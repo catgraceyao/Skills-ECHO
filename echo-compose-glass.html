@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo Compose — 音乐创作平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        original: {
+                            50: '#EEF2FF',
+                            100: '#E0E7FF',
+                            200: '#C7D2FE',
+                            300: '#A5B4FC',
+                            400: '#818CF8',
+                            500: '#6366F1',
+                            600: '#4F46E5',
+                            700: '#4338CA',
+                        },
+                        derivative: {
+                            50: '#FFF7ED',
+                            100: '#FFEDD5',
+                            200: '#FED7AA',
+                            300: '#FDBA74',
+                            400: '#FB923C',
+                            500: '#F97316',
+                            600: '#EA580C',
+                            700: '#C2410C',
+                        },
+                        cream: {
+                            50: '#FFFBF5',
+                            100: '#FDF6ED',
+                            200: '#FAEDE0',
+                            300: '#F5E3D0',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #FFFBF5 0%, #FDF6ED 50%, #FAF5F0 100%);
+            min-height: 100vh;
+        }
+        
+        /* 液态玻璃卡片 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.02),
+                0 2px 4px -1px rgba(0, 0, 0, 0.02),
+                0 0 0 1px rgba(0, 0, 0, 0.02);
+        }
+        
+        .glass-card:hover {
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.05),
+                0 10px 10px -5px rgba(0, 0, 0, 0.02),
+                0 0 0 1px rgba(0, 0, 0, 0.02);
+        }
+        
+        /* 有机气泡装饰 */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.4;
+            z-index: 0;
+        }
+        
+        .blob-original {
+            background: linear-gradient(135deg, #6366F1, #A5B4FC);
+        }
+        
+        .blob-derivative {
+            background: linear-gradient(135deg, #F97316, #FDBA74);
+        }
+        
+        .blob-mint {
+            background: linear-gradient(135deg, #10B981, #6EE7B7);
+        }
+        
+        /* 步骤指示器 */
+        .step-item {
+            transition: all 0.3s ease;
+        }
+        
+        .step-item.active .step-circle {
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            color: white;
+            box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.5);
+        }
+        
+        .step-item.completed .step-circle {
+            background: #10B981;
+            color: white;
+        }
+        
+        /* 开关样式 */
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #E5E7EB;
+            transition: .3s;
+            border-radius: 28px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        
+        /* 标签样式 */
+        .tag-item {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        
+        /* 上传区域 */
+        .upload-zone {
+            background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.4));
+            border: 2px dashed #D1D5DB;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-zone:hover {
+            border-color: #6366F1;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+        }
+        
+        /* 滑块样式 */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(to right, #10B981, #F59E0B, #EF4444);
+            outline: none;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #6366F1;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* 隐藏类 */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* 页面切换动画 */
+        .page-section {
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 导航活跃状态 */
+        .nav-link {
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #6366F1, #8B5CF6);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+        
+        /* Toast提示 */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body class="text-gray-700">
+    <!-- 背景装饰气泡 -->
+    <div class="blob blob-original w-96 h-96 -top-48 -left-48"></div>
+    <div class="blob blob-derivative w-80 h-80 top-1/3 -right-40"></div>
+    <div class="blob blob-mint w-64 h-64 bottom-20 left-1/4"></div>
+    
+    <!-- Toast提示 -->
+    <div id="toast" class="toast"></div>
+    
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-card">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="#" class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-original-500 to-original-600 flex items-center justify-center text-white shadow-lg shadow-original-500/30">
+                        <i data-lucide="music" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-xl font-bold text-gray-800">Echo<span class="text-original-500">Compose</span></span>
+                </a>
+                
+                <!-- 导航链接 -->
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#" class="nav-link text-sm font-medium text-gray-600 hover:text-gray-900">发现</a>
+                    <a href="#" class="nav-link text-sm font-medium text-gray-600 hover:text-gray-900">市场</a>
+                    <a href="#" class="nav-link active text-sm font-medium text-original-600">创作</a>
+                    <a href="#cooperate" class="nav-link text-sm font-medium text-gray-600 hover:text-gray-900">合作</a>
+                    <a href="#assets" class="nav-link text-sm font-medium text-gray-600 hover:text-gray-900">我的资产</a>
+                    <a href="#" class="nav-link text-sm font-medium text-gray-600 hover:text-gray-900">社区</a>
+                </div>
+                
+                <!-- 用户头像 -->
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-original-400 to-derivative-400 flex items-center justify-center text-white font-semibold shadow-lg cursor-pointer hover:scale-105 transition-transform">
+                        M
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 主内容区 -->
+    <div class="pt-24 pb-16 px-6">
+        <div class="max-w-6xl mx-auto">
+            
+            <!-- 双入口选择页 -->
+            <div id="dual-entrance-page" class="page-section">
+                <div class="text-center mb-16">
+                    <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                        开启你的<br/>
+                        <span class="bg-gradient-to-r from-original-500 to-original-600 bg-clip-text text-transparent">音乐创作</span>之旅
+                    </h1>
+                    <p class="text-lg text-gray-500 max-w-2xl mx-auto">
+                        选择你的创作路径，释放音乐灵感，构建属于你的数字音乐资产
+                    </p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- 原创入口 -->
+                    <div class="glass-card rounded-3xl p-8 md:p-10 relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-all duration-300" onclick="showCreateOriginal()">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-original-100 rounded-full -mr-16 -mt-16 opacity-50"></div>
+                        
+                        <div class="relative z-10">
+                            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-original-500 to-original-600 flex items-center justify-center text-white mb-6 shadow-xl shadow-original-500/30 group-hover:scale-110 transition-transform">
+                                <i data-lucide="sparkles" class="w-8 h-8"></i>
+                            </div>
+                            
+                            <h2 class="text-2xl font-bold text-gray-900 mb-3">创建原创资产</h2>
+                            <p class="text-gray-500 mb-6 leading-relaxed">从零开始创作全新的音乐作品，成为原创资产的所有者，享受完整的版权收益和衍生授权收入。</p>
+                            
+                            <div class="space-y-3 mb-8">
+                                <div class="flex items-center gap-3 text-sm text-gray-600">
+                                    <div class="w-5 h-5 rounded-full bg-original-100 flex items-center justify-center">
+                                        <i data-lucide="check" class="w-3 h-3 text-original-600"></i>
+                                    </div>
+                                    拥有完整版权和所有权
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-gray-600">
+                                    <div class="w-5 h-5 rounded-full bg-original-100 flex items-center justify-center">
+                                        <i data-lucide="check" class="w-3 h-3 text-original-600"></i>
+                                    </div>
+                                    设置播放和下载费用
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-gray-600">
+                                    <div class="w-5 h-5 rounded-full bg-original-100 flex items-center justify-center">
+                                        <i data-lucide="check" class="w-3 h-3 text-original-600"></i>
+                                    </div>
+                                    获得衍生作品授权收益
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-gray-600">
+                                    <div class="w-5 h-5 rounded-full bg-original-100 flex items-center justify-center">
+                                        <i data-lucide="check" class="w-3 h-3 text-original-600"></i>
+                                    </div>
+                                    作品永久上链，不可篡改
+                                </div>
+                            </div>
+                            
+                            <button class="w-full py-4 rounded-xl bg-gradient-to-r from-original-500 to-original-600 text-white font-semibold shadow-lg shadow-original-500/30 hover:shadow-xl hover:shadow-original-500/40 transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                                开始原创创作
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 衍生入口 -->
+                    <div class="glass-card rounded-3xl p-8 md:p-10 relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-all duration-300" onclick="showToast('衍生创作功能开发中', 'info')">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-derivative-100 rounded-full -mr-16 -mt-16 opacity-50"></div>
+                        
+                        <div class="relative z-10">
+                            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-derivative-500 to-derivative-600 flex items-center justify-center text-white mb-6 shadow-xl shadow-derivative-500/30 group-hover:scale-110 transition-transform">
+                                <i data-lucide="git-branch" class="w-8 h-8"></i>
+                            </div>
+                            
+                            <h2 class="text-2xl font-bold text-gray-900 mb-3">创建衍生资产</h2>
+                            <p class="text-gray-500 mb-6 leading-relaxed">基于已有原创作品进行二次创作，扩展音乐可能性，与原创作者共享收益，构建音乐创作生态。</p>
+                            
+                            <div class="space-y-3 mb-8">
+                                <div class="flex items-center gap-3 text-sm text-gray-600">
+                                    <div class="w-5 h-5 rounded-full bg-derivative-100 flex items-center justify-center">
+                                        <i data-lucide="check" class="w-3 h-3 text-derivative-600"></i>
+                                    </div>
+                                    基于已授权的原创作品创作
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-gray-600">
+                                    <div class="w-5 h-5 rounded-full bg-derivative-100 flex items-center justify-center">
+                                        <i data-lucide="check" class="w-3 h-3 text-derivative-600"></i>
+                                    </div>
+                                    自动遵守原创作者收益设置
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-gray-600">
+                                    <div class="w-5 h-5 rounded-full bg-derivative-100 flex items-center justify-center">
+                                        <i data-lucide="check" class="w-3 h-3 text-derivative-600"></i>
+                                    </div>
+                                    清晰的血缘关系记录
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-gray-600">
+                                    <div class="w-5 h-5 rounded-full bg-derivative-100 flex items-center justify-center">
+                                        <i data-lucide="check" class="w-3 h-3 text-derivative-600"></i>
+                                    </div>
+                                    灵活的二次创作授权
+                                </div>
+                            </div>
+                            
+                            <button class="w-full py-4 rounded-xl bg-gradient-to-r from-derivative-500 to-derivative-600 text-white font-semibold shadow-lg shadow-derivative-500/30 hover:shadow-xl hover:shadow-derivative-500/40 transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="wand-2" class="w-5 h-5"></i>
+                                探索衍生创作
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 原创创建流程页 -->
+            <div id="create-original-page" class="hidden page-section">
+                <div class="mb-8">
+                    <button onclick="showDualEntrance()" class="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors mb-4">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        返回
+                    </button>
+                    <h2 class="text-3xl font-bold text-gray-900">创建原创音乐资产</h2>
+                    <p class="text-gray-500 mt-2">上传你的音乐作品，设置授权信息，铸造属于你的原创音乐资产</p>
+                </div>
+                
+                <!-- 步骤指示器 -->
+                <div class="flex items-center justify-between mb-10 max-w-3xl mx-auto">
+                    <div class="step-item active flex flex-col items-center gap-2" data-step="1">
+                        <div class="step-circle w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 transition-all">
+                            <i data-lucide="upload" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-600">上传文件</span>
+                    </div>
+                    
+                    <div class="flex-1 h-0.5 bg-gray-200 mx-4"></div>
+                    
+                    <div class="step-item flex flex-col items-center gap-2" data-step="2">
+                        <div class="step-circle w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 transition-all">
+                            <i data-lucide="shield" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-400">权利配置</span>
+                    </div>
+                    
+                    <div class="flex-1 h-0.5 bg-gray-200 mx-4"></div>
+                    
+                    <div class="step-item flex flex-col items-center gap-2" data-step="3">
+                        <div class="step-circle w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 transition-all">
+                            <i data-lucide="coins" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-400">收益分配</span>
+                    </div>
+                    
+                    <div class="flex-1 h-0.5 bg-gray-200 mx-4"></div>
+                    
+                    <div class="step-item flex flex-col items-center gap-2" data-step="4">
+                        <div class="step-circle w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 transition-all">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-400">确认生成</span>
+                    </div>
+                </div>
+                
+                <!-- 表单内容 -->
+                <div class="glass-card rounded-3xl p-8 md:p-10">
+                    
+                    <!-- 步骤1: 上传文件 -->
+                    <div id="step-1-content" class="step-content">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                            <i data-lucide="upload-cloud" class="w-5 h-5 text-original-500"></i>
+                            上传音乐文件
+                        </h3>
+                        <p class="text-gray-500 mb-6">支持 WAV, MP3, FLAC 格式，最大 100MB</p>
+                        
+                        <div class="upload-zone rounded-2xl p-10 text-center mb-6" id="upload-area">
+                            <div class="w-16 h-16 rounded-full bg-original-50 flex items-center justify-center mx-auto mb-4">
+                                <i data-lucide="music" class="w-8 h-8 text-original-500"></i>
+                            </div>
+                            <p class="text-lg font-medium text-gray-700 mb-2">拖拽文件到此处或点击上传</p>
+                            <p class="text-sm text-gray-400 mb-4">支持批量上传多个文件</p>
+                            <button class="px-6 py-2.5 rounded-lg bg-original-500 text-white font-medium hover:bg-original-600 transition-colors">
+                                选择文件
+                            </button>
+                            <input type="file" id="file-input" class="hidden" accept=".wav,.mp3,.flac">
+                        </div>
+                        
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    作品名称 <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="asset-name" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-original-500 focus:ring-2 focus:ring-original-200 outline-none transition-all" placeholder="给你的音乐作品起个名字">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">作品描述</label>
+                                <textarea id="asset-desc" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-original-500 focus:ring-2 focus:ring-original-200 outline-none transition-all resize-none" placeholder="描述一下你的创作灵感和故事..."></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">标签</label>
+                                <div class="flex flex-wrap gap-2 p-3 rounded-xl border border-gray-200 bg-white" id="tag-container">
+                                    <span class="tag-item px-3 py-1 rounded-full text-sm text-original-700 flex items-center gap-1">
+                                        电子
+                                        <button class="hover:text-original-900"><i data-lucide="x" class="w-3 h-3"></i></button>
+                                    </span>
+                                    <span class="tag-item px-3 py-1 rounded-full text-sm text-original-700 flex items-center gap-1">
+                                        氛围
+                                        <button class="hover:text-original-900"><i data-lucide="x" class="w-3 h-3"></i></button>
+                                    </span>
+                                    <input type="text" id="tag-input" class="flex-1 min-w-[100px] outline-none text-sm" placeholder="添加标签...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 步骤2: 权利配置 -->
+                    <div id="step-2-content" class="step-content hidden">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                            <i data-lucide="shield" class="w-5 h-5 text-original-500"></i>
+                            权利蓝图配置
+                        </h3>
+                        
+                        <div class="space-y-4">
+                            <div class="glass-card rounded-2xl p-5 flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium text-gray-900">开放使用权用于资产播放/下载</h4>
+                                    <p class="text-sm text-gray-500 mt-1">建立衍生关系需提供给用户下载文件通道</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="glass-card rounded-2xl p-5 flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium text-gray-900">允许用户申请免费播放</h4>
+                                    <p class="text-sm text-gray-500 mt-1">用户可向你申请免费播放权限</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="glass-card rounded-2xl p-5 flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium text-gray-900">开放衍生权</h4>
+                                    <p class="text-sm text-gray-500 mt-1">允许其他用户基于你的作品创作衍生作品</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="glass-card rounded-2xl p-5 flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium text-gray-900">衍生作品需经我审核</h4>
+                                    <p class="text-sm text-gray-500 mt-1">所有衍生作品都需要你手动审核批准</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 步骤3: 收益配置 -->
+                    <div id="step-3-content" class="step-content hidden">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                            <i data-lucide="coins" class="w-5 h-5 text-original-500"></i>
+                            收益分配设置
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-3 gap-4 mb-8">
+                            <div class="glass-card rounded-2xl p-6 text-center">
+                                <div class="text-3xl font-bold text-original-600 mb-1">0.001</div>
+                                <div class="text-sm text-gray-500">ETH / 播放</div>
+                                <div class="text-xs text-green-600 mt-1">≈ $2.5</div>
+                            </div>
+                            
+                            <div class="glass-card rounded-2xl p-6 text-center">
+                                <div class="text-3xl font-bold text-original-600 mb-1">0.01</div>
+                                <div class="text-sm text-gray-500">ETH / 下载</div>
+                                <div class="text-xs text-green-600 mt-1">≈ $25</div>
+                            </div>
+                            
+                            <div class="glass-card rounded-2xl p-6 text-center">
+                                <div class="text-3xl font-bold text-derivative-500 mb-1">5%</div>
+                                <div class="text-sm text-gray-500">衍生授权费</div>
+                                <div class="text-xs text-gray-400 mt-1">最低底线</div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-5">
+                            <div class="glass-card rounded-2xl p-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">收益底线配置</label>
+                                <div class="text-4xl font-bold text-center text-original-600 mb-2">5%</div>
+                                <input type="range" min="0" max="100" value="5" class="w-full">
+                                <p class="text-sm text-gray-500 mt-3 text-center">确保此资产在建立衍生关系时你期望的收益底线</p>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">播放费用 (ETH)</label>
+                                    <div class="flex">
+                                        <input type="number" step="0.001" value="0.001" class="flex-1 px-4 py-3 rounded-l-xl border border-gray-200 focus:border-original-500 outline-none">
+                                        <select class="px-4 py-3 rounded-r-xl border border-l-0 border-gray-200 bg-gray-50">
+                                            <option>ETH</option>
+                                            <option>USDC</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">下载费用 (ETH)</label>
+                                    <div class="flex">
+                                        <input type="number" step="0.01" value="0.01" class="flex-1 px-4 py-3 rounded-l-xl border border-gray-200 focus:border-original-500 outline-none">
+                                        <select class="px-4 py-3 rounded-r-xl border border-l-0 border-gray-200 bg-gray-50">
+                                            <option>ETH</option>
+                                            <option>USDC</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 步骤4: 确认生成 -->
+                    <div id="step-4-content" class="step-content hidden">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-original-500"></i>
+                            确认与生成
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-4 mb-6">
+                            <div class="glass-card rounded-2xl p-5">
+                                <h4 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                    <i data-lucide="info" class="w-4 h-4 text-original-500"></i>
+                                    资产基本信息
+                                </h4>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">资产名称</span>
+                                        <span class="font-medium text-gray-900">夏日旋律</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">作品描述</span>
+                                        <span class="font-medium text-gray-900">轻快明亮的夏季流行曲</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">标签</span>
+                                        <span class="font-medium text-gray-900">电子, 氛围</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="glass-card rounded-2xl p-5">
+                                <h4 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                    <i data-lucide="coins" class="w-4 h-4 text-original-500"></i>
+                                    收益配置
+                                </h4>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">播放费用</span>
+                                        <span class="font-medium text-original-600">0.001 ETH/次</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">下载费用</span>
+                                        <span class="font-medium text-original-600">0.01 ETH</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">收益底线</span>
+                                        <span class="font-medium text-derivative-500">5%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card rounded-2xl p-5 mb-6">
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" id="confirm-checkbox" class="mt-1 w-4 h-4 rounded border-gray-300 text-original-600 focus:ring-original-500">
+                                <span class="text-sm text-gray-600">我确认以上信息准确无误，并同意将资产发布到区块链网络。我理解一旦发布，资产信息将永久存储且不可更改。</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 成功页面 -->
+                    <div id="success-content" class="step-content hidden text-center py-10">
+                        <div class="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="check" class="w-12 h-12 text-green-600"></i>
+                        </div>
+                        
+                        <h3 class="text-3xl font-bold text-gray-900 mb-3">资产创建成功！</h3>
+                        <p class="text-gray-500 mb-6">你的音乐资产已成功铸造上链</p>
+                        
+                        <div class="inline-block px-6 py-3 rounded-xl bg-original-50 border border-original-200 mb-8">
+                            <span class="text-sm text-gray-500">Echo ID: </span>
+                            <span class="font-mono font-bold text-original-600">#EC2024001</span>
+                        </div>
+                        
+                        <div class="flex gap-4 justify-center">
+                            <button class="px-6 py-3 rounded-xl bg-original-500 text-white font-medium hover:bg-original-600 transition-colors flex items-center gap-2">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                                查看资产
+                            </button>
+                            <button onclick="resetAndGoHome()" class="px-6 py-3 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                创建新资产
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 按钮组 -->
+                    <div class="flex justify-between mt-10 pt-6 border-t border-gray-100" id="form-actions">
+                        <button onclick="prevStep()" id="btn-prev" class="px-6 py-3 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                            上一步
+                        </button>
+                        
+                        <button onclick="nextStep()" id="btn-next" class="px-8 py-3 rounded-xl bg-original-500 text-white font-medium hover:bg-original-600 transition-colors flex items-center gap-2 shadow-lg shadow-original-500/30">
+                            下一步
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                        
+                        <button onclick="submitForm()" id="btn-submit" class="hidden px-8 py-3 rounded-xl bg-original-500 text-white font-medium hover:bg-original-600 transition-colors flex items-center gap-2 shadow-lg shadow-original-500/30">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            确认铸造
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 我的资产页 -->
+            <div id="assets-page" class="hidden page-section">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900">我的资产</h2>
+                    <p class="text-gray-500 mt-2">管理并查看你所有的Echo音乐资产</p>
+                </div>
+                
+                <div class="grid md:grid-cols-4 gap-4 mb-8">
+                    <div class="glass-card rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-xl bg-original-100 flex items-center justify-center">
+                                <i data-lucide="layers" class="w-5 h-5 text-original-600"></i>
+                            </div>
+                            <span class="text-3xl font-bold text-gray-900">18</span>
+                        </div>
+                        <span class="text-sm text-gray-500">资产总数</span>
+                    </div>
+                    
+                    <div class="glass-card rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-xl bg-original-100 flex items-center justify-center">
+                                <i data-lucide="sparkles" class="w-5 h-5 text-original-600"></i>
+                            </div>
+                            <span class="text-3xl font-bold text-gray-900">12</span>
+                        </div>
+                        <span class="text-sm text-gray-500">原创资产</span>
+                    </div>
+                    
+                    <div class="glass-card rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-xl bg-derivative-100 flex items-center justify-center">
+                                <i data-lucide="git-branch" class="w-5 h-5 text-derivative-600"></i>
+                            </div>
+                            <span class="text-3xl font-bold text-gray-900">6</span>
+                        </div>
+                        <span class="text-sm text-gray-500">衍生资产</span>
+                    </div>
+                    
+                    <div class="glass-card rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                                <i data-lucide="trending-up" class="w-5 h-5 text-green-600"></i>
+                            </div>
+                            <span class="text-3xl font-bold text-gray-900">4.82</span>
+                        </div>
+                        <span class="text-sm text-gray-500">总收益 (ETH)</span>
+                    </div>
+                </div>
+                
+                <div class="flex gap-2 mb-6">
+                    <button class="px-4 py-2 rounded-lg bg-original-500 text-white text-sm font-medium">全部</button>
+                    <button class="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50">原创</button>
+                    <button class="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50">衍生</button>
+                </div>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- 资产卡片1 -->
+                    <div class="glass-card rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all cursor-pointer">
+                        <div class="h-2 bg-gradient-to-r from-original-400 to-original-500"></div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">夏日旋律</h3>
+                                    <span class="text-xs text-gray-400 font-mono">ECHO-2023-SU001</span>
+                                </div>
+                                <span class="px-2 py-1 rounded-full bg-original-100 text-original-700 text-xs font-medium">原创</span>
+                            </div>
+                            
+                            <p class="text-sm text-gray-500 mb-4">轻快明亮的夏季流行曲，融合电子元素</p>
+                            
+                            <div class="flex gap-2 mb-4">
+                                <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs">流行</span>
+                                <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs">夏季</span>
+                                <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs">轻快</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-2 pt-4 border-t border-gray-100">
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">2.4K</div>
+                                    <div class="text-xs text-gray-400">播放</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">8</div>
+                                    <div class="text-xs text-gray-400">衍生</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">124</div>
+                                    <div class="text-xs text-gray-400">收藏</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 资产卡片2 -->
+                    <div class="glass-card rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all cursor-pointer">
+                        <div class="h-2 bg-gradient-to-r from-derivative-400 to-derivative-500"></div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">夏日变奏 Remix</h3>
+                                    <span class="text-xs text-gray-400 font-mono">ECHO-2023-SU001-D1</span>
+                                </div>
+                                <span class="px-2 py-1 rounded-full bg-derivative-100 text-derivative-700 text-xs font-medium">衍生</span>
+                            </div>
+                            
+                            <p class="text-sm text-gray-500 mb-4">基于「夏日旋律」的电子舞曲改编版本</p>
+                            
+                            <div class="flex gap-2 mb-4">
+                                <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs">Remix</span>
+                                <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs">电子</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-2 pt-4 border-t border-gray-100">
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">890</div>
+                                    <div class="text-xs text-gray-400">播放</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">2</div>
+                                    <div class="text-xs text-gray-400">衍生</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">45</div>
+                                    <div class="text-xs text-gray-400">收藏</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 资产卡片3 -->
+                    <div class="glass-card rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all cursor-pointer">
+                        <div class="h-2 bg-gradient-to-r from-original-400 to-original-500"></div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">城市夜行</h3>
+                                    <span class="text-xs text-gray-400 font-mono">ECHO-2023-CT001</span>
+                                </div>
+                                <span class="px-2 py-1 rounded-full bg-original-100 text-original-700 text-xs font-medium">原创</span>
+                            </div>
+                            
+                            <p class="text-sm text-gray-500 mb-4">深夜都市的氛围音乐，适合冥想和放松</p>
+                            
+                            <div class="flex gap-2 mb-4">
+                                <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs">电子</span>
+                                <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs">都市</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-2 pt-4 border-t border-gray-100">
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">1.8K</div>
+                                    <div class="text-xs text-gray-400">播放</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">5</div>
+                                    <div class="text-xs text-gray-400">衍生</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">98</div>
+                                    <div class="text-xs text-gray-400">收藏</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 合作申请页 -->
+            <div id="cooperate-page" class="hidden page-section">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900">合作申请中心</h2>
+                    <p class="text-gray-500 mt-2">管理免费播放申请和衍生作品审核</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="glass-card rounded-2xl p-6 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white font-semibold">
+                                ML
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">音乐实验室</h4>
+                                <p class="text-sm text-gray-500">申请基于「夏日旋律」创作Remix</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-sm font-medium">待处理</span>
+                            <button class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 text-sm hover:bg-gray-50">拒绝</button>
+                            <button class="px-4 py-2 rounded-lg bg-original-500 text-white text-sm hover:bg-original-600">同意</button>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card rounded-2xl p-6 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-semibold">
+                                US
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">都市音景</h4>
+                                <p class="text-sm text-gray-500">申请免费播放「城市夜行」</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">已同意</span>
+                            <button class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 text-sm hover:bg-gray-50">查看详情</button>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card rounded-2xl p-6 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold">
+                                DM
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">深海音乐家</h4>
+                                <p class="text-sm text-gray-500">申请在冥想应用中使用「深海回响」</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-sm font-medium">待处理</span>
+                            <button class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 text-sm hover:bg-gray-50">拒绝</button>
+                            <button class="px-4 py-2 rounded-lg bg-original-500 text-white text-sm hover:bg-original-600">同意</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <script>
+        // 初始化Lucide图标
+        lucide.createIcons();
+        
+        // 当前步骤
+        let currentStep = 1;
+        const totalSteps = 4;
+        
+        // 显示Toast
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        
+        // 显示双入口页
+        function showDualEntrance() {
+            hideAllPages();
+            document.getElementById('dual-entrance-page').classList.remove('hidden');
+            currentStep = 1;
+            updateStepUI();
+        }
+        
+        // 显示原创创建页
+        function showCreateOriginal() {
+            hideAllPages();
+            document.getElementById('create-original-page').classList.remove('hidden');
+            currentStep = 1;
+            updateStepUI();
+        }
+        
+        // 隐藏所有页面
+        function hideAllPages() {
+            document.querySelectorAll('.page-section').forEach(page => {
+                page.classList.add('hidden');
+            });
+        }
+        
+        // 更新步骤UI
+        function updateStepUI() {
+            // 更新步骤指示器
+            document.querySelectorAll('.step-item').forEach((item, index) => {
+                item.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    item.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // 更新步骤标签颜色
+            document.querySelectorAll('.step-item span').forEach((span, index) => {
+                if (index + 1 <= currentStep) {
+                    span.classList.remove('text-gray-400');
+                    span.classList.add('text-gray-600');
+                }
+            });
+            
+            // 显示当前步骤内容
+            document.querySelectorAll('.step-content').forEach((content, index) => {
+                content.classList.add('hidden');
+                if (index + 1 === currentStep) {
+                    content.classList.remove('hidden');
+                }
+            });
+            
+            // 更新按钮
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const btnSubmit = document.getElementById('btn-submit');
+            
+            if (currentStep === 1) {
+                btnPrev.innerHTML = '<i data-lucide="arrow-left" class="w-4 h-4"></i> 返回';
+            } else {
+                btnPrev.innerHTML = '<i data-lucide="arrow-left" class="w-4 h-4"></i> 上一步';
+            }
+            
+            if (currentStep === totalSteps) {
+                btnNext.classList.add('hidden');
+                btnSubmit.classList.remove('hidden');
+            } else {
+                btnNext.classList.remove('hidden');
+                btnSubmit.classList.add('hidden');
+            }
+            
+            // 重新初始化图标
+            lucide.createIcons();
+        }
+        
+        // 下一步
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStepUI();
+            }
+        }
+        
+        // 上一步
+        function prevStep() {
+            if (currentStep === 1) {
+                showDualEntrance();
+            } else {
+                currentStep--;
+                updateStepUI();
+            }
+        }
+        
+        // 提交表单
+        function submitForm() {
+            const checkbox = document.getElementById('confirm-checkbox');
+            if (!checkbox.checked) {
+                showToast('请确认资产信息准确无误', 'error');
+                return;
+            }
+            
+            // 显示成功页面
+            document.querySelectorAll('.step-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('success-content').classList.remove('hidden');
+            document.getElementById('form-actions').classList.add('hidden');
+            
+            showToast('资产创建成功！', 'success');
+        }
+        
+        // 重置并返回首页
+        function resetAndGoHome() {
+            currentStep = 1;
+            document.getElementById('confirm-checkbox').checked = false;
+            document.getElementById('form-actions').classList.remove('hidden');
+            showDualEntrance();
+        }
+        
+        // 标签输入
+        document.getElementById('tag-input')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.trim()) {
+                const container = document.getElementById('tag-container');
+                const tag = document.createElement('span');
+                tag.className = 'tag-item px-3 py-1 rounded-full text-sm text-original-700 flex items-center gap-1';
+                tag.innerHTML = `
+                    ${this.value.trim()}
+                    <button onclick="this.parentElement.remove()" class="hover:text-original-900"><i data-lucide="x" class="w-3 h-3"></i></button>
+                `;
+                container.insertBefore(tag, this);
+                this.value = '';
+                lucide.createIcons();
+            }
+        });
+        
+        // 文件上传区域点击
+        document.getElementById('upload-area')?.addEventListener('click', function() {
+            document.getElementById('file-input').click();
+        });
+        
+        // 拖拽上传
+        const uploadArea = document.getElementById('upload-area');
+        if (uploadArea) {
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#6366F1';
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.borderColor = '#D1D5DB';
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#D1D5DB';
+                showToast('文件上传成功', 'success');
+            });
+        }
+        
+        // 导航链接点击
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href.startsWith('#')) {
+                    e.preventDefault();
+                    const target = href.substring(1);
+                    
+                    // 移除所有活跃状态
+                    document.querySelectorAll('.nav-link').forEach(l => {
+                        l.classList.remove('active', 'text-original-600');
+                        l.classList.add('text-gray-600');
+                    });
+                    
+                    // 添加当前活跃状态
+                    this.classList.add('active', 'text-original-600');
+                    this.classList.remove('text-gray-600');
+                    
+                    // 显示对应页面
+                    hideAllPages();
+                    
+                    if (target === 'assets') {
+                        document.getElementById('assets-page').classList.remove('hidden');
+                    } else if (target === 'cooperate') {
+                        document.getElementById('cooperate-page').classList.remove('hidden');
+                    } else if (target === 'create' || target === '') {
+                        showDualEntrance();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

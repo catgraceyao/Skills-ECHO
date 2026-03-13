@@ -1,0 +1,2018 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo Compose — 音乐宇宙</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            /* 宇宙深色背景 */
+            --void-deep: #050510;
+            --void-primary: #0A0A1A;
+            --void-secondary: #12122A;
+            --void-surface: #1A1A3A;
+            --void-elevated: #252550;
+            
+            /* 原创星系 - 冷色调 */
+            --nebula-cyan: #00F5FF;
+            --nebula-blue: #4A8FE7;
+            --nebula-purple: #7B68EE;
+            --nebula-glow: rgba(74, 143, 231, 0.4);
+            
+            /* 衍生星云 - 暖色调 */
+            --nova-pink: #FF1493;
+            --nova-coral: #FF6B9D;
+            --nova-orange: #FF8C42;
+            --nova-glow: rgba(255, 107, 157, 0.4);
+            
+            /* 合作彗星 - 青色系 */
+            --comet-teal: #2ED8B6;
+            --comet-mint: #4AE7C7;
+            
+            /* 功能恒星 */
+            --star-gold: #FFD700;
+            --star-success: #00FF88;
+            --star-warning: #FFB800;
+            --star-error: #FF4757;
+            
+            /* 文字 */
+            --text-primary: #FFFFFF;
+            --text-secondary: #E8E8FF;
+            --text-tertiary: #A0A0D0;
+            --text-dim: #606090;
+            
+            /* 字体 */
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            
+            /* 间距 */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-xxl: 48px;
+            --space-xxxl: 64px;
+            
+            /* 圆角 */
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            --radius-full: 999px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: var(--font-body);
+            background: var(--void-deep);
+            color: var(--text-secondary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        /* Three.js Canvas 背景 */
+        #universe-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        /* 全局辉光层 */
+        .glow-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(74, 143, 231, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(255, 107, 157, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(46, 216, 182, 0.05) 0%, transparent 70%);
+            animation: nebula-drift 20s ease-in-out infinite;
+        }
+        
+        @keyframes nebula-drift {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+            33% { transform: translate(2%, -2%) scale(1.02); opacity: 1; }
+            66% { transform: translate(-1%, 1%) scale(0.98); opacity: 0.9; }
+        }
+        
+        /* 导航栏 - 玻璃态 */
+        .cosmic-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: var(--space-md) var(--space-xl);
+            background: linear-gradient(180deg, rgba(5, 5, 16, 0.9) 0%, rgba(5, 5, 16, 0.4) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        /* Logo - 脉冲恒星 */
+        .logo-orbit {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            text-decoration: none;
+            position: relative;
+        }
+        
+        .logo-star {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--nebula-cyan), var(--nova-pink));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            position: relative;
+            animation: star-pulse 3s ease-in-out infinite;
+            box-shadow: 
+                0 0 30px rgba(0, 245, 255, 0.5),
+                0 0 60px rgba(255, 20, 147, 0.3),
+                inset 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+        
+        @keyframes star-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(0, 245, 255, 0.5), 0 0 60px rgba(255, 20, 147, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(0, 245, 255, 0.7), 0 0 100px rgba(255, 20, 147, 0.5); }
+        }
+        
+        .logo-text {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+        
+        .logo-text span {
+            background: linear-gradient(90deg, var(--nebula-cyan), var(--nova-coral));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* 导航链接 - 悬浮光效 */
+        .nav-constellation {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            background: rgba(255, 255, 255, 0.03);
+            padding: var(--space-xs);
+            border-radius: var(--radius-full);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-link {
+            padding: var(--space-sm) var(--space-lg);
+            color: var(--text-tertiary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border-radius: var(--radius-full);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            transition: all 0.4s ease;
+            border-radius: 50%;
+        }
+        
+        .nav-link:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-link.active {
+            color: var(--text-primary);
+            background: linear-gradient(135deg, rgba(74, 143, 231, 0.3), rgba(255, 107, 157, 0.2));
+            box-shadow: 0 0 20px rgba(74, 143, 231, 0.3);
+        }
+        
+        /* 用户头像 - 量子态 */
+        .user-quantum {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+        
+        .quantum-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--nebula-blue), var(--nova-coral));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .quantum-avatar::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--nebula-cyan), var(--nova-pink));
+            z-index: -1;
+            opacity: 0.5;
+            animation: quantum-ring 2s linear infinite;
+        }
+        
+        @keyframes quantum-ring {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .quantum-avatar:hover {
+            transform: scale(1.1);
+        }
+        
+        /* 主容器 */
+        .cosmic-container {
+            position: relative;
+            z-index: 10;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 120px var(--space-xl) var(--space-xxxl);
+        }
+        
+        /* 英雄区域 - 超新星 */
+        .supernova-hero {
+            min-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            perspective: 1000px;
+        }
+        
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 8vw, 7rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: var(--space-lg);
+            position: relative;
+        }
+        
+        .hero-title .line {
+            display: block;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--nebula-cyan) 50%, var(--nova-coral) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: title-glow 4s ease-in-out infinite;
+        }
+        
+        @keyframes title-glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 245, 255, 0.3)); }
+            50% { filter: drop-shadow(0 0 40px rgba(255, 20, 147, 0.5)); }
+        }
+        
+        .hero-subtitle {
+            font-size: 1.35rem;
+            color: var(--text-tertiary);
+            max-width: 700px;
+            margin-bottom: var(--space-xxl);
+            line-height: 1.7;
+        }
+        
+        /* 双入口 - 双星系统 */
+        .binary-system {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-xl);
+            max-width: 1100px;
+            width: 100%;
+            perspective: 1500px;
+        }
+        
+        .creation-planet {
+            background: linear-gradient(145deg, rgba(26, 26, 58, 0.8), rgba(10, 10, 26, 0.9));
+            border-radius: var(--radius-xl);
+            padding: var(--space-xxxl) var(--space-xxl);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        
+        .creation-planet::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--planet-color), transparent);
+        }
+        
+        .creation-planet.original {
+            --planet-color: var(--nebula-cyan);
+        }
+        
+        .creation-planet.derivative {
+            --planet-color: var(--nova-coral);
+        }
+        
+        .creation-planet:hover {
+            transform: translateY(-10px) rotateX(5deg);
+            border-color: var(--planet-color);
+            box-shadow: 
+                0 30px 60px rgba(0, 0, 0, 0.4),
+                0 0 60px var(--planet-glow);
+        }
+        
+        .creation-planet.original { --planet-glow: rgba(0, 245, 255, 0.2); }
+        .creation-planet.derivative { --planet-glow: rgba(255, 107, 157, 0.2); }
+        
+        .planet-core {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto var(--space-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            position: relative;
+            animation: planet-rotate 20s linear infinite;
+        }
+        
+        @keyframes planet-rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .creation-planet.original .planet-core {
+            background: radial-gradient(circle at 30% 30%, var(--nebula-cyan), var(--nebula-blue));
+            box-shadow: 
+                0 0 40px rgba(0, 245, 255, 0.5),
+                inset -10px -10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .creation-planet.derivative .planet-core {
+            background: radial-gradient(circle at 30% 30%, var(--nova-coral), var(--nova-pink));
+            box-shadow: 
+                0 0 40px rgba(255, 107, 157, 0.5),
+                inset -10px -10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .planet-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: var(--space-md);
+        }
+        
+        .creation-planet.original .planet-title { color: var(--nebula-cyan); }
+        .creation-planet.derivative .planet-title { color: var(--nova-coral); }
+        
+        .planet-description {
+            color: var(--text-tertiary);
+            margin-bottom: var(--space-xl);
+            line-height: 1.6;
+        }
+        
+        .planet-features {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-xl);
+        }
+        
+        .feature-orbit {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-full);
+            font-size: 0.9rem;
+        }
+        
+        .creation-planet.original .feature-orbit i { color: var(--nebula-cyan); }
+        .creation-planet.derivative .feature-orbit i { color: var(--nova-coral); }
+        
+        .planet-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+            padding: var(--space-md) var(--space-xl);
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .creation-planet.original .planet-cta {
+            background: linear-gradient(135deg, var(--nebula-cyan), var(--nebula-blue));
+            box-shadow: 0 10px 30px rgba(0, 245, 255, 0.3);
+        }
+        
+        .creation-planet.derivative .planet-cta {
+            background: linear-gradient(135deg, var(--nova-coral), var(--nova-pink));
+            box-shadow: 0 10px 30px rgba(255, 107, 157, 0.3);
+        }
+        
+        .planet-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px currentColor;
+        }
+        
+        /* 创作流程 - 星系轨道 */
+        .galaxy-section {
+            margin-top: var(--space-xxxl);
+            padding: var(--space-xxxl) 0;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: var(--space-xxxl);
+        }
+        
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: var(--space-md);
+            background: linear-gradient(90deg, var(--nebula-cyan), var(--nova-coral));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .section-subtitle {
+            color: var(--text-tertiary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* 步骤轨道 */
+        .orbit-track {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1000px;
+            margin: 0 auto var(--space-xxxl);
+            position: relative;
+            padding: 0 var(--space-xl);
+        }
+        
+        .orbit-track::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 80px;
+            right: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--nebula-cyan), var(--nova-coral));
+            transform: translateY(-50%);
+            opacity: 0.3;
+        }
+        
+        .orbit-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-md);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .node-body {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--void-surface);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-tertiary);
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+        
+        .orbit-node:hover .node-body,
+        .orbit-node.active .node-body {
+            background: linear-gradient(135deg, var(--nebula-cyan), var(--nova-coral));
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 0 40px rgba(0, 245, 255, 0.4);
+            transform: scale(1.1);
+        }
+        
+        .orbit-node.completed .node-body {
+            background: var(--star-success);
+            border-color: transparent;
+            color: white;
+        }
+        
+        .node-label {
+            font-size: 0.9rem;
+            color: var(--text-tertiary);
+            text-align: center;
+            max-width: 120px;
+        }
+        
+        .orbit-node.active .node-label {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        /* 表单星云 */
+        .nebula-form {
+            background: linear-gradient(145deg, rgba(26, 26, 58, 0.6), rgba(10, 10, 26, 0.8));
+            border-radius: var(--radius-xl);
+            padding: var(--space-xxxl);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .form-sector {
+            display: none;
+        }
+        
+        .form-sector.active {
+            display: block;
+            animation: sector-fade 0.5s ease;
+        }
+        
+        @keyframes sector-fade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .sector-title {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: var(--space-md);
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+        
+        .sector-title i {
+            color: var(--nebula-cyan);
+        }
+        
+        .sector-subtitle {
+            color: var(--text-tertiary);
+            margin-bottom: var(--space-xl);
+        }
+        
+        /* 输入字段 - 能量场 */
+        .energy-field {
+            margin-bottom: var(--space-xl);
+        }
+        
+        .field-label {
+            display: block;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .field-label .required {
+            color: var(--nova-coral);
+            margin-left: var(--space-xs);
+        }
+        
+        .field-input {
+            width: 100%;
+            padding: var(--space-md) var(--space-lg);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .field-input:focus {
+            outline: none;
+            border-color: var(--nebula-cyan);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .field-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        /* 上传区域 - 虫洞 */
+        .wormhole-upload {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xxxl);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            background: rgba(255, 255, 255, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .wormhole-upload::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(0, 245, 255, 0.1) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+            border-radius: 50%;
+        }
+        
+        .wormhole-upload:hover::before {
+            width: 200%;
+            height: 200%;
+        }
+        
+        .wormhole-upload:hover {
+            border-color: var(--nebula-cyan);
+            background: rgba(0, 245, 255, 0.03);
+        }
+        
+        .wormhole-icon {
+            font-size: 4rem;
+            color: var(--nebula-cyan);
+            margin-bottom: var(--space-lg);
+            animation: wormhole-spin 10s linear infinite;
+        }
+        
+        @keyframes wormhole-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .wormhole-text {
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+            font-weight: 500;
+        }
+        
+        .wormhole-hint {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+        
+        /* 开关 - 量子纠缠 */
+        .quantum-switches {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-lg);
+        }
+        
+        .quantum-switch {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-lg);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .quantum-switch:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .switch-info h4 {
+            color: var(--text-primary);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .switch-info p {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+        
+        .switch-control {
+            position: relative;
+            width: 60px;
+            height: 32px;
+        }
+        
+        .switch-control input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            transition: 0.4s;
+            border-radius: 32px;
+        }
+        
+        .switch-slider::before {
+            position: absolute;
+            content: '';
+            height: 24px;
+            width: 24px;
+            left: 4px;
+            bottom: 4px;
+            background: white;
+            transition: 0.4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .switch-control input:checked + .switch-slider {
+            background: linear-gradient(135deg, var(--nebula-cyan), var(--nova-coral));
+        }
+        
+        .switch-control input:checked + .switch-slider::before {
+            transform: translateX(28px);
+        }
+        
+        /* 资产卡片网格 - 星群 */
+        .constellation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: var(--space-xl);
+            margin-top: var(--space-xxl);
+        }
+        
+        .star-card {
+            background: linear-gradient(145deg, rgba(26, 26, 58, 0.6), rgba(10, 10, 26, 0.8));
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .star-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--star-color);
+            opacity: 0.8;
+        }
+        
+        .star-card.original { --star-color: var(--nebula-cyan); }
+        .star-card.derivative { --star-color: var(--nova-coral); }
+        
+        .star-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--star-color);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 40px var(--star-glow);
+        }
+        
+        .star-card.original { --star-glow: rgba(0, 245, 255, 0.15); }
+        .star-card.derivative { --star-glow: rgba(255, 107, 157, 0.15); }
+        
+        .star-content {
+            padding: var(--space-xl);
+        }
+        
+        .star-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .star-title-group h3 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .star-id {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+        }
+        
+        .star-badge {
+            padding: 6px 12px;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .star-card.original .star-badge {
+            background: rgba(0, 245, 255, 0.15);
+            color: var(--nebula-cyan);
+        }
+        
+        .star-card.derivative .star-badge {
+            background: rgba(255, 107, 157, 0.15);
+            color: var(--nova-coral);
+        }
+        
+        .star-stats {
+            display: flex;
+            gap: var(--space-md);
+            padding-top: var(--space-lg);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .star-stat {
+            flex: 1;
+            text-align: center;
+            padding: var(--space-sm);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+            transition: all 0.3s ease;
+        }
+        
+        .star-stat:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-2px);
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* 合作卡片 - 彗尾效果 */
+        .comet-card {
+            background: linear-gradient(145deg, rgba(26, 26, 58, 0.6), rgba(10, 10, 26, 0.8));
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        
+        .comet-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(46, 216, 182, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .comet-card:hover::after {
+            left: 100%;
+        }
+        
+        .comet-card:hover {
+            border-color: var(--comet-teal);
+            transform: translateX(5px);
+        }
+        
+        .comet-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+        
+        .comet-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--comet-teal), var(--comet-mint));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .comet-status {
+            margin-left: auto;
+            padding: 6px 12px;
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-pending { background: rgba(255, 184, 0, 0.15); color: var(--star-warning); }
+        .status-approved { background: rgba(0, 255, 136, 0.15); color: var(--star-success); }
+        .status-rejected { background: rgba(255, 71, 87, 0.15); color: var(--star-error); }
+        
+        /* 按钮组 */
+        .action-nebula {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--space-xxl);
+            padding-top: var(--space-xl);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .btn-cosmic {
+            padding: var(--space-md) var(--space-xl);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 1rem;
+        }
+        
+        .btn-cosmic-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .btn-cosmic-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-cosmic-primary {
+            background: linear-gradient(135deg, var(--nebula-cyan), var(--nova-coral));
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 245, 255, 0.3);
+        }
+        
+        .btn-cosmic-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 245, 255, 0.4);
+        }
+        
+        /* 收益图表区域 */
+        .revenue-constellation {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-lg);
+            margin-bottom: var(--space-xl);
+        }
+        
+        .revenue-star {
+            background: linear-gradient(145deg, rgba(26, 26, 58, 0.8), rgba(10, 10, 26, 0.9));
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .revenue-star:hover {
+            transform: translateY(-5px);
+            border-color: var(--nebula-cyan);
+            box-shadow: 0 10px 30px rgba(0, 245, 255, 0.1);
+        }
+        
+        .revenue-amount {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .revenue-token {
+            font-size: 0.9rem;
+            color: var(--text-tertiary);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .revenue-change {
+            font-size: 0.85rem;
+            color: var(--star-success);
+        }
+        
+        /* 标签输入 */
+        .tag-nebula {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-sm);
+            padding: var(--space-md);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            min-height: 60px;
+        }
+        
+        .tag-particle {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: 8px 16px;
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.2), rgba(255, 107, 157, 0.2));
+            border-radius: var(--radius-full);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            animation: tag-float 3s ease-in-out infinite;
+        }
+        
+        @keyframes tag-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+        
+        .tag-input {
+            flex: 1;
+            min-width: 120px;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .binary-system {
+                grid-template-columns: 1fr;
+            }
+            
+            .revenue-constellation {
+                grid-template-columns: 1fr;
+            }
+            
+            .constellation-grid {
+                grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .cosmic-container {
+                padding: 100px var(--space-md) var(--space-xxl);
+            }
+            
+            .nav-constellation {
+                display: none;
+            }
+            
+            .orbit-track {
+                flex-direction: column;
+                gap: var(--space-lg);
+            }
+            
+            .orbit-track::before {
+                display: none;
+            }
+            
+            .constellation-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nebula-form {
+                padding: var(--space-xl);
+            }
+        }
+        
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--void-deep);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--nebula-cyan), var(--nova-coral));
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--nebula-blue), var(--nova-pink));
+        }
+        
+        /* 音频可视化装饰 */
+        .audio-visualizer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.3;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 4px;
+            padding: 0 var(--space-xl);
+        }
+        
+        .audio-bar {
+            width: 4px;
+            background: linear-gradient(to top, var(--nebula-cyan), var(--nova-coral));
+            border-radius: 2px;
+            animation: audio-dance 1s ease-in-out infinite;
+        }
+        
+        @keyframes audio-dance {
+            0%, 100% { height: 20%; }
+            50% { height: 80%; }
+        }
+        
+        /* 成功状态 - 超新星爆发 */
+        .supernova-success {
+            text-align: center;
+            padding: var(--space-xxxl);
+        }
+        
+        .success-explosion {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 0 auto var(--space-xl);
+            background: radial-gradient(circle, var(--star-success), transparent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            animation: explosion 2s ease-out infinite;
+        }
+        
+        @keyframes explosion {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 60px var(--star-success); }
+            100% { transform: scale(0.8); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Three.js Canvas -->
+    <canvas id="universe-canvas"></canvas>
+    
+    <!-- 辉光覆盖层 -->
+    <div class="glow-overlay"></div>
+    
+    <!-- 音频可视化装饰 -->
+    <div class="audio-visualizer">
+        <!-- 由JS生成音频条 -->
+    </div>
+    
+    <!-- 导航栏 -->
+    <nav class="cosmic-nav">
+        <div class="nav-container">
+            <a href="#" class="logo-orbit">
+                <div class="logo-star">♪</div>
+                <div class="logo-text">Echo<span>Compose</span></div>
+            </a>
+            
+            <div class="nav-constellation">
+                <a href="#discover" class="nav-link">发现</a>
+                <a href="#market" class="nav-link">市场</a>
+                <a href="#create" class="nav-link active">创作</a>
+                <a href="#cooperate" class="nav-link">合作</a>
+                <a href="#assets" class="nav-link">我的资产</a>
+                <a href="#community" class="nav-link">社区</a>
+            </div>
+            
+            <div class="user-quantum">
+                <div class="quantum-avatar">M</div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 主内容 -->
+    <main class="cosmic-container">
+        <!-- 英雄区域 -->
+        <section class="supernova-hero" id="hero">
+            <h1 class="hero-title">
+                <span class="line">在音乐宇宙中</span>
+                <span class="line">铸造你的数字资产</span>
+            </h1>
+            <p class="hero-subtitle">
+                Echo Compose 是下一代音乐创作平台，融合区块链技术，
+                让每一首原创作品都成为可追溯、可衍生的数字宇宙资产
+            </p>
+            
+            <!-- 双入口 -->
+            <div class="binary-system">
+                <div class="creation-planet original">
+                    <div class="planet-core">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h2 class="planet-title">原创资产</h2>
+                    <p class="planet-description">从零开始创造全新的音乐宇宙，成为原创星系的主宰者</p>
+                    <div class="planet-features">
+                        <div class="feature-orbit">
+                            <i class="fas fa-check-circle"></i>
+                            <span>完整版权与所有权</span>
+                        </div>
+                        <div class="feature-orbit">
+                            <i class="fas fa-check-circle"></i>
+                            <span>自定义播放/下载费用</span>
+                        </div>
+                        <div class="feature-orbit">
+                            <i class="fas fa-check-circle"></i>
+                            <span>衍生作品授权收益</span>
+                        </div>
+                        <div class="feature-orbit">
+                            <i class="fas fa-check-circle"></i>
+                            <span>永久上链，不可篡改</span>
+                        </div>
+                    </div>
+                    <button class="planet-cta" onclick="showCreateForm('original')">
+                        <i class="fas fa-plus-circle"></i>
+                        开始原创创作
+                    </button>
+                </div>
+                
+                <div class="creation-planet derivative">
+                    <div class="planet-core">
+                        <i class="fas fa-code-branch"></i>
+                    </div>
+                    <h2 class="planet-title">衍生资产</h2>
+                    <p class="planet-description">基于已有作品进行二次创作，与原创者共建音乐生态</p>
+                    <div class="planet-features">
+                        <div class="feature-orbit">
+                            <i class="fas fa-check-circle"></i>
+                            <span>基于授权原创作品</span>
+                        </div>
+                        <div class="feature-orbit">
+                            <i class="fas fa-check-circle"></i>
+                            <span>自动遵守收益设置</span>
+                        </div>
+                        <div class="feature-orbit">
+                            <i class="fas fa-check-circle"></i>
+                            <span>清晰的血缘关系</span>
+                        </div>
+                        <div class="feature-orbit">
+                            <i class="fas fa-check-circle"></i>
+                            <span>灵活的二次授权</span>
+                        </div>
+                    </div>
+                    <button class="planet-cta" onclick="showCreateForm('derivative')">
+                        <i class="fas fa-magic"></i>
+                        探索衍生创作
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 创作流程 -->
+        <section class="galaxy-section" id="create">
+            <div class="section-header">
+                <h2 class="section-title">创作流程</h2>
+                <p class="section-subtitle">四步完成你的音乐资产上链，开启数字创作之旅</p>
+            </div>
+            
+            <!-- 步骤轨道 -->
+            <div class="orbit-track">
+                <div class="orbit-node active" data-step="1">
+                    <div class="node-body">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <span class="node-label">上传文件</span>
+                </div>
+                <div class="orbit-node" data-step="2">
+                    <div class="node-body">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <span class="node-label">权利配置</span>
+                </div>
+                <div class="orbit-node" data-step="3">
+                    <div class="node-body">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <span class="node-label">收益分配</span>
+                </div>
+                <div class="orbit-node" data-step="4">
+                    <div class="node-body">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <span class="node-label">确认生成</span>
+                </div>
+            </div>
+            
+            <!-- 表单星云 -->
+            <div class="nebula-form">
+                <!-- 步骤1: 上传 -->
+                <div class="form-sector active" id="step-1">
+                    <h3 class="sector-title">
+                        <i class="fas fa-upload"></i>
+                        上传音乐文件
+                    </h3>
+                    <p class="sector-subtitle">支持 MP3, WAV, FLAC 格式，最大 100MB</p>
+                    
+                    <div class="wormhole-upload">
+                        <div class="wormhole-icon">
+                            <i class="fas fa-compact-disc"></i>
+                        </div>
+                        <p class="wormhole-text">拖拽文件到此处或点击上传</p>
+                        <p class="wormhole-hint">支持批量上传多个文件</p>
+                    </div>
+                    
+                    <div class="energy-field" style="margin-top: var(--space-xl);">
+                        <label class="field-label">作品名称 <span class="required">*</span></label>
+                        <input type="text" class="field-input" placeholder="给你的音乐作品起个名字">
+                    </div>
+                    
+                    <div class="energy-field">
+                        <label class="field-label">作品描述</label>
+                        <textarea class="field-input field-textarea" placeholder="描述一下你的创作灵感和故事..."></textarea>
+                    </div>
+                    
+                    <div class="energy-field">
+                        <label class="field-label">标签</label>
+                        <div class="tag-nebula">
+                            <span class="tag-particle">电子 <i class="fas fa-times"></i></span>
+                            <span class="tag-particle">氛围 <i class="fas fa-times"></i></span>
+                            <input type="text" class="tag-input" placeholder="添加标签...">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 步骤2: 权利配置 -->
+                <div class="form-sector" id="step-2">
+                    <h3 class="sector-title">
+                        <i class="fas fa-shield-alt"></i>
+                        权利蓝图配置
+                    </h3>
+                    <p class="sector-subtitle">设置你的作品使用权限和授权条款</p>
+                    
+                    <div class="quantum-switches">
+                        <div class="quantum-switch">
+                            <div class="switch-info">
+                                <h4>允许免费试听</h4>
+                                <p>用户可以免费播放完整作品</p>
+                            </div>
+                            <label class="switch-control">
+                                <input type="checkbox" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="quantum-switch">
+                            <div class="switch-info">
+                                <h4>允许下载</h4>
+                                <p>用户可以下载音频文件到本地</p>
+                            </div>
+                            <label class="switch-control">
+                                <input type="checkbox" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="quantum-switch">
+                            <div class="switch-info">
+                                <h4>允许衍生创作</h4>
+                                <p>其他创作者可以基于你的作品进行二创</p>
+                            </div>
+                            <label class="switch-control">
+                                <input type="checkbox" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="quantum-switch">
+                            <div class="switch-info">
+                                <h4>商业使用授权</h4>
+                                <p>允许商业项目使用该音乐</p>
+                            </div>
+                            <label class="switch-control">
+                                <input type="checkbox">
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 步骤3: 收益分配 -->
+                <div class="form-sector" id="step-3">
+                    <h3 class="sector-title">
+                        <i class="fas fa-chart-pie"></i>
+                        收益分配设置
+                    </h3>
+                    <p class="sector-subtitle">配置播放、下载和衍生授权的收益分配</p>
+                    
+                    <div class="revenue-constellation">
+                        <div class="revenue-star">
+                            <div class="revenue-amount">0.001</div>
+                            <div class="revenue-token">ETH / 播放</div>
+                            <div class="revenue-change">≈ $2.5</div>
+                        </div>
+                        <div class="revenue-star">
+                            <div class="revenue-amount">0.01</div>
+                            <div class="revenue-token">ETH / 下载</div>
+                            <div class="revenue-change">≈ $25</div>
+                        </div>
+                        <div class="revenue-star">
+                            <div class="revenue-amount">5%</div>
+                            <div class="revenue-token">衍生授权费</div>
+                            <div class="revenue-change">最低底线</div>
+                        </div>
+                    </div>
+                    
+                    <div class="energy-field">
+                        <label class="field-label">自定义播放费用 (ETH)</label>
+                        <input type="number" class="field-input" placeholder="0.001" step="0.0001">
+                    </div>
+                    
+                    <div class="energy-field">
+                        <label class="field-label">自定义下载费用 (ETH)</label>
+                        <input type="number" class="field-input" placeholder="0.01" step="0.001">
+                    </div>
+                    
+                    <div class="energy-field">
+                        <label class="field-label">衍生收益底线 (%)</label>
+                        <input type="range" class="field-input" min="0" max="100" value="5">
+                    </div>
+                </div>
+                
+                <!-- 步骤4: 确认 -->
+                <div class="form-sector" id="step-4">
+                    <div class="supernova-success">
+                        <div class="success-explosion">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <h3 class="sector-title" style="justify-content: center;">
+                            创作即将完成！
+                        </h3>
+                        <p class="sector-subtitle" style="text-align: center;">
+                            确认以下信息，你的音乐资产将被铸造上链
+                        </p>
+                        
+                        <div style="background: rgba(255,255,255,0.03); padding: var(--space-xl); border-radius: var(--radius-md); margin-top: var(--space-xl);">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); text-align: left;">
+                                <div>
+                                    <p style="color: var(--text-tertiary); font-size: 0.9rem;">作品名称</p>
+                                    <p style="color: var(--text-primary); font-weight: 600;">夏日旋律</p>
+                                </div>
+                                <div>
+                                    <p style="color: var(--text-tertiary); font-size: 0.9rem;">资产类型</p>
+                                    <p style="color: var(--nebula-cyan); font-weight: 600;">原创资产</p>
+                                </div>
+                                <div>
+                                    <p style="color: var(--text-tertiary); font-size: 0.9rem;">播放费用</p>
+                                    <p style="color: var(--text-primary); font-weight: 600;">0.001 ETH</p>
+                                </div>
+                                <div>
+                                    <p style="color: var(--text-tertiary); font-size: 0.9rem;">衍生底线</p>
+                                    <p style="color: var(--text-primary); font-weight: 600;">5%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 按钮组 -->
+                <div class="action-nebula">
+                    <button class="btn-cosmic btn-cosmic-secondary" onclick="prevStep()">
+                        <i class="fas fa-arrow-left"></i>
+                        上一步
+                    </button>
+                    <button class="btn-cosmic btn-cosmic-primary" onclick="nextStep()">
+                        下一步
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 我的资产 -->
+        <section class="galaxy-section" id="assets">
+            <div class="section-header">
+                <h2 class="section-title">我的资产星系</h2>
+                <p class="section-subtitle">管理你的所有音乐资产，追踪收益和使用权</p>
+            </div>
+            
+            <div class="constellation-grid">
+                <div class="star-card original">
+                    <div class="star-content">
+                        <div class="star-header">
+                            <div class="star-title-group">
+                                <h3>夏日旋律</h3>
+                                <span class="star-id">ECHO-2023-SU001</span>
+                            </div>
+                            <span class="star-badge">原创</span>
+                        </div>
+                        <p style="color: var(--text-tertiary); margin-bottom: var(--space-lg);">
+                            轻快明亮的夏季流行曲，融合电子元素
+                        </p>
+                        <div class="star-stats">
+                            <div class="star-stat">
+                                <span class="stat-number">2.4K</span>
+                                <span class="stat-label">播放</span>
+                            </div>
+                            <div class="star-stat">
+                                <span class="stat-number">156</span>
+                                <span class="stat-label">下载</span>
+                            </div>
+                            <div class="star-stat">
+                                <span class="stat-number">8</span>
+                                <span class="stat-label">衍生</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="star-card derivative">
+                    <div class="star-content">
+                        <div class="star-header">
+                            <div class="star-title-group">
+                                <h3>夏日变奏 Remix</h3>
+                                <span class="star-id">ECHO-2023-SU001-D1</span>
+                            </div>
+                            <span class="star-badge">衍生</span>
+                        </div>
+                        <p style="color: var(--text-tertiary); margin-bottom: var(--space-lg);">
+                            基于「夏日旋律」的电子舞曲改编版本
+                        </p>
+                        <div class="star-stats">
+                            <div class="star-stat">
+                                <span class="stat-number">890</span>
+                                <span class="stat-label">播放</span>
+                            </div>
+                            <div class="star-stat">
+                                <span class="stat-number">45</span>
+                                <span class="stat-label">下载</span>
+                            </div>
+                            <div class="star-stat">
+                                <span class="stat-number">2</span>
+                                <span class="stat-label">衍生</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="star-card original">
+                    <div class="star-content">
+                        <div class="star-header">
+                            <div class="star-title-group">
+                                <h3>城市夜行</h3>
+                                <span class="star-id">ECHO-2023-CT001</span>
+                            </div>
+                            <span class="star-badge">原创</span>
+                        </div>
+                        <p style="color: var(--text-tertiary); margin-bottom: var(--space-lg);">
+                            深夜都市的氛围音乐，适合冥想和放松
+                        </p>
+                        <div class="star-stats">
+                            <div class="star-stat">
+                                <span class="stat-number">1.8K</span>
+                                <span class="stat-label">播放</span>
+                            </div>
+                            <div class="star-stat">
+                                <span class="stat-number">98</span>
+                                <span class="stat-label">下载</span>
+                            </div>
+                            <div class="star-stat">
+                                <span class="stat-number">5</span>
+                                <span class="stat-label">衍生</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="star-card derivative">
+                    <div class="star-content">
+                        <div class="star-header">
+                            <div class="star-title-group">
+                                <h3>城市夜行 Lofi版</h3>
+                                <span class="star-id">ECHO-2023-CT001-D1</span>
+                            </div>
+                            <span class="star-badge">衍生</span>
+                        </div>
+                        <p style="color: var(--text-tertiary); margin-bottom: var(--space-lg);">
+                            慢节奏的Lofi改编，适合学习和工作
+                        </p>
+                        <div class="star-stats">
+                            <div class="star-stat">
+                                <span class="stat-number">760</span>
+                                <span class="stat-label">播放</span>
+                            </div>
+                            <div class="star-stat">
+                                <span class="stat-number">38</span>
+                                <span class="stat-label">下载</span>
+                            </div>
+                            <div class="star-stat">
+                                <span class="stat-number">1</span>
+                                <span class="stat-label">衍生</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 合作申请 -->
+        <section class="galaxy-section" id="cooperate">
+            <div class="section-header">
+                <h2 class="section-title">合作申请中心</h2>
+                <p class="section-subtitle">管理免费播放申请和衍生作品审核</p>
+            </div>
+            
+            <div class="constellation-grid">
+                <div class="comet-card">
+                    <div class="comet-header">
+                        <div class="comet-avatar">ML</div>
+                        <div>
+                            <h4 style="color: var(--text-primary); margin-bottom: 4px;">音乐实验室</h4>
+                            <p style="color: var(--text-tertiary); font-size: 0.85rem;">申请衍生授权</p>
+                        </div>
+                        <span class="comet-status status-pending">待处理</span>
+                    </div>
+                    <p style="color: var(--text-tertiary); margin-bottom: var(--space-md);">
+                        希望基于「夏日旋律」创作Remix版本
+                    </p>
+                    <div style="display: flex; gap: var(--space-sm);">
+                        <button class="btn-cosmic btn-cosmic-secondary" style="flex: 1;">拒绝</button>
+                        <button class="btn-cosmic btn-cosmic-primary" style="flex: 1;">同意</button>
+                    </div>
+                </div>
+                
+                <div class="comet-card">
+                    <div class="comet-header">
+                        <div class="comet-avatar">US</div>
+                        <div>
+                            <h4 style="color: var(--text-primary); margin-bottom: 4px;">都市音景</h4>
+                            <p style="color: var(--text-tertiary); font-size: 0.85rem;">申请免费播放</p>
+                        </div>
+                        <span class="comet-status status-approved">已同意</span>
+                    </div>
+                    <p style="color: var(--text-tertiary); margin-bottom: var(--space-md);">
+                        希望在直播中使用「城市夜行」作为背景音乐
+                    </p>
+                    <div style="display: flex; gap: var(--space-sm);">
+                        <button class="btn-cosmic btn-cosmic-secondary" style="flex: 1;">查看详情</button>
+                    </div>
+                </div>
+                
+                <div class="comet-card">
+                    <div class="comet-header">
+                        <div class="comet-avatar">DM</div>
+                        <div>
+                            <h4 style="color: var(--text-primary); margin-bottom: 4px;">深海音乐家</h4>
+                            <p style="color: var(--text-tertiary); font-size: 0.85rem;">申请免费播放</p>
+                        </div>
+                        <span class="comet-status status-pending">待处理</span>
+                    </div>
+                    <p style="color: var(--text-tertiary); margin-bottom: var(--space-md);">
+                        希望在冥想应用中使用「深海回响」
+                    </p>
+                    <div style="display: flex; gap: var(--space-sm);">
+                        <button class="btn-cosmic btn-cosmic-secondary" style="flex: 1;">拒绝</button>
+                        <button class="btn-cosmic btn-cosmic-primary" style="flex: 1;">同意</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <script>
+        // Three.js 宇宙背景
+        const initUniverse = () => {
+            const canvas = document.getElementById('universe-canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            
+            // 创建星空粒子
+            const starsGeometry = new THREE.BufferGeometry();
+            const starsCount = 3000;
+            const posArray = new Float32Array(starsCount * 3);
+            const colorArray = new Float32Array(starsCount * 3);
+            
+            for(let i = 0; i < starsCount * 3; i += 3) {
+                // 位置
+                posArray[i] = (Math.random() - 0.5) * 2000;
+                posArray[i+1] = (Math.random() - 0.5) * 2000;
+                posArray[i+2] = (Math.random() - 0.5) * 2000;
+                
+                // 颜色 - 混合蓝青和粉紫
+                const colorChoice = Math.random();
+                if (colorChoice < 0.5) {
+                    // 蓝青色调
+                    colorArray[i] = 0;
+                    colorArray[i+1] = 0.8 + Math.random() * 0.2;
+                    colorArray[i+2] = 1;
+                } else {
+                    // 粉紫色调
+                    colorArray[i] = 1;
+                    colorArray[i+1] = 0.2 + Math.random() * 0.4;
+                    colorArray[i+2] = 0.6 + Math.random() * 0.4;
+                }
+            }
+            
+            starsGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            starsGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+            
+            const starsMaterial = new THREE.PointsMaterial({
+                size: 3,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+            
+            const starsMesh = new THREE.Points(starsGeometry, starsMaterial);
+            scene.add(starsMesh);
+            
+            // 添加音乐符号粒子
+            const notesGeometry = new THREE.BufferGeometry();
+            const notesCount = 100;
+            const notesPos = new Float32Array(notesCount * 3);
+            const notesVelocity = [];
+            
+            for(let i = 0; i < notesCount; i++) {
+                notesPos[i*3] = (Math.random() - 0.5) * 1000;
+                notesPos[i*3+1] = (Math.random() - 0.5) * 1000;
+                notesPos[i*3+2] = (Math.random() - 0.5) * 1000;
+                notesVelocity.push({
+                    x: (Math.random() - 0.5) * 0.5,
+                    y: (Math.random() - 0.5) * 0.5,
+                    z: (Math.random() - 0.5) * 0.5
+                });
+            }
+            
+            notesGeometry.setAttribute('position', new THREE.BufferAttribute(notesPos, 3));
+            
+            const notesMaterial = new THREE.PointsMaterial({
+                size: 8,
+                color: 0x00F5FF,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending
+            });
+            
+            const notesMesh = new THREE.Points(notesGeometry, notesMaterial);
+            scene.add(notesMesh);
+            
+            camera.position.z = 500;
+            
+            // 动画循环
+            let time = 0;
+            const animate = () => {
+                requestAnimationFrame(animate);
+                time += 0.001;
+                
+                // 星空缓慢旋转
+                starsMesh.rotation.y += 0.0002;
+                starsMesh.rotation.x += 0.0001;
+                
+                // 音乐符号漂浮
+                const positions = notesMesh.geometry.attributes.position.array;
+                for(let i = 0; i < notesCount; i++) {
+                    positions[i*3] += notesVelocity[i].x + Math.sin(time + i) * 0.1;
+                    positions[i*3+1] += notesVelocity[i].y + Math.cos(time + i) * 0.1;
+                    positions[i*3+2] += notesVelocity[i].z;
+                    
+                    // 边界检查
+                    if(Math.abs(positions[i*3]) > 500) notesVelocity[i].x *= -1;
+                    if(Math.abs(positions[i*3+1]) > 500) notesVelocity[i].y *= -1;
+                    if(Math.abs(positions[i*3+2]) > 500) notesVelocity[i].z *= -1;
+                }
+                notesMesh.geometry.attributes.position.needsUpdate = true;
+                notesMesh.rotation.y -= 0.0005;
+                
+                renderer.render(scene, camera);
+            };
+            
+            animate();
+            
+            // 响应窗口大小
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            
+            // 鼠标交互
+            let mouseX = 0, mouseY = 0;
+            document.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+                mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+                
+                starsMesh.rotation.y += mouseX * 0.0001;
+                starsMesh.rotation.x += mouseY * 0.0001;
+            });
+        };
+        
+        // 初始化
+        initUniverse();
+        
+        // 音频可视化条生成
+        const audioVisualizer = document.querySelector('.audio-visualizer');
+        for(let i = 0; i < 50; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'audio-bar';
+            bar.style.animationDelay = `${i * 0.05}s`;
+            bar.style.height = `${Math.random() * 60 + 20}%`;
+            audioVisualizer.appendChild(bar);
+        }
+        
+        // 步骤控制
+        let currentStep = 1;
+        const totalSteps = 4;
+        
+        function updateSteps() {
+            // 更新轨道节点
+            document.querySelectorAll('.orbit-node').forEach((node, index) => {
+                const stepNum = index + 1;
+                node.classList.remove('active', 'completed');
+                if (stepNum < currentStep) {
+                    node.classList.add('completed');
+                } else if (stepNum === currentStep) {
+                    node.classList.add('active');
+                }
+            });
+            
+            // 更新表单区域
+            document.querySelectorAll('.form-sector').forEach((sector, index) => {
+                sector.classList.remove('active');
+                if (index + 1 === currentStep) {
+                    sector.classList.add('active');
+                }
+            });
+            
+            // 更新按钮文本
+            const nextBtn = document.querySelector('.btn-cosmic-primary');
+            if (currentStep === totalSteps) {
+                nextBtn.innerHTML = '确认铸造 <i class="fas fa-rocket"></i>';
+            } else {
+                nextBtn.innerHTML = '下一步 <i class="fas fa-arrow-right"></i>';
+            }
+        }
+        
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateSteps();
+            } else {
+                alert('🎉 恭喜你！你的音乐资产已成功铸造上链！');
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateSteps();
+            }
+        }
+        
+        // 点击轨道节点跳转
+        document.querySelectorAll('.orbit-node').forEach((node, index) => {
+            node.addEventListener('click', () => {
+                currentStep = index + 1;
+                updateSteps();
+            });
+        });
+        
+        // 行星点击效果
+        function showCreateForm(type) {
+            document.getElementById('create').scrollIntoView({ behavior: 'smooth' });
+            // 可以在这里添加表单类型的切换逻辑
+        }
+        
+        // 标签输入
+        document.querySelectorAll('.tag-input').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && input.value.trim()) {
+                    const tag = document.createElement('span');
+                    tag.className = 'tag-particle';
+                    tag.innerHTML = `${input.value.trim()} <i class="fas fa-times"></i>`;
+                    input.parentElement.insertBefore(tag, input);
+                    input.value = '';
+                    
+                    // 删除标签
+                    tag.querySelector('i').addEventListener('click', () => tag.remove());
+                }
+            });
+        });
+        
+        // 平滑滚动导航
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href').substring(1);
+                const target = document.getElementById(targetId);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                    
+                    // 更新活跃状态
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                }
+            });
+        });
+        
+        // 滚动时更新导航
+        window.addEventListener('scroll', () => {
+            const sections = ['hero', 'create', 'assets', 'cooperate'];
+            const scrollPos = window.scrollY + 200;
+            
+            sections.forEach(id => {
+                const section = document.getElementById(id);
+                if (section) {
+                    const top = section.offsetTop;
+                    const bottom = top + section.offsetHeight;
+                    
+                    if (scrollPos >= top && scrollPos < bottom) {
+                        document.querySelectorAll('.nav-link').forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

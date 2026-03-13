@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo Compose 2.0 - 液态金属版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0A0A0F;
+            color: #fff;
+            overflow: hidden;
+            min-height: 100vh;
+        }
+
+        /* ===== 粒子背景 ===== */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* ===== 页面容器 ===== */
+        .page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            z-index: 1;
+        }
+
+        .page.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ===== 液态 Logo ===== */
+        .liquid-logo {
+            font-size: clamp(3rem, 10vw, 8rem);
+            font-weight: 100;
+            letter-spacing: 0.3em;
+            background: linear-gradient(135deg, #C0C0C0 0%, #FFFFFF 50%, #C0C0C0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 60px rgba(192, 192, 192, 0.5);
+            animation: breathe 3s ease-in-out infinite;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        .liquid-logo::before {
+            content: 'ECHO';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.8) 50%, transparent 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s ease-in-out infinite;
+            background-size: 200% 100%;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.02); opacity: 1; }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -100% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* ===== 入口按钮 ===== */
+        .portal-container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .portal-btn {
+            width: 200px;
+            height: 280px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(192, 192, 192, 0.2);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portal-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(0,212,255,0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.6s ease;
+        }
+
+        .portal-btn:hover {
+            transform: scale(1.05) translateY(-10px);
+            border-color: rgba(0,212,255,0.5);
+            box-shadow: 0 20px 60px rgba(0,212,255,0.2);
+        }
+
+        .portal-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .portal-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            filter: grayscale(100%) brightness(1.5);
+            transition: all 0.3s;
+        }
+
+        .portal-btn:hover .portal-icon {
+            filter: grayscale(0%) brightness(1);
+            transform: scale(1.1);
+        }
+
+        .portal-title {
+            font-size: 1.5rem;
+            font-weight: 300;
+            letter-spacing: 0.2em;
+            margin-bottom: 8px;
+        }
+
+        .portal-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 0.1em;
+        }
+
+        /* ===== 工作室页面 ===== */
+        .studio-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+        }
+
+        .studio-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 15px 25px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 10px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .back-btn:hover {
+            opacity: 1;
+        }
+
+        .mode-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #00D4FF;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+        }
+
+        .studio-main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            min-height: 0;
+        }
+
+        /* 声纹可视化区域 */
+        .waveform-area {
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .waveform-canvas {
+            width: 90%;
+            height: 200px;
+        }
+
+        .record-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF4757 0%, #FF6B9D 100%);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-top: 30px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 40px rgba(255,71,87,0.4);
+        }
+
+        .record-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 50px rgba(255,71,87,0.6);
+        }
+
+        .record-btn.recording {
+            animation: pulse-red 1s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 10px 40px rgba(255,71,87,0.4); }
+            50% { box-shadow: 0 20px 60px rgba(255,71,87,0.8); }
+        }
+
+        /* 参数面板 */
+        .params-panel {
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .param-group {
+            margin-bottom: 25px;
+        }
+
+        .param-label {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .param-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .param-input:focus {
+            outline: none;
+            border-color: #00D4FF;
+        }
+
+        /* 情绪滑块 */
+        .mood-slider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .mood-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #00D4FF 0%, #00FF88 100%);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* 液态生成按钮 */
+        .generate-area {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .liquid-generate-btn {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #C0C0C0 0%, #FFFFFF 25%, #C0C0C0 50%, #808080 100%);
+            border: none;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 0 60px rgba(192,192,192,0.3),
+                inset 0 0 60px rgba(255,255,255,0.5);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .liquid-generate-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(transparent, rgba(255,255,255,0.8), transparent, rgba(0,212,255,0.3), transparent);
+            animation: rotate 4s linear infinite;
+        }
+
+        .liquid-generate-btn::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background: linear-gradient(135deg, #2a2a3a 0%, #1a1a2e 100%);
+            border-radius: 50%;
+        }
+
+        @keyframes rotate {
+            to { transform: rotate(360deg); }
+        }
+
+        .liquid-generate-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 
+                0 0 80px rgba(0,212,255,0.5),
+                inset 0 0 60px rgba(255,255,255,0.5);
+        }
+
+        .liquid-generate-btn.generating {
+            animation: liquid-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes liquid-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+        }
+
+        .btn-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .btn-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .btn-text {
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            color: #C0C0C0;
+        }
+
+        .btn-progress {
+            position: absolute;
+            z-index: 1;
+            font-size: 2.5rem;
+            font-weight: 100;
+            color: #00D4FF;
+            display: none;
+        }
+
+        .liquid-generate-btn.generating .btn-content {
+            display: none;
+        }
+
+        .liquid-generate-btn.generating .btn-progress {
+            display: block;
+        }
+
+        /* ===== 星系市场 ===== */
+        .universe-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .universe-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 25px;
+            margin-bottom: 20px;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 400px;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 25px;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9rem;
+        }
+
+        .universe-view {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            background: radial-gradient(ellipse at center, rgba(0,212,255,0.1) 0%, transparent 50%);
+        }
+
+        /* 星系轨道 */
+        .galaxy {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+        }
+
+        .orbit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+
+        .orbit-1 { width: 200px; height: 200px; animation: orbit-rotate 20s linear infinite; }
+        .orbit-2 { width: 350px; height: 350px; animation: orbit-rotate 30s linear infinite reverse; }
+        .orbit-3 { width: 500px; height: 500px; animation: orbit-rotate 40s linear infinite; }
+
+        @keyframes orbit-rotate {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .planet {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        .planet:hover {
+            transform: scale(1.3);
+        }
+
+        .planet-1 {
+            background: linear-gradient(135deg, #6B5CE7, #00D4FF);
+            color: #00D4FF;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .planet-2 {
+            background: linear-gradient(135deg, #FF6B9D, #FFB800);
+            color: #FF6B9D;
+            top: 50%;
+            right: -25px;
+            transform: translateY(-50%);
+        }
+
+        .planet-3 {
+            background: linear-gradient(135deg, #00FF88, #00D4FF);
+            color: #00FF88;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .center-star {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #FFFFFF 0%, #C0C0C0 30%, transparent 70%);
+            border-radius: 50%;
+            box-shadow: 0 0 60px rgba(255,255,255,0.5);
+            animation: star-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes star-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
+        }
+
+        /* 底部作品卡片 */
+        .works-slider {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+        }
+
+        .work-card {
+            flex: 0 0 280px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            scroll-snap-align: start;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .work-card:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-5px);
+        }
+
+        .work-title {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .work-artist {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 15px;
+        }
+
+        .work-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .work-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(0,212,255,0.1);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: #00D4FF;
+            margin-bottom: 10px;
+        }
+
+        /* ===== 作品详情页 ===== */
+        .detail-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .detail-waveform {
+            height: 300px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .play-btn-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00D4FF, #00FF88);
+            border: none;
+            cursor: pointer;
+            font-size: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 40px rgba(0,212,255,0.4);
+            transition: all 0.3s;
+        }
+
+        .play-btn-large:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 50px rgba(0,212,255,0.6);
+        }
+
+        .detail-info {
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .detail-title {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .detail-meta {
+            display: flex;
+            gap: 20px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 15px;
+        }
+
+        .detail-desc {
+            color: rgba(255,255,255,0.5);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .detail-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .action-btn {
+            padding: 12px 30px;
+            border-radius: 25px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #00D4FF, #00FF88);
+            border: none;
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        /* ===== 导航小圆点 ===== */
+        .nav-dots {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-dot.active {
+            background: #00D4FF;
+            box-shadow: 0 0 10px #00D4FF;
+            transform: scale(1.3);
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 900px) {
+            .studio-main {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr auto;
+            }
+            
+            .params-panel {
+                max-height: 300px;
+            }
+            
+            .galaxy {
+                width: 300px;
+                height: 300px;
+            }
+            
+            .orbit-1 { width: 100px; height: 100px; }
+            .orbit-2 { width: 175px; height: 175px; }
+            .orbit-3 { width: 250px; height: 250px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 粒子背景 -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- 导航圆点 -->
+    <div class="nav-dots">
+        <div class="nav-dot active" data-page="landing"></div>
+        <div class="nav-dot" data-page="studio"></div>
+        <div class="nav-dot" data-page="universe"></div>
+        <div class="nav-dot" data-page="detail"></div>
+    </div>
+
+    <!-- ===== 页面 1: 声波门户 ===== -->
+    <div class="page active" id="landing">
+        <div class="liquid-logo">ECHO</div>
+        <div class="portal-container">
+            <div class="portal-btn" onclick="enterStudio('original')">
+                <span class="portal-icon">🎵</span>
+                <div class="portal-title">原创</div>
+                <div class="portal-subtitle">CREATE</div>
+            </div>
+            <div class="portal-btn" onclick="enterStudio('remix')">
+                <span class="portal-icon">🎭</span>
+                <div class="portal-title">衍生</div>
+                <div class="portal-subtitle">REMIX</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 页面 2: 创作空间 ===== -->
+    <div class="page" id="studio">
+        <div class="studio-container">
+            <div class="studio-header">
+                <button class="back-btn" onclick="goBack()">← 返回</button>
+                <div class="mode-indicator">
+                    <span id="mode-icon">🎵</span>
+                    <span id="mode-text">原创模式</span>
+                </div>
+                <div>
+                    <button class="back-btn" onclick="showPage('universe')">🌐 市场</button>
+                </div>
+            </div>
+            <div class="studio-main">
+                <div class="waveform-area">
+                    <canvas class="waveform-canvas" id="studio-waveform"></canvas>
+                    <button class="record-btn" id="recordBtn" onclick="toggleRecord()">
+                        🎙️
+                    </button>
+                </div>
+                <div class="params-panel">
+                    <div class="param-group">
+                        <div class="param-label">风格 Style</div>
+                        <select class="param-input">
+                            <option>古典 Classical</option>
+                            <option>电子 Electronic</option>
+                            <option>流行 Pop</option>
+                            <option>爵士 Jazz</option>
+                            <option>摇滚 Rock</option>
+                        </select>
+                    </div>
+                    <div class="param-group">
+                        <div class="param-label">时长 Duration</div>
+                        <input type="text" class="param-input" value="02:30">
+                    </div>
+                    <div class="param-group">
+                        <div class="param-label">情绪 Mood</div>
+                        <div class="mood-slider">
+                            <span class="mood-label">忧伤</span>
+                            <input type="range" min="0" max="100" value="50">
+                            <span class="mood-label">欢快</span>
+                        </div>
+                    </div>
+                    <div class="param-group">
+                        <div class="param-label">乐器 Instruments</div>
+                        <input type="text" class="param-input" value="钢琴 + 弦乐">
+                    </div>
+                    <div class="param-group">
+                        <div class="param-label">音调 Key</div>
+                        <input type="text" class="param-input" value="C Major">
+                    </div>
+                </div>
+            </div>
+            <div class="generate-area">
+                <button class="liquid-generate-btn" id="generateBtn" onclick="generateAudio()">
+                    <div class="btn-content">
+                        <span class="btn-icon">✦</span>
+                        <span class="btn-text">生成音频</span>
+                    </div>
+                    <div class="btn-progress" id="progressText">0%</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 页面 3: 星系市场 ===== -->
+    <div class="page" id="universe">
+        <div class="universe-container">
+            <div class="universe-header">
+                <button class="back-btn" onclick="showPage('landing')">← 返回</button>
+                <input type="text" class="search-bar" placeholder="🔍 搜索作品...">
+                <button class="back-btn" onclick="showPage('detail')">👤 我的</button>
+            </div>
+            <div class="universe-view">
+                <div class="galaxy">
+                    <div class="orbit orbit-1">
+                        <div class="planet planet-1" onclick="showPage('detail')"></div>
+                    </div>
+                    <div class="orbit orbit-2">
+                        <div class="planet planet-2" onclick="showPage('detail')"></div>
+                    </div>
+                    <div class="orbit orbit-3">
+                        <div class="planet planet-3" onclick="showPage('detail')"></div>
+                    </div>
+                    <div class="center-star"></div>
+                </div>
+            </div>
+            <div class="works-slider">
+                <div class="work-card" onclick="showPage('detail')">
+                    <span class="work-tag">古典</span>
+                    <div class="work-title">月光奏鸣曲</div>
+                    <div class="work-artist">@BeethovenAI</div>
+                    <div class="work-stats">
+                        <span>▶ 12.5k</span>
+                        <span>💰 10</span>
+                        <span>♥ 892</span>
+                    </div>
+                </div>
+                <div class="work-card" onclick="showPage('detail')">
+                    <span class="work-tag" style="background: rgba(255,107,157,0.1); color: #FF6B9D;">电子</span>
+                    <div class="work-title">赛博脉冲</div>
+                    <div class="work-artist">@NeonBeats</div>
+                    <div class="work-stats">
+                        <span>▶ 8.3k</span>
+                        <span>💰 5</span>
+                        <span>♥ 456</span>
+                    </div>
+                </div>
+                <div class="work-card" onclick="showPage('detail')">
+                    <span class="work-tag" style="background: rgba(0,255,136,0.1); color: #00FF88;">流行</span>
+                    <div class="work-title">星空漫步</div>
+                    <div class="work-artist">@StarWalker</div>
+                    <div class="work-stats">
+                        <span>▶ 23.1k</span>
+                        <span>💰 8</span>
+                        <span>♥ 1.2k</span>
+                    </div>
+                </div>
+                <div class="work-card" onclick="enterStudio('remix')">
+                    <span class="work-tag" style="background: rgba(255,184,0,0.1); color: #FFB800;">+ 创作</span>
+                    <div class="work-title">创作衍生作品</div>
+                    <div class="work-artist">基于当前风格</div>
+                    <div class="work-stats">
+                        <span>点击开始创作 →</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 页面 4: 作品详情 ===== -->
+    <div class="page" id="detail">
+        <div class="detail-container">
+            <div class="studio-header">
+                <button class="back-btn" onclick="showPage('universe')">← 返回</button>
+                <div class="mode-indicator">
+                    <span>🎵 作品详情</span>
+                </div>
+                <button class="back-btn">⋮</button>
+            </div>
+            <div class="detail-waveform">
+                <canvas class="waveform-canvas" id="detail-waveform"></canvas>
+                <button class="play-btn-large" id="playBtn" onclick="togglePlay()">▶</button>
+            </div>
+            <div class="detail-info">
+                <div class="detail-title">月光奏鸣曲 · AI版</div>
+                <div class="detail-meta">
+                    <span>👤 @BeethovenAI</span>
+                    <span>📅 2026.03.11</span>
+                    <span>▶ 12.5k 播放</span>
+                </div>
+                <div class="detail-desc">
+                    创作灵感来自雨夜的玻璃窗，结合古典钢琴与现代电子音效，营造出一种穿越时空的诗意氛围。
+                </div>
+                <div class="detail-actions">
+                    <button class="action-btn primary">💰 10 tokens 购买</button>
+                    <button class="action-btn" onclick="enterStudio('remix')">🎭 创作衍生</button>
+                    <button class="action-btn">♥ 收藏</button>
+                </div>
+            </div>
+            <div class="detail-info">
+                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-bottom: 15px;">
+                    衍生作品 (3个)
+                </div>
+                <div class="works-slider">
+                    <div class="work-card" style="flex: 0 0 200px;" onclick="showPage('detail')">
+                        <div class="work-title">月光 · 电音版</div>
+                        <div class="work-artist">@ElectroFan</div>
+                    </div>
+                    <div class="work-card" style="flex: 0 0 200px;" onclick="showPage('detail')">
+                        <div class="work-title">月光 · 爵士版</div>
+                        <div class="work-artist">@JazzCat</div>
+                    </div>
+                    <div class="work-card" style="flex: 0 0 200px;" onclick="enterStudio('remix')">
+                        <div class="work-title" style="color: #00D4FF;">+ 创作衍生</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== 粒子背景系统 =====
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 0.5;
+                this.baseX = this.x;
+                this.baseY = this.y;
+                this.density = (Math.random() * 30) + 1;
+            }
+
+            update() {
+                // 鼠标交互
+                if (mouse.x != null) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < mouse.radius) {
+                        const forceDirectionX = dx / distance;
+                        const forceDirectionY = dy / distance;
+                        const force = (mouse.radius - distance) / mouse.radius;
+                        const directionX = forceDirectionX * force * this.density;
+                        const directionY = forceDirectionY * force * this.density;
+                        
+                        this.vx -= directionX * 0.02;
+                        this.vy -= directionY * 0.02;
+                    }
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // 边界检查
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+                // 阻尼
+                this.vx *= 0.99;
+                this.vy *= 0.99;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(192, 192, 192, 0.5)';
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const numberOfParticles = Math.min(100, (canvas.width * canvas.height) / 15000);
+            for (let i = 0; i < numberOfParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+        initParticles();
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制连线
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 100) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(0, 212, 255, ${0.1 * (1 - distance / 100)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+            
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+
+        window.addEventListener('mouseout', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        // ===== 页面切换 =====
+        let currentPage = 'landing';
+        let previousPage = 'landing';
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-dot').forEach(dot => {
+                dot.classList.remove('active');
+            });
+            
+            document.getElementById(pageId).classList.add('active');
+            document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+            
+            previousPage = currentPage;
+            currentPage = pageId;
+        }
+
+        function goBack() {
+            showPage(previousPage);
+        }
+
+        document.querySelectorAll('.nav-dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                showPage(dot.dataset.page);
+            });
+        });
+
+        // ===== 创作空间 =====
+        let currentMode = 'original';
+
+        function enterStudio(mode) {
+            currentMode = mode;
+            const icon = mode === 'original' ? '🎵' : '🎭';
+            const text = mode === 'original' ? '原创模式' : '衍生模式';
+            document.getElementById('mode-icon').textContent = icon;
+            document.getElementById('mode-text').textContent = text;
+            showPage('studio');
+        }
+
+        // ===== 声纹可视化 =====
+        function drawWaveform(canvasId, color = '#00D4FF', animate = false) {
+            const waveCanvas = document.getElementById(canvasId);
+            if (!waveCanvas) return;
+            
+            const waveCtx = waveCanvas.getContext('2d');
+            waveCanvas.width = waveCanvas.offsetWidth;
+            waveCanvas.height = waveCanvas.offsetHeight;
+            
+            const centerY = waveCanvas.height / 2;
+            
+            function draw() {
+                waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+                
+                waveCtx.beginPath();
+                waveCtx.strokeStyle = color;
+                waveCtx.lineWidth = 2;
+                
+                for (let x = 0; x < waveCanvas.width; x += 2) {
+                    let amplitude = animate ? 
+                        Math.sin(x * 0.02 + Date.now() * 0.005) * 30 + 
+                        Math.sin(x * 0.05 + Date.now() * 0.003) * 15 :
+                        Math.sin(x * 0.02) * 20;
+                    
+                    // 中间高两边低的包络
+                    let envelope = Math.sin((x / waveCanvas.width) * Math.PI);
+                    amplitude *= envelope;
+                    
+                    if (x === 0) {
+                        waveCtx.moveTo(x, centerY + amplitude);
+                    } else {
+                        waveCtx.lineTo(x, centerY + amplitude);
+                    }
+                }
+                
+                waveCtx.stroke();
+                
+                // 镜像波形
+                waveCtx.beginPath();
+                waveCtx.strokeStyle = color + '40';
+                for (let x = 0; x < waveCanvas.width; x += 2) {
+                    let amplitude = animate ? 
+                        Math.sin(x * 0.02 + Date.now() * 0.005) * 30 + 
+                        Math.sin(x * 0.05 + Date.now() * 0.003) * 15 :
+                        Math.sin(x * 0.02) * 20;
+                    
+                    let envelope = Math.sin((x / waveCanvas.width) * Math.PI);
+                    amplitude *= envelope;
+                    
+                    if (x === 0) {
+                        waveCtx.moveTo(x, centerY - amplitude);
+                    } else {
+                        waveCtx.lineTo(x, centerY - amplitude);
+                    }
+                }
+                waveCtx.stroke();
+                
+                if (animate) {
+                    requestAnimationFrame(draw);
+                }
+            }
+            
+            draw();
+        }
+
+        // 初始绘制
+        setTimeout(() => {
+            drawWaveform('studio-waveform', '#00D4FF', true);
+            drawWaveform('detail-waveform', '#00FF88', true);
+        }, 100);
+
+        // ===== 录制功能 =====
+        let isRecording = false;
+        function toggleRecord() {
+            const btn = document.getElementById('recordBtn');
+            isRecording = !isRecording;
+            
+            if (isRecording) {
+                btn.classList.add('recording');
+                btn.innerHTML = '⏹️';
+            } else {
+                btn.classList.remove('recording');
+                btn.innerHTML = '🎙️';
+            }
+        }
+
+        // ===== 生成按钮动画 =====
+        function generateAudio() {
+            const btn = document.getElementById('generateBtn');
+            const progressText = document.getElementById('progressText');
+            
+            btn.classList.add('generating');
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    
+                    setTimeout(() => {
+                        btn.classList.remove('generating');
+                        progressText.textContent = '0%';
+                        showPage('detail');
+                    }, 500);
+                }
+                progressText.textContent = Math.floor(progress) + '%';
+            }, 300);
+        }
+
+        // ===== 播放控制 =====
+        let isPlaying = false;
+        function togglePlay() {
+            const btn = document.getElementById('playBtn');
+            isPlaying = !isPlaying;
+            btn.textContent = isPlaying ? '⏸' : '▶';
+        }
+
+        // 响应式重绘
+        window.addEventListener('resize', () => {
+            drawWaveform('studio-waveform', '#00D4FF', true);
+            drawWaveform('detail-waveform', '#00FF88', true);
+        });
+    </script>
+</body>
+</html>
