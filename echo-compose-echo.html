@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHO // 声音的回响</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --void: #000000;
+            --dark: #050508;
+            --violet: #8b5cf6;
+            --fuchsia: #d946ef;
+            --cyan: #06b6d4;
+            --amber: #f59e0b;
+            --pink: #ec4899;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--void);
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        /* 声音可视化画布 */
+        #audio-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        /* 场景 */
+        .scene {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+            padding: 4rem 2rem;
+        }
+        
+        /* 回响文字效果 */
+        .echo-text {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .echo-text .layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0.3;
+            animation: echo-pulse 2s ease-in-out infinite;
+        }
+        
+        .echo-text .layer:nth-child(2) { animation-delay: 0.2s; opacity: 0.2; }
+        .echo-text .layer:nth-child(3) { animation-delay: 0.4s; opacity: 0.1; }
+        
+        @keyframes echo-pulse {
+            0%, 100% { transform: translateX(0) scale(1); opacity: 0.3; }
+            50% { transform: translateX(10px) scale(1.02); opacity: 0.1; }
+        }
+        
+        /* 四维权利环 */
+        .rights-ring {
+            position: relative;
+            width: 400px;
+            height: 400px;
+        }
+        
+        .ring-layer {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid;
+            animation: ring-rotate 20s linear infinite;
+        }
+        
+        .ring-layer:nth-child(1) {
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            border-color: var(--violet);
+            animation-duration: 30s;
+        }
+        
+        .ring-layer:nth-child(2) {
+            width: 75%;
+            height: 75%;
+            top: 12.5%;
+            left: 12.5%;
+            border-color: var(--fuchsia);
+            animation-duration: 25s;
+            animation-direction: reverse;
+        }
+        
+        .ring-layer:nth-child(3) {
+            width: 50%;
+            height: 50%;
+            top: 25%;
+            left: 25%;
+            border-color: var(--cyan);
+            animation-duration: 20s;
+        }
+        
+        .ring-layer:nth-child(4) {
+            width: 25%;
+            height: 25%;
+            top: 37.5%;
+            left: 37.5%;
+            border-color: var(--amber);
+            animation-duration: 15s;
+            animation-direction: reverse;
+        }
+        
+        @keyframes ring-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .ring-label {
+            position: absolute;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        
+        /* 声波涟漪 */
+        .sound-ripple {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid var(--cyan);
+            opacity: 0;
+            animation: ripple-expand 3s ease-out infinite;
+        }
+        
+        @keyframes ripple-expand {
+            0% { width: 0; height: 0; opacity: 1; }
+            100% { width: 300px; height: 300px; opacity: 0; }
+        }
+        
+        /* 创作星系 */
+        .creation-star {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, var(--violet), transparent);
+            box-shadow: 0 0 30px var(--violet);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .creation-star:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 50px var(--fuchsia);
+        }
+        
+        .creation-star::before {
+            content: '';
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            border: 1px solid var(--violet);
+            opacity: 0.5;
+            animation: star-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes star-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.2; }
+        }
+        
+        /* 连接线 - 声波样式 */
+        .sound-connection {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            transform-origin: left center;
+            animation: sound-flow 2s ease-in-out infinite;
+        }
+        
+        @keyframes sound-flow {
+            0%, 100% { opacity: 0.3; transform: scaleX(0.8); }
+            50% { opacity: 1; transform: scaleX(1); }
+        }
+        
+        /* 分润可视化 - 瀑布流 */
+        .value-waterfall {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .value-drop {
+            height: 40px;
+            background: linear-gradient(90deg, var(--violet), var(--fuchsia));
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .value-drop::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: value-flow 2s ease-in-out infinite;
+        }
+        
+        @keyframes value-flow {
+            to { left: 100%; }
+        }
+        
+        /* 交互提示 */
+        .audio-hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid var(--violet);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .audio-hint:hover {
+            background: rgba(139, 92, 246, 0.2);
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
+        }
+        
+        /* 波形文字 */
+        .wave-text {
+            display: inline-block;
+            animation: wave-bounce 1s ease-in-out infinite;
+        }
+        
+        @keyframes wave-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 音频可视化画布 -->
+    <canvas id="audio-canvas"></canvas>
+    
+    <!-- 音频启动提示 -->
+    <div class="audio-hint" id="audioHint">
+        <span style="color: var(--cyan);">▶</span> 点击开启声音体验
+    </div>
+
+    <!-- Scene 1: 回响诞生 -->
+    <section class="scene" id="scene1">
+        <div class="text-center">
+            <div class="mb-8 opacity-0" id="s1-soundwave">
+                <canvas id="init-waveform" width="400" height="100"></canvas>
+            </div>
+            
+            <h1 class="text-7xl md:text-9xl font-bold mb-4">
+                <span class="echo-text" id="s1-title" style="opacity: 0;">
+                    <span class="layer">ECHO</span>
+                    <span class="layer">ECHO</span>
+                    <span class="layer">ECHO</span>
+                    ECHO
+                </span>
+            </h1>
+            
+            <p class="text-xl md:text-2xl opacity-0" id="s1-subtitle" style="color: var(--cyan);">
+                每一次创作，都在时空中留下回响
+            </p>
+        </div>
+    </section>
+
+    <!-- Scene 2: 四维权利分离 -->
+    <section class="scene" id="scene2">
+        <div class="max-w-6xl w-full grid md:grid-cols-2 gap-16 items-center">
+            <div>
+                <h2 class="text-4xl md:text-6xl font-bold mb-6">
+                    <span style="color: var(--violet);">权利分离</span>
+                </h2>
+                <p class="text-lg opacity-70 mb-8">
+                    不再是非黑即白的所有权。ECHO 协议将创作拆分为四个维度，每一维都可独立流转。
+                </p>
+                
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4 p-4 rounded-lg" style="background: rgba(139, 92, 246, 0.1); border-left: 3px solid var(--violet);">
+                        <span class="text-2xl">◉</span>
+                        <div>
+                            <div class="font-semibold" style="color: var(--violet);">OWNERSHIP</div>
+                            <div class="text-sm opacity-60">所有权 - 资产的终极归属</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 p-4 rounded-lg" style="background: rgba(217, 70, 239, 0.1); border-left: 3px solid var(--fuchsia);">
+                        <span class="text-2xl">◈</span>
+                        <div>
+                            <div class="font-semibold" style="color: var(--fuchsia);">USAGE</div>
+                            <div class="text-sm opacity-60">使用权 - 聆听与体验</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 p-4 rounded-lg" style="background: rgba(6, 182, 212, 0.1); border-left: 3px solid var(--cyan);">
+                        <span class="text-2xl">◆</span>
+                        <div>
+                            <div class="font-semibold" style="color: var(--cyan);">DERIVATIVE</div>
+                            <div class="text-sm opacity-60">衍生权 -  remix 与改编</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 p-4 rounded-lg" style="background: rgba(245, 158, 11, 0.1); border-left: 3px solid var(--amber);">
+                        <span class="text-2xl">◊</span>
+                        <div>
+                            <div class="font-semibold" style="color: var(--amber);">EXTENSION</div>
+                            <div class="text-sm opacity-60">扩展权 - 续作与延伸</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-center">
+                <div class="rights-ring" id="s2-ring">
+                    <div class="ring-layer"></div>
+                    <div class="ring-layer"></div>
+                    <div class="ring-layer"></div>
+                    <div class="ring-layer"></div>
+                    
+                    <div class="ring-label" style="top: 0; left: 50%; transform: translateX(-50%);">OWNERSHIP</div>
+                    <div class="ring-label" style="top: 50%; right: 0; transform: translateY(-50%) rotate(90deg);">USAGE</div>
+                    <div class="ring-label" style="bottom: 0; left: 50%; transform: translateX(-50%);">DERIVATIVE</div>
+                    <div class="ring-label" style="top: 50%; left: 0; transform: translateY(-50%) rotate(-90deg);">EXTENSION</div>
+                    
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-4xl font-bold" style="color: var(--violet);">ECHO</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scene 3: 创作星系 -->
+    <section class="scene" id="scene3">
+        <div class="max-w-6xl w-full">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-6xl font-bold mb-4">
+                    <span style="color: var(--fuchsia);">创作星系</span>
+                </h2>
+                <p class="text-lg opacity-70">
+                    每个作品都是一颗星球，引用关系是引力波
+                </p>
+            </div>
+            
+            <div class="relative h-[500px]" id="s3-galaxy">
+                <!-- 中心原点 -->
+                <div class="creation-star" style="left: 50%; top: 50%; transform: translate(-50%, -50%); background: radial-gradient(circle at 30% 30%, var(--amber), transparent); box-shadow: 0 0 50px var(--amber);" data-sound="low">
+                    <div class="absolute inset-0 flex items-center justify-center text-xs font-bold">ORIGIN</div>
+                </div>
+                
+                <!-- 卫星作品 -->
+                <div class="creation-star" style="left: 20%; top: 30%;" data-sound="mid">
+                    <div class="absolute inset-0 flex items-center justify-center text-xs">R1</div>
+                </div>
+                
+                <div class="creation-star" style="left: 70%; top: 25%;" data-sound="high">
+                    <div class="absolute inset-0 flex items-center justify-center text-xs">R2</div>
+                </div>
+                
+                <div class="creation-star" style="left: 75%; top: 60%;" data-sound="mid">
+                    <div class="absolute inset-0 flex items-center justify-center text-xs">R3</div>
+                </div>
+                
+                <div class="creation-star" style="left: 25%; top: 70%;" data-sound="low">
+                    <div class="absolute inset-0 flex items-center justify-center text-xs">R4</div>
+                </div>
+                
+                <!-- 连接线 -->
+                <svg class="absolute inset-0 w-full h-full" style="z-index: -1;">
+                    <line x1="50%" y1="50%" x2="20%" y2="30%" stroke="rgba(139, 92, 246, 0.3)" stroke-width="1"/>
+                    <line x1="50%" y1="50%" x2="70%" y2="25%" stroke="rgba(139, 92, 246, 0.3)" stroke-width="1"/>
+                    <line x1="50%" y1="50%" x2="75%" y2="60%" stroke="rgba(139, 92, 246, 0.3)" stroke-width="1"/>
+                    <line x1="50%" y1="50%" x2="25%" y2="70%" stroke="rgba(139, 92, 246, 0.3)" stroke-width="1"/>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scene 4: 智能分润瀑布 -->
+    <section class="scene" id="scene4">
+        <div class="max-w-5xl w-full">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-6xl font-bold mb-4">
+                    <span style="color: var(--cyan);">价值流动</span>
+                </h2>
+                <p class="text-lg opacity-70">
+                    像声波一样自然传播，每一次回响都带来回报
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="text-5xl font-bold mb-2" style="color: var(--violet);">100</div>
+                    <div class="text-sm opacity-50">交易金额</div>
+                </div>
+                
+                <div class="col-span-2 space-y-3">
+                    <div class="value-waterfall">
+                        <div class="value-drop flex items-center justify-between px-4" style="width: 10%;">
+                            <span class="text-xs">平台</span>
+                            <span class="text-xs">10</span>
+                        </div>
+                        <div class="value-drop flex items-center justify-between px-4" style="width: 36%; background: linear-gradient(90deg, var(--fuchsia), var(--pink));">
+                            <span class="text-xs">直接创作者</span>
+                            <span class="text-xs">36</span>
+                        </div>
+                        <div class="value-drop flex items-center justify-between px-4" style="width: 54%; background: linear-gradient(90deg, var(--cyan), var(--violet));">
+                            <span class="text-xs">上游分润池</span>
+                            <span class="text-xs">54</span>
+                        </div>
+                    </div>
+                    
+                    <div class="pl-8 space-y-2 mt-4">
+                        <div class="flex items-center gap-2 text-sm">
+                            <div class="w-2 h-2 rounded-full" style="background: var(--amber);"></div>
+                            <span class="opacity-60">原创者保底 25%</span>
+                            <span style="color: var(--amber);">→ 22.5</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm">
+                            <div class="w-2 h-2 rounded-full" style="background: var(--cyan);"></div>
+                            <span class="opacity-60">父级 L1</span>
+                            <span style="color: var(--cyan);">→ 13.24</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm">
+                            <div class="w-2 h-2 rounded-full" style="background: var(--violet);"></div>
+                            <span class="opacity-60">父级 L2</span>
+                            <span style="color: var(--violet);">→ 9.26</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scene 5: CTA -->
+    <section class="scene" id="scene5">
+        <div class="text-center">
+            <h2 class="text-5xl md:text-8xl font-bold mb-8">
+                <span class="echo-text">
+                    <span class="layer">加入回响</span>
+                    <span class="layer">加入回响</span>
+                    <span class="layer">加入回响</span>
+                    加入回响
+                </span>
+            </h2>
+            
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <button class="px-8 py-4 rounded-lg font-semibold transition-all" style="background: var(--violet); hover: box-shadow: 0 0 30px var(--violet);">
+                    申请 Beta 体验
+                </button>
+                <button class="px-8 py-4 rounded-lg font-semibold border transition-all" style="border-color: var(--cyan); hover: background: rgba(6, 182, 212, 0.1);">
+                    阅读协议文档
+                </button>
+            </div>
+            
+            <p class="mt-12 text-sm opacity-40">
+                COMPOSE.MUSIC · ECHO PROTOCOL v2.0
+            </p>
+        </div>
+    </section>
+
+    <script>
+        // ==================== 音频可视化系统 ====================
+        const canvas = document.getElementById('audio-canvas');
+        const ctx = canvas.getContext('2d');
+        let audioContext, analyser, dataArray;
+        let isAudioInitialized = false;
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 生成模拟音频数据
+        function generateAudioData() {
+            const data = new Uint8Array(256);
+            const time = Date.now() * 0.001;
+            for(let i = 0; i < 256; i++) {
+                const freq = i / 256;
+                data[i] = Math.sin(time * 2 + freq * 10) * 50 + 
+                          Math.sin(time * 3 + freq * 20) * 30 +
+                          Math.random() * 20 + 100;
+            }
+            return data;
+        }
+        
+        // 绘制圆形频谱
+        function drawCircularSpectrum() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) * 0.3;
+            const data = generateAudioData();
+            
+            // 外圈频谱
+            for(let i = 0; i < 256; i++) {
+                const angle = (i / 256) * Math.PI * 2;
+                const barHeight = data[i] * 0.5;
+                
+                const x1 = centerX + Math.cos(angle) * radius;
+                const y1 = centerY + Math.sin(angle) * radius;
+                const x2 = centerX + Math.cos(angle) * (radius + barHeight);
+                const y2 = centerY + Math.sin(angle) * (radius + barHeight);
+                
+                const hue = (i / 256) * 60 + 260; // 紫色到青色
+                ctx.strokeStyle = `hsla(${hue}, 70%, 60%, 0.6)`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+            
+            // 内圈反向
+            for(let i = 0; i < 128; i++) {
+                const angle = (i / 128) * Math.PI * 2;
+                const barHeight = data[i + 64] * 0.3;
+                
+                const x1 = centerX + Math.cos(angle) * (radius - 20);
+                const y1 = centerY + Math.sin(angle) * (radius - 20);
+                const x2 = centerX + Math.cos(angle) * (radius - 20 - barHeight);
+                const y2 = centerY + Math.sin(angle) * (radius - 20 - barHeight);
+                
+                ctx.strokeStyle = 'rgba(139, 92, 246, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+            
+            // 中心圆
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 40, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(139, 92, 246, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+        
+        // 绘制波形
+        function drawWaveform() {
+            const data = generateAudioData();
+            const centerY = canvas.height / 2;
+            
+            // 上层波形
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            for(let i = 0; i < canvas.width; i++) {
+                const dataIndex = Math.floor((i / canvas.width) * 256);
+                const y = centerY + (data[dataIndex] - 128) * 0.5;
+                ctx.lineTo(i, y);
+            }
+            ctx.strokeStyle = 'rgba(139, 92, 246, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 下层波形（延迟）
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            for(let i = 0; i < canvas.width; i++) {
+                const dataIndex = Math.floor(((i + 20) / canvas.width) * 256) % 256;
+                const y = centerY + (data[dataIndex] - 128) * 0.3;
+                ctx.lineTo(i, y);
+            }
+            ctx.strokeStyle = 'rgba(6, 182, 212, 0.2)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // 主动画循环
+        let sceneType = 'circular';
+        function animate() {
+            if(sceneType === 'circular') {
+                drawCircularSpectrum();
+            } else {
+                drawWaveform();
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+        
+        // 点击启动音频
+        document.getElementById('audioHint').addEventListener('click', function() {
+            this.style.display = 'none';
+            // 这里可以添加真实的 Web Audio API 初始化
+        });
+        
+        // ==================== GSAP 动画 ====================
+        gsap.registerPlugin(ScrollTrigger);
+        
+        // Scene 1
+        gsap.to('#s1-title', {
+            opacity: 1,
+            duration: 1.5,
+            ease: 'power2.out'
+        });
+        
+        gsap.to('#s1-subtitle', {
+            opacity: 1,
+            duration: 1,
+            delay: 0.5
+        });
+        
+        // 切换场景类型
+        ScrollTrigger.create({
+            trigger: '#scene2',
+            start: 'top center',
+            onEnter: () => { sceneType = 'waveform'; },
+            onLeaveBack: () => { sceneType = 'circular'; }
+        });
+        
+        // 创作星系交互
+        document.querySelectorAll('.creation-star').forEach(star => {
+            star.addEventListener('mouseenter', function() {
+                gsap.to(this, { scale: 1.3, duration: 0.3 });
+            });
+            star.addEventListener('mouseleave', function() {
+                gsap.to(this, { scale: 1, duration: 0.3 });
+            });
+        });
+    </script>
+</body>
+</html>
