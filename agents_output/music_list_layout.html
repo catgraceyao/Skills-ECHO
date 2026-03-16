@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音 — 音乐星系</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            /* 宇宙深色背景 */
+            --void-deep: #050510;
+            --void-primary: #0A0A1A;
+            --void-secondary: #12122A;
+            --void-surface: #1A1A3A;
+            --void-elevated: #252550;
+            
+            /* 原创星系 - 冷色调 */
+            --nebula-cyan: #00F5FF;
+            --nebula-blue: #4A8FE7;
+            --nebula-purple: #7B68EE;
+            --nebula-glow: rgba(74, 143, 231, 0.4);
+            
+            /* 衍生星云 - 暖色调 */
+            --nova-pink: #FF1493;
+            --nova-coral: #FF6B9D;
+            --nova-orange: #FF8C42;
+            --nova-glow: rgba(255, 107, 157, 0.4);
+            
+            /* 合作彗星 - 青色系 */
+            --comet-teal: #2ED8B6;
+            --comet-mint: #4AE7C7;
+            
+            /* 功能恒星 */
+            --star-gold: #FFD700;
+            --star-success: #00FF88;
+            --star-warning: #FFB800;
+            --star-error: #FF4757;
+            
+            /* 文字 */
+            --text-primary: #FFFFFF;
+            --text-secondary: #E8E8FF;
+            --text-tertiary: #A0A0D0;
+            --text-dim: #606090;
+            
+            /* 字体 */
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            
+            /* 间距 */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-xxl: 48px;
+            --space-xxxl: 64px;
+            
+            /* 圆角 */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --radius-full: 999px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: var(--font-body);
+            background: var(--void-deep);
+            color: var(--text-secondary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        /* Three.js Canvas 背景 */
+        #universe-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        /* 全局辉光层 */
+        .glow-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            background: 
+                radial-gradient(ellipse at 15% 20%, rgba(0, 245, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(ellipse at 85% 80%, rgba(255, 20, 147, 0.08) 0%, transparent 40%),
+                radial-gradient(ellipse at 50% 50%, rgba(74, 143, 231, 0.03) 0%, transparent 60%);
+            animation: nebula-drift 25s ease-in-out infinite;
+        }
+        
+        @keyframes nebula-drift {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+            33% { transform: translate(3%, -2%) scale(1.02); opacity: 1; }
+            66% { transform: translate(-2%, 2%) scale(0.98); opacity: 0.9; }
+        }
+        
+        /* 导航栏 - 玻璃态 */
+        .cosmic-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: var(--space-md) var(--space-xl);
+            background: linear-gradient(180deg, rgba(5, 5, 16, 0.95) 0%, rgba(5, 5, 16, 0.5) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        /* Logo - 脉冲恒星 */
+        .logo-orbit {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            text-decoration: none;
+            position: relative;
+        }
+        
+        .logo-star {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--nebula-cyan), var(--nova-pink));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            position: relative;
+            animation: star-pulse 3s ease-in-out infinite;
+            box-shadow: 
+                0 0 30px rgba(0, 245, 255, 0.5),
+                0 0 60px rgba(255, 20, 147, 0.3),
+                inset 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+        
+        @keyframes star-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(0, 245, 255, 0.5), 0 0 60px rgba(255, 20, 147, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(0, 245, 255, 0.7), 0 0 100px rgba(255, 20, 147, 0.5); }
+        }
+        
+        .logo-text {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+        
+        .logo-text span {
+            background: linear-gradient(90deg, var(--nebula-cyan), var(--nova-coral));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* 导航链接 - 悬浮光效 */
+        .nav-constellation {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            background: rgba(255, 255, 255, 0.03);
+            padding: var(--space-xs);
+            border-radius: var(--radius-full);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-link {
+            padding: var(--space-sm) var(--space-lg);
+            color: var(--text-tertiary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border-radius: var(--radius-full);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            transition: all 0.4s ease;
+            border-radius: 50%;
+        }
+        
+        .nav-link:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-link.active {
+            color: var(--text-primary);
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.3), rgba(255, 20, 147, 0.2));
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+        }
+        
+        /* 用户头像 - 量子态 */
+        .user-quantum {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+        
+        .quantum-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--nebula-blue), var(--nova-coral));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 0.875rem;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .quantum-avatar::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--nebula-cyan), var(--nova-pink));
+            z-index: -1;
+            opacity: 0.5;
+            animation: quantum-ring 2s linear infinite;
+        }
+        
+        @keyframes quantum-ring {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 主容器 */
+        .cosmic-container {
+            position: relative;
+            z-index: 10;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 100px var(--space-xl) var(--space-xxxl);
+        }
+        
+        /* ========================================
+           页面标题区域 - 星系核心
+        ======================================== */
+        .galaxy-core {
+            position: relative;
+            padding: var(--space-xxxl) 0;
+            margin-bottom: var(--space-xl);
+        }
+        
+        .core-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: var(--space-lg);
+        }
+        
+        .core-title-group {
+            flex: 1;
+            min-width: 280px;
+        }
+        
+        .core-symbol {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.15), rgba(255, 20, 147, 0.15));
+            border-radius: var(--radius-full);
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            margin-bottom: var(--space-md);
+            font-size: 0.875rem;
+            color: var(--nebula-cyan);
+            font-weight: 500;
+        }
+        
+        .core-symbol i {
+            animation: symbol-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes symbol-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        
+        .core-title {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--nebula-cyan) 50%, var(--nova-coral) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: var(--space-sm);
+            line-height: 1.1;
+        }
+        
+        .core-subtitle {
+            color: var(--text-tertiary);
+            font-size: 1.1rem;
+            max-width: 500px;
+        }
+        
+        /* 装饰性轨道环 */
+        .orbit-decoration {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            width: 300px;
+            height: 300px;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+        
+        .orbit-ring {
+            position: absolute;
+            border: 1px solid;
+            border-radius: 50%;
+            animation: orbit-rotate linear infinite;
+        }
+        
+        .orbit-ring:nth-child(1) {
+            width: 100%;
+            height: 100%;
+            border-color: var(--nebula-cyan);
+            animation-duration: 20s;
+        }
+        
+        .orbit-ring:nth-child(2) {
+            width: 70%;
+            height: 70%;
+            top: 15%;
+            left: 15%;
+            border-color: var(--nova-pink);
+            animation-duration: 15s;
+            animation-direction: reverse;
+        }
+        
+        .orbit-ring:nth-child(3) {
+            width: 40%;
+            height: 40%;
+            top: 30%;
+            left: 30%;
+            border-color: var(--comet-teal);
+            animation-duration: 10s;
+        }
+        
+        .orbit-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--nebula-cyan);
+            box-shadow: 0 0 10px var(--nebula-cyan);
+        }
+        
+        .orbit-ring:nth-child(1) .orbit-particle {
+            top: -4px;
+            left: 50%;
+        }
+        
+        .orbit-ring:nth-child(2) .orbit-particle {
+            top: 50%;
+            right: -4px;
+            background: var(--nova-pink);
+            box-shadow: 0 0 10px var(--nova-pink);
+        }
+        
+        .orbit-ring:nth-child(3) .orbit-particle {
+            bottom: -4px;
+            left: 50%;
+            background: var(--comet-teal);
+            box-shadow: 0 0 10px var(--comet-teal);
+        }
+        
+        @keyframes orbit-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ========================================
+           控制栏 - 星云控制器
+        ======================================== */
+        .nebula-controller {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--space-lg);
+            padding: var(--space-lg) 0;
+            margin-bottom: var(--space-xl);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        /* 过滤器 - 星际筛选器 */
+        .star-filters {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+        }
+        
+        .filter-label {
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+            margin-right: var(--space-sm);
+        }
+        
+        .filter-chip {
+            padding: var(--space-sm) var(--space-md);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-full);
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        
+        .filter-chip:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: var(--text-secondary);
+        }
+        
+        .filter-chip.active {
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.2), rgba(255, 20, 147, 0.15));
+            border-color: var(--nebula-cyan);
+            color: var(--text-primary);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.15);
+        }
+        
+        /* 视图切换 - 星系视角 */
+        .view-toggles {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            background: rgba(255, 255, 255, 0.03);
+            padding: var(--space-xs);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .view-toggle {
+            padding: var(--space-sm) var(--space-md);
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--text-tertiary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-size: 0.875rem;
+        }
+        
+        .view-toggle:hover {
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .view-toggle.active {
+            color: var(--text-primary);
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.3), rgba(255, 20, 147, 0.2));
+            box-shadow: 0 4px 15px rgba(0, 245, 255, 0.2);
+        }
+        
+        /* 排序下拉 */
+        .sort-dropdown {
+            position: relative;
+        }
+        
+        .sort-trigger {
+            padding: var(--space-sm) var(--space-md);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        
+        .sort-trigger:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .sort-menu {
+            position: absolute;
+            top: calc(100% + var(--space-sm));
+            right: 0;
+            min-width: 180px;
+            background: linear-gradient(145deg, rgba(26, 26, 58, 0.95), rgba(10, 10, 26, 0.98));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            padding: var(--space-sm);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            backdrop-filter: blur(20px);
+        }
+        
+        .sort-dropdown.open .sort-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .sort-option {
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-sm);
+            color: var(--text-tertiary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+        }
+        
+        .sort-option:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+        
+        .sort-option.active {
+            color: var(--nebula-cyan);
+            background: rgba(0, 245, 255, 0.1);
+        }
+        
+        /* ========================================
+           音乐列表 - 星群网格
+        ======================================== */
+        .constellation-container {
+            position: relative;
+            min-height: 400px;
+        }
+        
+        /* 网格视图 */
+        .star-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-xl);
+            transition: opacity 0.3s ease;
+        }
+        
+        .star-grid.transitioning {
+            opacity: 0;
+        }
+        
+        /* 列表视图 */
+        .star-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+            transition: opacity 0.3s ease;
+        }
+        
+        .star-list.transitioning {
+            opacity: 0;
+        }
+        
+        .star-list .music-card {
+            display: grid;
+            grid-template-columns: 80px 1fr auto;
+            align-items: center;
+            gap: var(--space-lg);
+            padding: var(--space-md);
+        }
+        
+        .star-list .music-card .card-cover-wrapper {
+            width: 80px;
+            height: 80px;
+        }
+        
+        .star-list .music-card .card-content {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
+            gap: var(--space-lg);
+        }
+        
+        .star-list .music-card .card-info {
+            margin-bottom: 0;
+        }
+        
+        .star-list .music-card .card-meta {
+            flex-direction: row;
+            gap: var(--space-lg);
+        }
+        
+        .star-list .music-card .card-actions {
+            margin-top: 0;
+        }
+        
+        /* ========================================
+           音乐卡片 - 恒星卡片
+        ======================================== */
+        .music-card {
+            background: linear-gradient(145deg, rgba(26, 26, 58, 0.6), rgba(10, 10, 26, 0.8));
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            cursor: pointer;
+            transform-style: preserve-3d;
+        }
+        
+        .music-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--card-accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .music-card.original { --card-accent: var(--nebula-cyan); --card-glow: rgba(0, 245, 255, 0.2); }
+        .music-card.derivative { --card-accent: var(--nova-coral); --card-glow: rgba(255, 107, 157, 0.2); }
+        
+        /* 悬停效果 */
+        .music-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--card-accent);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 50px var(--card-glow);
+        }
+        
+        .music-card:hover::before {
+            opacity: 1;
+        }
+        
+        .music-card:hover .card-cover-overlay {
+            opacity: 1;
+        }
+        
+        .music-card:hover .card-cover {
+            transform: scale(1.1);
+        }
+        
+        .music-card:hover .play-btn {
+            transform: scale(1) translate(-50%, -50%);
+            opacity: 1;
+        }
+        
+        /* 封面区域 */
+        .card-cover-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--void-surface), var(--void-secondary));
+        }
+        
+        .card-cover {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* 播放按钮 */
+        .play-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: scale(0.5) translate(-50%, -50%);
+            transform-origin: 0 0;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--nebula-cyan), var(--nova-pink));
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+            box-shadow: 0 8px 30px rgba(0, 245, 255, 0.4);
+        }
+        
+        .play-btn:hover {
+            transform: scale(1.1) translate(-45%, -45%);
+            box-shadow: 0 12px 40px rgba(0, 245, 255, 0.6);
+        }
+        
+        .play-btn.playing {
+            opacity: 1;
+            transform: scale(1) translate(-50%, -50%);
+            background: linear-gradient(135deg, var(--star-success), var(--comet-teal));
+            animation: playing-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes playing-pulse {
+            0%, 100% { box-shadow: 0 8px 30px rgba(0, 255, 136, 0.4); }
+            50% { box-shadow: 0 12px 50px rgba(0, 255, 136, 0.7); }
+        }
+        
+        /* 播放动画 - 声波扩散 */
+        .play-btn.playing::before,
+        .play-btn.playing::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 2px solid var(--star-success);
+            animation: sound-wave 1.5s ease-out infinite;
+        }
+        
+        .play-btn.playing::after {
+            animation-delay: 0.5s;
+        }
+        
+        @keyframes sound-wave {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        
+        /* 类型徽章 */
+        .type-badge {
+            position: absolute;
+            top: var(--space-sm);
+            right: var(--space-sm);
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            z-index: 5;
+        }
+        
+        .music-card.original .type-badge {
+            background: rgba(0, 245, 255, 0.2);
+            color: var(--nebula-cyan);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+        }
+        
+        .music-card.derivative .type-badge {
+            background: rgba(255, 107, 157, 0.2);
+            color: var(--nova-coral);
+            border: 1px solid rgba(255, 107, 157, 0.3);
+        }
+        
+        /* 时长标签 */
+        .duration-badge {
+            position: absolute;
+            bottom: var(--space-sm);
+            right: var(--space-sm);
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            z-index: 5;
+            backdrop-filter: blur(4px);
+        }
+        
+        /* 卡片内容 */
+        .card-content {
+            padding: var(--space-lg);
+        }
+        
+        .card-info {
+            margin-bottom: var(--space-md);
+        }
+        
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-xs);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color 0.3s ease;
+        }
+        
+        .music-card:hover .card-title {
+            color: var(--card-accent);
+        }
+        
+        .card-artist {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        
+        .card-artist i {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        
+        /* 元信息 */
+        .card-meta {
+            display: flex;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        
+        .meta-item i {
+            font-size: 0.75rem;
+        }
+        
+        .meta-item.original i { color: var(--nebula-cyan); }
+        .meta-item.derivative i { color: var(--nova-coral); }
+        
+        /* 流派标签 */
+        .card-genre {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-full);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card-genre i {
+            color: var(--star-gold);
+            font-size: 0.75rem;
+        }
+        
+        /* 操作按钮 */
+        .card-actions {
+            display: flex;
+            gap: var(--space-sm);
+            margin-top: var(--space-md);
+            padding-top: var(--space-md);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: var(--space-sm);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-sm);
+            color: var(--text-tertiary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-xs);
+            font-size: 0.8rem;
+        }
+        
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: var(--text-secondary);
+        }
+        
+        .action-btn.liked {
+            color: var(--nova-coral);
+            border-color: rgba(255, 20, 147, 0.3);
+            background: rgba(255, 20, 147, 0.1);
+        }
+        
+        .action-btn.liked i {
+            animation: heart-beat 0.5s ease;
+        }
+        
+        @keyframes heart-beat {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.3); }
+            50% { transform: scale(1); }
+            75% { transform: scale(1.2); }
+        }
+        
+        /* ========================================
+           加载状态 - 星际能量
+        ======================================== */
+        .loading-nebula {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-xxxl);
+            gap: var(--space-xl);
+        }
+        
+        .loading-orbit {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        
+        .loading-ring {
+            position: absolute;
+            inset: 0;
+            border: 3px solid transparent;
+            border-top-color: var(--nebula-cyan);
+            border-radius: 50%;
+            animation: loading-spin 1s linear infinite;
+        }
+        
+        .loading-ring:nth-child(2) {
+            inset: 10px;
+            border-top-color: var(--nova-pink);
+            animation-duration: 1.5s;
+            animation-direction: reverse;
+        }
+        
+        .loading-ring:nth-child(3) {
+            inset: 20px;
+            border-top-color: var(--comet-teal);
+            animation-duration: 2s;
+        }
+        
+        @keyframes loading-spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: var(--text-tertiary);
+            font-size: 0.95rem;
+        }
+        
+        .loading-text::after {
+            content: '';
+            animation: loading-dots 1.5s steps(4, end) infinite;
+        }
+        
+        @keyframes loading-dots {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+        }
+        
+        /* ========================================
+           空状态 - 虚空星云
+        ======================================== */
+        .empty-void {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-xxxl);
+            text-align: center;
+        }
+        
+        .empty-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, rgba(26, 26, 58, 0.5), rgba(10, 10, 26, 0.8));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--text-dim);
+            margin-bottom: var(--space-xl);
+            position: relative;
+        }
+        
+        .empty-icon::before {
+            content: '';
+            position: absolute;
+            inset: -5px;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            animation: empty-rotate 20s linear infinite;
+        }
+        
+        @keyframes empty-rotate {
+            to { transform: rotate(360deg); }
+        }
+        
+        .empty-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .empty-desc {
+            color: var(--text-tertiary);
+            max-width: 400px;
+            margin-bottom: var(--space-xl);
+            line-height: 1.6;
+        }
+        
+        .empty-action {
+            padding: var(--space-md) var(--space-xl);
+            background: linear-gradient(135deg, var(--nebula-cyan), var(--nova-coral));
+            border: none;
+            border-radius: var(--radius-full);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        
+        .empty-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 245, 255, 0.3);
+        }
+        
+        /* ========================================
+           分页加载 - 星际轨道
+        ======================================== */
+        .orbit-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: var(--space-xxl);
+            gap: var(--space-lg);
+        }
+        
+        .orbit-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--nebula-cyan);
+            animation: orbit-bounce 1.4s ease-in-out infinite both;
+            box-shadow: 0 0 10px var(--nebula-cyan);
+        }
+        
+        .orbit-dot:nth-child(1) { animation-delay: -0.32s; background: var(--nebula-cyan); }
+        .orbit-dot:nth-child(2) { animation-delay: -0.16s; background: var(--nova-pink); box-shadow: 0 0 10px var(--nova-pink); }
+        .orbit-dot:nth-child(3) { animation-delay: 0s; background: var(--comet-teal); box-shadow: 0 0 10px var(--comet-teal); }
+        
+        @keyframes orbit-bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        
+        .load-more {
+            display: flex;
+            justify-content: center;
+            padding: var(--space-xxl) 0;
+        }
+        
+        .load-more-btn {
+            padding: var(--space-md) var(--space-xxl);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-full);
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        
+        .load-more-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--nebula-cyan);
+            color: var(--text-primary);
+            box-shadow: 0 0 30px rgba(0, 245, 255, 0.15);
+        }
+        
+        .load-more-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* ========================================
+           过滤过渡动画
+        ======================================== */
+        .music-card {
+            animation: card-enter 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        @keyframes card-enter {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .music-card.leaving {
+            animation: card-leave 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        @keyframes card-leave {
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
+        
+        /* 交错动画 */
+        .music-card:nth-child(1) { animation-delay: 0ms; }
+        .music-card:nth-child(2) { animation-delay: 50ms; }
+        .music-card:nth-child(3) { animation-delay: 100ms; }
+        .music-card:nth-child(4) { animation-delay: 150ms; }
+        .music-card:nth-child(5) { animation-delay: 200ms; }
+        .music-card:nth-child(6) { animation-delay: 250ms; }
+        .music-card:nth-child(7) { animation-delay: 300ms; }
+        .music-card:nth-child(8) { animation-delay: 350ms; }
+        .music-card:nth-child(9) { animation-delay: 400ms; }
+        .music-card:nth-child(10) { animation-delay: 450ms; }
+        .music-card:nth-child(11) { animation-delay: 500ms; }
+        .music-card:nth-child(12) { animation-delay: 550ms; }
+        
+        /* ========================================
+           响应式设计
+        ======================================== */
+        @media (max-width: 1200px) {
+            .star-grid {
+                grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            }
+            
+            .orbit-decoration {
+                width: 200px;
+                height: 200px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .nebula-controller {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .star-filters {
+                order: 2;
+                justify-content: center;
+            }
+            
+            .view-toggles {
+                order: 1;
+                align-self: flex-end;
+            }
+            
+            .sort-dropdown {
+                order: 0;
+                align-self: flex-end;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .cosmic-container {
+                padding: 90px var(--space-md) var(--space-xxl);
+            }
+            
+            .nav-constellation {
+                display: none;
+            }
+            
+            .core-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .orbit-decoration {
+                display: none;
+            }
+            
+            .star-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: var(--space-md);
+            }
+            
+            .card-content {
+                padding: var(--space-md);
+            }
+            
+            .card-title {
+                font-size: 0.95rem;
+            }
+            
+            .card-artist {
+                font-size: 0.8rem;
+            }
+            
+            .card-actions {
+                display: none;
+            }
+            
+            .play-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1rem;
+            }
+            
+            /* 列表视图移动端优化 */
+            .star-list .music-card {
+                grid-template-columns: 64px 1fr;
+                gap: var(--space-md);
+            }
+            
+            .star-list .music-card .card-cover-wrapper {
+                width: 64px;
+                height: 64px;
+            }
+            
+            .star-list .music-card .card-meta {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .star-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .filter-chip {
+                padding: var(--space-xs) var(--space-sm);
+                font-size: 0.8rem;
+            }
+            
+            .core-title {
+                font-size: 2rem;
+            }
+        }
+        
+        /* ========================================
+           滚动条样式
+        ======================================== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--void-deep);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--nebula-cyan), var(--nova-pink));
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--nebula-blue), var(--nova-coral));
+        }
+        
+        /* ========================================
+           音频播放条 - 底部固定
+        ======================================== */
+        .cosmic-player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: linear-gradient(180deg, rgba(10, 10, 26, 0.95), rgba(5, 5, 16, 0.98));
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: var(--space-md) var(--space-xl);
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .cosmic-player.active {
+            transform: translateY(0);
+        }
+        
+        .player-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+        }
+        
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            flex: 0 0 auto;
+            min-width: 200px;
+        }
+        
+        .player-cover {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--void-surface), var(--void-secondary));
+            overflow: hidden;
+        }
+        
+        .player-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .player-meta h4 {
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .player-meta p {
+            color: var(--text-tertiary);
+            font-size: 0.8rem;
+        }
+        
+        .player-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-md);
+            flex: 1;
+        }
+        
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+        
+        .control-btn.play {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--nebula-cyan), var(--nova-pink));
+            border: none;
+            color: white;
+        }
+        
+        .control-btn.play:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(0, 245, 255, 0.4);
+        }
+        
+        .player-progress {
+            flex: 1;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        
+        .progress-time {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            font-family: var(--font-display);
+            min-width: 40px;
+        }
+        
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 30%;
+            background: linear-gradient(90deg, var(--nebula-cyan), var(--nova-pink));
+            border-radius: 2px;
+            transition: width 0.1s linear;
+        }
+        
+        .player-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        
+        @media (max-width: 768px) {
+            .cosmic-player {
+                padding: var(--space-sm) var(--space-md);
+            }
+            
+            .player-info {
+                min-width: auto;
+            }
+            
+            .player-cover {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .player-progress {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Three.js Canvas -->
+    <canvas id="universe-canvas"></canvas>
+    
+    <!-- 辉光覆盖层 -->
+    <div class="glow-overlay"></div>
+    
+    <!-- 导航栏 -->
+    <nav class="cosmic-nav">
+        <div class="nav-container">
+            <a href="#" class="logo-orbit">
+                <div class="logo-star">♪</div>
+                <div class="logo-text">音</div>
+            </a>
+            
+            <div class="nav-constellation">
+                <a href="#discover" class="nav-link active">发现</a>
+                <a href="#library" class="nav-link">曲库</a>
+                <a href="#playlist" class="nav-link">歌单</a>
+                <a href="#favorites" class="nav-link">收藏</a>
+            </div>
+            
+            <div class="user-quantum">
+                <div class="quantum-avatar">M</div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 主内容 -->
+    <main class="cosmic-container">
+        <!-- 页面标题区域 -->
+        <section class="galaxy-core">
+            <div class="core-header">
+                <div class="core-title-group">
+                    <div class="core-symbol">
+                        <i class="fas fa-music"></i>
+                        <span>Music Galaxy</span>
+                    </div>
+                    <h1 class="core-title">音乐星系</h1>
+                    <p class="core-subtitle">探索音乐宇宙中的每一个独特声波，发现属于你的旋律星辰</p>
+                </div>
+            </div>
+            
+            <!-- 装饰性轨道环 -->
+            <div class="orbit-decoration">
+                <div class="orbit-ring">
+                    <div class="orbit-particle"></div>
+                </div>
+                <div class="orbit-ring">
+                    <div class="orbit-particle"></div>
+                </div>
+                <div class="orbit-ring">
+                    <div class="orbit-particle"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 控制栏 -->
+        <div class="nebula-controller">
+            <div class="star-filters">
+                <span class="filter-label">筛选：</span>
+                <button class="filter-chip active" data-filter="all">
+                    <i class="fas fa-th"></i>
+                    全部
+                </button>
+                <button class="filter-chip" data-filter="original">
+                    <i class="fas fa-star"></i>
+                    原创
+                </button>
+                <button class="filter-chip" data-filter="derivative">
+                    <i class="fas fa-code-branch"></i>
+                    衍生
+                </button>
+                <button class="filter-chip" data-filter="trending">
+                    <i class="fas fa-fire"></i>
+                    热门
+                </button>
+            </div>
+            
+            <div class="sort-dropdown">
+                <div class="sort-trigger" onclick="toggleSortMenu()">
+                    <i class="fas fa-sort"></i>
+                    <span id="sort-label">最新发布</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="sort-menu" id="sort-menu">
+                    <div class="sort-option active" data-sort="newest">最新发布</div>
+                    <div class="sort-option" data-sort="popular">最受欢迎</div>
+                    <div class="sort-option" data-sort="duration-short">时长: 短到长</div>
+                    <div class="sort-option" data-sort="duration-long">时长: 长到短</div>
+                </div>
+            </div>
+            
+            <div class="view-toggles">
+                <button class="view-toggle active" data-view="grid" onclick="switchView('grid')">
+                    <i class="fas fa-th-large"></i>
+                    网格
+                </button>
+                <button class="view-toggle" data-view="list" onclick="switchView('list')">
+                    <i class="fas fa-list"></i>
+                    列表
+                </button>
+            </div>
+        </div>
+        
+        <!-- 音乐列表容器 -->
+        <div class="constellation-container" id="constellation-container">
+            <!-- 加载状态 -->
+            <div class="loading-nebula" id="loading-state">
+                <div class="loading-orbit">
+                    <div class="loading-ring"></div>
+                    <div class="loading-ring"></div>
+                    <div class="loading-ring"></div>
+                </div>
+                <p class="loading-text">正在连接音乐星系</p>
+            </div>
+            
+            <!-- 空状态 (默认隐藏) -->
+            <div class="empty-void" id="empty-state" style="display: none;">
+                <div class="empty-icon">
+                    <i class="fas fa-satellite"></i>
+                </div>
+                <h3 class="empty-title">这片星云还是空的</h3>
+                <p class="empty-desc">还没有符合条件的音乐作品，试着调整筛选条件或稍后再来探索</p>
+                <button class="empty-action" onclick="resetFilters()">
+                    <i class="fas fa-refresh"></i>
+                    重置筛选
+                </button>
+            </div>
+            
+            <!-- 网格视图 -->
+            <div class="star-grid" id="star-grid" style="display: none;"></div>
+            
+            <!-- 列表视图 -->
+            <div class="star-list" id="star-list" style="display: none;"></div>
+        </div>
+        
+        <!-- 加载更多 -->
+        <div class="load-more" id="load-more-container">
+            <button class="load-more-btn" id="load-more-btn" onclick="loadMore()">
+                <i class="fas fa-chevron-down"></i>
+                加载更多
+            </button>
+        </div>
+    </main>
+    
+    <!-- 底部播放器 -->
+    <div class="cosmic-player" id="cosmic-player">
+        <div class="player-container">
+            <div class="player-info">
+                <div class="player-cover">
+                    <img src="" alt="" id="player-cover-img">
+                </div>
+                <div class="player-meta">
+                    <h4 id="player-title">选择一首音乐</h4>
+                    <p id="player-artist">开始你的音乐之旅</p>
+                </div>
+            </div>
+            
+            <div class="player-controls">
+                <button class="control-btn"><i class="fas fa-step-backward"></i></button>
+                <button class="control-btn play" id="player-play-btn" onclick="togglePlayerPlay()">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button class="control-btn"><i class="fas fa-step-forward"></i></button>
+            </div>
+            
+            <div class="player-progress">
+                <span class="progress-time">1:24</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <span class="progress-time">3:45</span>
+            </div>
+            
+            <div class="player-actions">
+                <button class="control-btn"><i class="fas fa-heart"></i></button>
+                <button class="control-btn"><i class="fas fa-list"></i></button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ========================================
+        // Three.js 宇宙背景
+        // ========================================
+        const initUniverse = () => {
+            const canvas = document.getElementById('universe-canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            
+            // 创建星空粒子
+            const starsGeometry = new THREE.BufferGeometry();
+            const starsCount = 2000;
+            const posArray = new Float32Array(starsCount * 3);
+            const colorArray = new Float32Array(starsCount * 3);
+            
+            for(let i = 0; i < starsCount * 3; i += 3) {
+                posArray[i] = (Math.random() - 0.5) * 2000;
+                posArray[i+1] = (Math.random() - 0.5) * 2000;
+                posArray[i+2] = (Math.random() - 0.5) * 2000;
+                
+                const colorChoice = Math.random();
+                if (colorChoice < 0.5) {
+                    colorArray[i] = 0;
+                    colorArray[i+1] = 0.8 + Math.random() * 0.2;
+                    colorArray[i+2] = 1;
+                } else {
+                    colorArray[i] = 1;
+                    colorArray[i+1] = 0.2 + Math.random() * 0.4;
+                    colorArray[i+2] = 0.6 + Math.random() * 0.4;
+                }
+            }
+            
+            starsGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            starsGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+            
+            const starsMaterial = new THREE.PointsMaterial({
+                size: 2.5,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.7,
+                blending: THREE.AdditiveBlending
+            });
+            
+            const starsMesh = new THREE.Points(starsGeometry, starsMaterial);
+            scene.add(starsMesh);
+            
+            // 音乐波形粒子
+            const waveGeometry = new THREE.BufferGeometry();
+            const waveCount = 80;
+            const wavePos = new Float32Array(waveCount * 3);
+            
+            for(let i = 0; i < waveCount; i++) {
+                wavePos[i*3] = (Math.random() - 0.5) * 800;
+                wavePos[i*3+1] = -400 + Math.random() * 200;
+                wavePos[i*3+2] = (Math.random() - 0.5) * 400;
+            }
+            
+            waveGeometry.setAttribute('position', new THREE.BufferAttribute(wavePos, 3));
+            
+            const waveMaterial = new THREE.PointsMaterial({
+                size: 6,
+                color: 0x00F5FF,
+                transparent: true,
+                opacity: 0.5,
+                blending: THREE.AdditiveBlending
+            });
+            
+            const waveMesh = new THREE.Points(waveGeometry, waveMaterial);
+            scene.add(waveMesh);
+            
+            camera.position.z = 600;
+            
+            let time = 0;
+            const animate = () => {
+                requestAnimationFrame(animate);
+                time += 0.001;
+                
+                starsMesh.rotation.y += 0.00015;
+                starsMesh.rotation.x += 0.00005;
+                
+                // 波形粒子动画
+                const positions = waveMesh.geometry.attributes.position.array;
+                for(let i = 0; i < waveCount; i++) {
+                    positions[i*3+1] += Math.sin(time * 2 + i * 0.1) * 0.3;
+                }
+                waveMesh.geometry.attributes.position.needsUpdate = true;
+                waveMesh.rotation.y -= 0.0003;
+                
+                renderer.render(scene, camera);
+            };
+            
+            animate();
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        };
+        
+        initUniverse();
+        
+        // ========================================
+        // 模拟音乐数据
+        // ========================================
+        const musicData = [
+            { id: 1, title: "星云漫步", artist: "Cosmic Walker", type: "original", duration: "3:45", plays: "12.5K", likes: 856, genre: "电子", cover: "linear-gradient(135deg, #1A1A3A, #4A8FE7)" },
+            { id: 2, title: "量子纠缠", artist: "Quantum Beats", type: "derivative", duration: "4:12", plays: "8.2K", likes: 623, genre: "氛围", cover: "linear-gradient(135deg, #2A1A3A, #FF6B9D)" },
+            { id: 3, title: "深空回响", artist: "Void Echo", type: "original", duration: "5:30", plays: "20.1K", likes: 1523, genre: "氛围", cover: "linear-gradient(135deg, #0A1A2A, #00F5FF)" },
+            { id: 4, title: "星际穿越", artist: "Galaxy Drift", type: "original", duration: "3:28", plays: "15.8K", likes: 1120, genre: "电子", cover: "linear-gradient(135deg, #1A0A2A, #7B68EE)" },
+            { id: 5, title: "黑洞频率", artist: "Event Horizon", type: "derivative", duration: "6:15", plays: "6.5K", likes: 445, genre: "实验", cover: "linear-gradient(135deg, #0A0A1A, #FF1493)" },
+            { id: 6, title: "超新星爆发", artist: "Nova Core", type: "original", duration: "4:05", plays: "32.4K", likes: 2890, genre: "流行", cover: "linear-gradient(135deg, #2A1A1A, #FF8C42)" },
+            { id: 7, title: "彗星尾巴", artist: "Comet Tail", type: "derivative", duration: "3:52", plays: "9.1K", likes: 678, genre: "轻音乐", cover: "linear-gradient(135deg, #1A2A2A, #2ED8B6)" },
+            { id: 8, title: "银河系漫游", artist: "Milky Way", type: "original", duration: "7:20", plays: "18.7K", likes: 1345, genre: "交响", cover: "linear-gradient(135deg, #1A1A4A, #4AE7C7)" },
+            { id: 9, title: "暗物质", artist: "Dark Matter", type: "original", duration: "4:48", plays: "11.3K", likes: 892, genre: "实验", cover: "linear-gradient(135deg, #0A0A0A, #606090)" },
+            { id: 10, title: "引力波", artist: "Gravity Wave", type: "derivative", duration: "5:05", plays: "7.8K", likes: 567, genre: "电子", cover: "linear-gradient(135deg, #1A2A3A, #4A8FE7)" },
+            { id: 11, title: "宇宙微波", artist: "CMB Radiation", type: "original", duration: "8:00", plays: "5.2K", likes: 423, genre: "古典", cover: "linear-gradient(135deg, #2A1A0A, #FFD700)" },
+            { id: 12, title: "时空扭曲", artist: "Space-Time", type: "derivative", duration: "3:33", plays: "14.6K", likes: 1089, genre: "电子", cover: "linear-gradient(135deg, #2A0A2A, #FF6B9D)" }
+        ];
+        
+        let currentView = 'grid';
+        let currentFilter = 'all';
+        let currentSort = 'newest';
+        let displayedCount = 8;
+        let isLoading = false;
+        let currentPlayingId = null;
+        
+        // 时长解析辅助函数
+        function parseDuration(duration) {
+            const [mins, secs] = duration.split(':').map(Number);
+            return mins * 60 + secs;
+        }
+        
+        // ========================================
+        // 渲染音乐卡片
+        // ========================================
+        function renderMusicCard(music, index) {
+            const isPlaying = currentPlayingId === music.id;
+            return `
+                <div class="music-card ${music.type}" data-id="${music.id}" data-type="${music.type}" style="animation-delay: ${index * 50}ms">
+                    <div class="card-cover-wrapper">
+                        <div class="card-cover" style="background: ${music.cover};"></div>
+                        <button class="play-btn ${isPlaying ? 'playing' : ''}" onclick="togglePlay(event, ${music.id})">
+                            <i class="fas ${isPlaying ? 'fa-pause' : 'fa-play'}"></i>
+                        </button>
+                        <span class="type-badge">${music.type === 'original' ? '原创' : '衍生'}</span>
+                        <span class="duration-badge">${music.duration}</span>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-info">
+                            <h3 class="card-title">${music.title}</h3>
+                            <p class="card-artist">
+                                <i class="fas fa-user-astronaut"></i>
+                                ${music.artist}
+                            </p>
+                        </div>
+                        <div class="card-meta">
+                            <span class="meta-item ${music.type}">
+                                <i class="fas fa-play"></i>
+                                ${music.plays}
+                            </span>
+                            <span class="card-genre">
+                                <i class="fas fa-compact-disc"></i>
+                                ${music.genre}
+                            </span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn ${music.liked ? 'liked' : ''}" onclick="toggleLike(event, ${music.id})">
+                                <i class="fas fa-heart"></i>
+                                <span>${music.likes}</span>
+                            </button>
+                            <button class="action-btn" onclick="addToPlaylist(event, ${music.id})">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 渲染列表项
+        function renderListItem(music, index) {
+            const isPlaying = currentPlayingId === music.id;
+            return `
+                <div class="music-card ${music.type}" data-id="${music.id}" data-type="${music.type}" style="animation-delay: ${index * 50}ms">
+                    <div class="card-cover-wrapper">
+                        <div class="card-cover" style="background: ${music.cover};"></div>
+                        <button class="play-btn ${isPlaying ? 'playing' : ''}" onclick="togglePlay(event, ${music.id})">
+                            <i class="fas ${isPlaying ? 'fa-pause' : 'fa-play'}"></i>
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-info">
+                            <h3 class="card-title">${music.title}</h3>
+                            <p class="card-artist">
+                                <i class="fas fa-user-astronaut"></i>
+                                ${music.artist}
+                            </p>
+                        </div>
+                        <div class="card-meta">
+                            <span class="meta-item ${music.type}">
+                                <i class="fas fa-play"></i>
+                                ${music.plays}
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                ${music.duration}
+                            </span>
+                            <span class="card-genre">
+                                <i class="fas fa-compact-disc"></i>
+                                ${music.genre}
+                            </span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn ${music.liked ? 'liked' : ''}" onclick="toggleLike(event, ${music.id})">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // ========================================
+        // 过滤和排序
+        // ========================================
+        function getFilteredMusic() {
+            let filtered = [...musicData];
+            
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'trending') {
+                    filtered = filtered.sort((a, b) => parseFloat(b.plays) - parseFloat(a.plays));
+                } else {
+                    filtered = filtered.filter(m => m.type === currentFilter);
+                }
+            }
+            
+            switch(currentSort) {
+                case 'popular':
+                    filtered.sort((a, b) => parseFloat(b.plays) - parseFloat(a.plays));
+                    break;
+                case 'duration-short':
+                    filtered.sort((a, b) => parseDuration(a.duration) - parseDuration(b.duration));
+                    break;
+                case 'duration-long':
+                    filtered.sort((a, b) => parseDuration(b.duration) - parseDuration(a.duration));
+                    break;
+                default:
+                    filtered.sort((a, b) => b.id - a.id);
+            }
+            
+            return filtered;
+        }
+        
+        // ========================================
+        // 渲染列表
+        // ========================================
+        function renderList() {
+            const grid = document.getElementById('star-grid');
+            const list = document.getElementById('star-list');
+            const loading = document.getElementById('loading-state');
+            const empty = document.getElementById('empty-state');
+            const loadMoreBtn = document.getElementById('load-more-btn');
+            
+            const filtered = getFilteredMusic();
+            const displayData = filtered.slice(0, displayedCount);
+            
+            loading.style.display = 'none';
+            
+            if (filtered.length === 0) {
+                grid.style.display = 'none';
+                list.style.display = 'none';
+                empty.style.display = 'flex';
+                loadMoreBtn.style.display = 'none';
+                return;
+            }
+            
+            empty.style.display = 'none';
+            
+            if (currentView === 'grid') {
+                grid.innerHTML = displayData.map((m, i) => renderMusicCard(m, i)).join('');
+                grid.style.display = 'grid';
+                list.style.display = 'none';
+            } else {
+                list.innerHTML = displayData.map((m, i) => renderListItem(m, i)).join('');
+                list.style.display = 'flex';
+                grid.style.display = 'none';
+            }
+            
+            // 显示/隐藏加载更多按钮
+            if (displayedCount >= filtered.length) {
+                loadMoreBtn.style.display = 'none';
+            } else {
+                loadMoreBtn.style.display = 'flex';
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.innerHTML = '<i class="fas fa-chevron-down"></i> 加载更多';
+            }
+        }
+        
+        // ========================================
+        // 视图切换
+        // ========================================
+        function switchView(view) {
+            if (currentView === view || isLoading) return;
+            
+            currentView = view;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.view-toggle').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+            
+            // 添加过渡效果
+            const container = document.getElementById('constellation-container');
+            const grid = document.getElementById('star-grid');
+            const list = document.getElementById('star-list');
+            
+            if (view === 'grid') {
+                list.classList.add('transitioning');
+                setTimeout(() => {
+                    list.style.display = 'none';
+                    list.classList.remove('transitioning');
+                    renderList();
+                }, 300);
+            } else {
+                grid.classList.add('transitioning');
+                setTimeout(() => {
+                    grid.style.display = 'none';
+                    grid.classList.remove('transitioning');
+                    renderList();
+                }, 300);
+            }
+        }
+        
+        // ========================================
+        // 筛选切换
+        // ========================================
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                if (isLoading) return;
+                
+                // 更新按钮状态
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                
+                currentFilter = chip.dataset.filter;
+                displayedCount = 8;
+                
+                // 添加过渡动画
+                const cards = document.querySelectorAll('.music-card');
+                cards.forEach(card => card.classList.add('leaving'));
+                
+                setTimeout(() => {
+                    renderList();
+                }, 300);
+            });
+        });
+        
+        // ========================================
+        // 排序菜单
+        // ========================================
+        function toggleSortMenu() {
+            document.querySelector('.sort-dropdown').classList.toggle('open');
+        }
+        
+        document.querySelectorAll('.sort-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.sort-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                
+                currentSort = option.dataset.sort;
+                document.getElementById('sort-label').textContent = option.textContent;
+                document.querySelector('.sort-dropdown').classList.remove('open');
+                
+                displayedCount = 8;
+                renderList();
+            });
+        });
+        
+        // 点击外部关闭排序菜单
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.sort-dropdown')) {
+                document.querySelector('.sort-dropdown').classList.remove('open');
+            }
+        });
+        
+        // ========================================
+        // 加载更多
+        // ========================================
+        function loadMore() {
+            if (isLoading) return;
+            
+            isLoading = true;
+            const btn = document.getElementById('load-more-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="orbit-loader" style="padding: 0;"><div class="orbit-dot"></div><div class="orbit-dot"></div><div class="orbit-dot"></div></div>';
+            
+            // 模拟加载延迟
+            setTimeout(() => {
+                displayedCount += 4;
+                isLoading = false;
+                renderList();
+            }, 800);
+        }
+        
+        // ========================================
+        // 播放控制
+        // ========================================
+        function togglePlay(event, id) {
+            event.stopPropagation();
+            
+            const music = musicData.find(m => m.id === id);
+            const player = document.getElementById('cosmic-player');
+            const playerTitle = document.getElementById('player-title');
+            const playerArtist = document.getElementById('player-artist');
+            const playerPlayBtn = document.getElementById('player-play-btn');
+            
+            if (currentPlayingId === id) {
+                // 暂停当前播放
+                currentPlayingId = null;
+                playerPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
+            } else {
+                // 播放新音乐
+                currentPlayingId = id;
+                playerTitle.textContent = music.title;
+                playerArtist.textContent = music.artist;
+                playerPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                player.classList.add('active');
+            }
+            
+            // 更新所有卡片播放按钮状态
+            renderList();
+        }
+        
+        function togglePlayerPlay() {
+            if (currentPlayingId) {
+                togglePlay({ stopPropagation: () => {} }, currentPlayingId);
+            }
+        }
+        
+        // ========================================
+        // 点赞
+        // ========================================
+        function toggleLike(event, id) {
+            event.stopPropagation();
+            
+            const music = musicData.find(m => m.id === id);
+            music.liked = !music.liked;
+            music.likes += music.liked ? 1 : -1;
+            
+            renderList();
+        }
+        
+        // ========================================
+        // 添加到播放列表
+        // ========================================
+        function addToPlaylist(event, id) {
+            event.stopPropagation();
+            
+            // 显示提示
+            const btn = event.currentTarget;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i>';
+            btn.style.color = 'var(--star-success)';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.color = '';
+            }, 1500);
+        }
+        
+        // ========================================
+        // 重置筛选
+        // ========================================
+        function resetFilters() {
+            currentFilter = 'all';
+            currentSort = 'newest';
+            displayedCount = 8;
+            
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            document.querySelector('.filter-chip[data-filter="all"]').classList.add('active');
+            
+            document.querySelectorAll('.sort-option').forEach(o => o.classList.remove('active'));
+            document.querySelector('.sort-option[data-sort="newest"]').classList.add('active');
+            document.getElementById('sort-label').textContent = '最新发布';
+            
+            renderList();
+        }
+        
+        // ========================================
+        // 初始化
+        // ========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            // 模拟初始加载
+            setTimeout(() => {
+                renderList();
+            }, 1200);
+        });
+        
+        // 无限滚动
+        let scrollTimeout;
+        window.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                const scrollHeight = document.documentElement.scrollHeight;
+                const scrollTop = document.documentElement.scrollTop;
+                const clientHeight = document.documentElement.clientHeight;
+                
+                if (scrollTop + clientHeight >= scrollHeight - 200) {
+                    const filtered = getFilteredMusic();
+                    if (displayedCount < filtered.length) {
+                        loadMore();
+                    }
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>

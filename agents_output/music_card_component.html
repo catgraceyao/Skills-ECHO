@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>「音」- 音乐宇宙</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            /* 宇宙深色背景 */
+            --void-deep: #050510;
+            --void-primary: #0A0A1A;
+            --void-secondary: #12122A;
+            --void-surface: #1A1A3A;
+            --void-elevated: #252550;
+            
+            /* 原创星系 - 冷色调 */
+            --nebula-cyan: #00F5FF;
+            --nebula-blue: #4A8FE7;
+            --nebula-purple: #7B68EE;
+            --nebula-glow: rgba(74, 143, 231, 0.4);
+            
+            /* 衍生星云 - 暖色调 */
+            --nova-pink: #FF1493;
+            --nova-coral: #FF6B9D;
+            --nova-orange: #FF8C42;
+            --nova-glow: rgba(255, 107, 157, 0.4);
+            
+            /* 功能恒星 */
+            --star-gold: #FFD700;
+            --star-success: #00FF88;
+            --star-warning: #FFB800;
+            
+            /* 文字 */
+            --text-primary: #FFFFFF;
+            --text-secondary: #E8E8FF;
+            --text-tertiary: #A0A0D0;
+            --text-dim: #606090;
+            
+            /* 字体 */
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            
+            /* 间距 */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 12px;
+            --space-lg: 16px;
+            --space-xl: 20px;
+            --space-xxl: 24px;
+            --space-xxxl: 32px;
+            --space-4xl: 48px;
+            --space-5xl: 64px;
+            
+            /* 圆角 */
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --radius-full: 999px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-body);
+            background: var(--void-deep);
+            color: var(--text-secondary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* ========================================
+           页面头部 & Logo
+           ======================================== */
+        
+        .yin-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: var(--space-lg) var(--space-4xl);
+            background: linear-gradient(180deg, rgba(5, 5, 16, 0.95) 0%, rgba(5, 5, 16, 0.4) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .yin-nav {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        /* Logo - 音字脉冲恒星 */
+        .yin-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            text-decoration: none;
+        }
+        
+        .yin-logo__symbol {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--nebula-cyan), var(--nova-pink));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            position: relative;
+            animation: yin-pulse 3s ease-in-out infinite;
+            box-shadow: 
+                0 0 30px rgba(0, 245, 255, 0.5),
+                0 0 60px rgba(255, 20, 147, 0.3),
+                inset 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+        
+        .yin-logo__symbol::before {
+            content: '♪';
+            color: white;
+            font-size: 1.75rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+        
+        @keyframes yin-pulse {
+            0%, 100% { 
+                transform: scale(1); 
+                box-shadow: 0 0 30px rgba(0, 245, 255, 0.5), 0 0 60px rgba(255, 20, 147, 0.3); 
+            }
+            50% { 
+                transform: scale(1.05); 
+                box-shadow: 0 0 50px rgba(0, 245, 255, 0.7), 0 0 100px rgba(255, 20, 147, 0.5); 
+            }
+        }
+        
+        .yin-logo__text {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.1em;
+            background: linear-gradient(90deg, var(--nebula-cyan), var(--nova-coral));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 245, 255, 0.3);
+        }
+        
+        /* 导航链接 */
+        .yin-nav__links {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            background: rgba(255, 255, 255, 0.03);
+            padding: var(--space-xs);
+            border-radius: var(--radius-full);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .yin-nav__link {
+            padding: var(--space-sm) var(--space-lg);
+            color: var(--text-tertiary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border-radius: var(--radius-full);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .yin-nav__link:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .yin-nav__link.active {
+            color: var(--text-primary);
+            background: linear-gradient(135deg, rgba(74, 143, 231, 0.3), rgba(255, 107, 157, 0.2));
+            box-shadow: 0 0 20px rgba(74, 143, 231, 0.3);
+        }
+        
+        /* 用户头像 */
+        .yin-user {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+        
+        .yin-user__avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--nebula-blue), var(--nova-coral));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .yin-user__avatar::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--nebula-cyan), var(--nova-pink));
+            z-index: -1;
+            opacity: 0.5;
+            animation: quantum-ring 2s linear infinite;
+        }
+        
+        @keyframes quantum-ring {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 主容器 */
+        .yin-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 120px var(--space-4xl) var(--space-5xl);
+        }
+        
+        /* 英雄区域 */
+        .yin-hero {
+            text-align: center;
+            padding: var(--space-5xl) 0;
+            margin-bottom: var(--space-5xl);
+        }
+        
+        .yin-hero__title {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 6vw, 5rem);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .yin-hero__title .char {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--nebula-cyan) 0%, var(--nova-coral) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: char-glow 4s ease-in-out infinite;
+        }
+        
+        @keyframes char-glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 245, 255, 0.3)); }
+            50% { filter: drop-shadow(0 0 40px rgba(255, 20, 147, 0.5)); }
+        }
+        
+        .yin-hero__subtitle {
+            font-size: 1.25rem;
+            color: var(--text-tertiary);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+        
+        /* ========================================
+           音乐卡片组件 - Music Card Component
+           ======================================== */
+        
+        /* 数据结构定义 (JavaScript):
+        
+        interface MusicCardData {
+            id: string;              // 资产ID，如 "YIN-2023-001"
+            title: string;           // 歌曲名称
+            artist: string;          // 艺术家
+            duration: string;        // 时长，如 "3:45"
+            genre: string;           // 流派，如 "电子", "流行"
+            playCount: number;       // 播放量
+            coverImage: string;      // 封面图URL
+            assetType: 'original' | 'derivative';  // 资产类型
+            price: {                 // 价格信息
+                play: number;        // 播放价格 (ETH)
+                download: number;    // 下载价格 (ETH)
+            };
+            isPlaying?: boolean;     // 是否正在播放
+            isCollected?: boolean;   // 是否已收藏
+        }
+        
+        */
+        
+        /* 卡片容器 - 玻璃态星云效果 */
+        .music-card {
+            position: relative;
+            width: 280px;
+            background: linear-gradient(
+                145deg,
+                rgba(26, 26, 58, 0.7) 0%,
+                rgba(10, 10, 26, 0.85) 50%,
+                rgba(5, 5, 16, 0.95) 100%
+            );
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+        
+        /* 顶部发光边框 - 根据类型变色 */
+        .music-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--card-accent);
+            opacity: 0.8;
+            z-index: 2;
+        }
+        
+        /* 悬停时全边框发光 */
+        .music-card::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: var(--radius-xl);
+            padding: 1px;
+            background: linear-gradient(
+                135deg,
+                var(--card-accent) 0%,
+                transparent 50%,
+                var(--card-accent-secondary) 100%
+            );
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        .music-card:hover::after {
+            opacity: 1;
+        }
+        
+        /* 原创类型变量 */
+        .music-card[data-type="original"] {
+            --card-accent: var(--nebula-cyan);
+            --card-accent-secondary: var(--nebula-blue);
+            --card-glow: rgba(0, 245, 255, 0.3);
+            --card-glow-strong: rgba(0, 245, 255, 0.5);
+        }
+        
+        /* 衍生类型变量 */
+        .music-card[data-type="derivative"] {
+            --card-accent: var(--nova-coral);
+            --card-accent-secondary: var(--nova-pink);
+            --card-glow: rgba(255, 107, 157, 0.3);
+            --card-glow-strong: rgba(255, 107, 157, 0.5);
+        }
+        
+        /* 悬停效果 - 浮动与发光 */
+        .music-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            border-color: var(--card-accent);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.5),
+                0 0 60px var(--card-glow),
+                0 0 100px var(--card-glow-strong),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        /* 封面区域 */
+        .music-card__cover {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            background: linear-gradient(
+                135deg,
+                var(--void-surface) 0%,
+                var(--void-secondary) 100%
+            );
+        }
+        
+        .music-card__cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .music-card:hover .music-card__cover img {
+            transform: scale(1.1);
+        }
+        
+        /* 封面覆盖层 - 渐变遮罩 */
+        .music-card__cover-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                transparent 50%,
+                rgba(5, 5, 16, 0.6) 80%,
+                rgba(5, 5, 16, 0.9) 100%
+            );
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        
+        .music-card:hover .music-card__cover-overlay {
+            opacity: 1;
+        }
+        
+        /* 播放按钮 - 悬浮在封面中央 */
+        .music-card__play-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(
+                135deg,
+                var(--card-accent) 0%,
+                var(--card-accent-secondary) 100%
+            );
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--void-deep);
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 0 30px var(--card-glow-strong),
+                0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 3;
+        }
+        
+        .music-card:hover .music-card__play-btn {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .music-card__play-btn:hover {
+            transform: translate(-50%, -50%) scale(1.15) !important;
+            box-shadow: 
+                0 0 50px var(--card-glow-strong),
+                0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* 播放状态 - 脉冲动画 */
+        .music-card__play-btn.playing {
+            animation: pulse-play 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-play {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 30px var(--card-glow-strong),
+                    0 10px 30px rgba(0, 0, 0, 0.3);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 50px var(--card-glow-strong),
+                    0 0 80px var(--card-glow),
+                    0 10px 30px rgba(0, 0, 0, 0.3);
+            }
+        }
+        
+        /* 资产类型标签 - 左上角 */
+        .music-card__type-badge {
+            position: absolute;
+            top: var(--space-md);
+            left: var(--space-md);
+            padding: 6px 12px;
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-accent);
+            color: var(--card-accent);
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .music-card__type-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--card-accent);
+            animation: badge-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes badge-pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 5px var(--card-accent); }
+            50% { opacity: 0.6; box-shadow: 0 0 10px var(--card-accent); }
+        }
+        
+        /* 收藏按钮 - 右上角 */
+        .music-card__collect-btn {
+            position: absolute;
+            top: var(--space-md);
+            right: var(--space-md);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+        
+        .music-card:hover .music-card__collect-btn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .music-card__collect-btn:hover {
+            background: rgba(255, 20, 147, 0.2);
+            border-color: var(--nova-pink);
+            color: var(--nova-pink);
+            transform: scale(1.1);
+        }
+        
+        .music-card__collect-btn.collected {
+            opacity: 1;
+            transform: translateY(0);
+            background: rgba(255, 20, 147, 0.3);
+            border-color: var(--nova-pink);
+            color: var(--nova-pink);
+        }
+        
+        /* 时长标签 - 封面右下角 */
+        .music-card__duration {
+            position: absolute;
+            bottom: var(--space-md);
+            right: var(--space-md);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            font-family: var(--font-display);
+            letter-spacing: 0.5px;
+            z-index: 2;
+        }
+        
+        /* 音频可视化波纹 - 播放时显示 */
+        .music-card__visualizer {
+            position: absolute;
+            bottom: var(--space-md);
+            left: var(--space-md);
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 2;
+        }
+        
+        .music-card[data-playing="true"] .music-card__visualizer {
+            opacity: 1;
+        }
+        
+        .music-card__visualizer-bar {
+            width: 3px;
+            background: var(--card-accent);
+            border-radius: 2px;
+            animation: visualizer-dance 0.8s ease-in-out infinite;
+        }
+        
+        .music-card__visualizer-bar:nth-child(1) { height: 30%; animation-delay: 0s; }
+        .music-card__visualizer-bar:nth-child(2) { height: 70%; animation-delay: 0.1s; }
+        .music-card__visualizer-bar:nth-child(3) { height: 50%; animation-delay: 0.2s; }
+        .music-card__visualizer-bar:nth-child(4) { height: 90%; animation-delay: 0.3s; }
+        .music-card__visualizer-bar:nth-child(5) { height: 40%; animation-delay: 0.15s; }
+        
+        @keyframes visualizer-dance {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.5); }
+        }
+        
+        /* 内容区域 */
+        .music-card__content {
+            padding: var(--space-xl);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+        
+        /* 歌曲名称 */
+        .music-card__title {
+            font-family: var(--font-display);
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color 0.3s ease;
+        }
+        
+        .music-card:hover .music-card__title {
+            background: linear-gradient(90deg, var(--card-accent), var(--text-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* 艺术家 */
+        .music-card__artist {
+            font-size: 0.9rem;
+            color: var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        
+        .music-card__artist::before {
+            content: '';
+            width: 16px;
+            height: 1px;
+            background: var(--card-accent);
+            opacity: 0.5;
+        }
+        
+        /* 流派标签 */
+        .music-card__genre {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            width: fit-content;
+        }
+        
+        /* 底部信息栏 */
+        .music-card__footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: var(--space-md);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: auto;
+        }
+        
+        /* 播放量 */
+        .music-card__plays {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        
+        .music-card__plays i {
+            font-size: 0.75rem;
+            color: var(--card-accent);
+        }
+        
+        /* 价格显示 */
+        .music-card__price {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+        
+        .music-card__price-label {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .music-card__price-value {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--star-gold);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .music-card__price-value i {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+        }
+        
+        /* 悬停时显示操作按钮 */
+        .music-card__actions {
+            position: absolute;
+            bottom: var(--space-xl);
+            left: var(--space-xl);
+            right: var(--space-xl);
+            display: flex;
+            gap: var(--space-sm);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 3;
+        }
+        
+        .music-card:hover .music-card__actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .music-card__action-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border: none;
+        }
+        
+        .music-card__action-btn--secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .music-card__action-btn--secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .music-card__action-btn--primary {
+            background: linear-gradient(
+                135deg,
+                var(--card-accent) 0%,
+                var(--card-accent-secondary) 100%
+            );
+            color: var(--void-deep);
+            box-shadow: 0 5px 20px var(--card-glow);
+        }
+        
+        .music-card__action-btn--primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--card-glow-strong);
+        }
+        
+        /* 卡片网格布局 */
+        .music-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 32px;
+            margin-top: var(--space-4xl);
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: var(--space-xxxl);
+        }
+        
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: var(--space-md);
+            background: linear-gradient(90deg, var(--nebula-cyan), var(--nova-coral));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .section-subtitle {
+            color: var(--text-tertiary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .music-card {
+                width: 100%;
+            }
+            
+            .yin-container {
+                padding: 100px var(--space-lg) var(--space-4xl);
+            }
+            
+            .yin-nav__links {
+                display: none;
+            }
+            
+            .yin-hero__title {
+                font-size: 2.5rem;
+            }
+        }
+        
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--void-deep);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--nebula-cyan), var(--nova-coral));
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部导航 -->
+    <header class="yin-header">
+        <nav class="yin-nav">
+            <a href="#" class="yin-logo">
+                <div class="yin-logo__symbol"></div>
+                <span class="yin-logo__text">音</span>
+            </a>
+            
+            <div class="yin-nav__links">
+                <a href="#discover" class="yin-nav__link active">发现</a>
+                <a href="#library" class="yin-nav__link">曲库</a>
+                <a href="#original" class="yin-nav__link">原创</a>
+                <a href="#remix" class="yin-nav__link">衍生</a>
+                <a href="#collection" class="yin-nav__link">收藏</a>
+            </div>
+            
+            <div class="yin-user">
+                <div class="yin-user__avatar">M</div>
+            </div>
+        </nav>
+    </header>
+    
+    <!-- 主内容 -->
+    <main class="yin-container">
+        <!-- 英雄区域 -->
+        <section class="yin-hero">
+            <h1 class="yin-hero__title">
+                <span class="char">音</span>
+            </h1>
+            <p class="yin-hero__subtitle">
+                在音乐的宇宙星云中，探索每一个独特的音符星球<br>
+                原创与衍生，在此共鸣
+            </p>
+        </section>
+        
+        <!-- 音乐卡片展示区 -->
+        <section id="discover">
+            <div class="section-header">
+                <h2 class="section-title">发现音乐</h2>
+                <p class="section-subtitle">探索来自音乐宇宙的精选作品</p>
+            </div>
+            
+            <div class="music-grid">
+                <!-- 原创音乐卡片示例 1 -->
+                <div class="music-card" data-type="original" data-id="YIN-2023-001">
+                    <div class="music-card__cover">
+                        <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400&h=400&fit=crop" alt="夏日旋律">
+                        <div class="music-card__cover-overlay"></div>
+                        
+                        <span class="music-card__type-badge">原创</span>
+                        
+                        <button class="music-card__collect-btn">
+                            <i class="far fa-heart"></i>
+                        </button>
+                        
+                        <button class="music-card__play-btn">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        
+                        <span class="music-card__duration">3:45</span>
+                        
+                        <div class="music-card__visualizer">
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="music-card__content">
+                        <h3 class="music-card__title">夏日旋律 Summer Melody</h3>
+                        <p class="music-card__artist">StarWalker</p>
+                        <span class="music-card__genre">电子 / 氛围</span>
+                        
+                        <div class="music-card__footer">
+                            <div class="music-card__plays">
+                                <i class="fas fa-play"></i>
+                                <span>12.5K</span>
+                            </div>
+                            <div class="music-card__price">
+                                <span class="music-card__price-label">播放</span>
+                                <span class="music-card__price-value">
+                                    <i class="fab fa-ethereum"></i>
+                                    0.001
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="music-card__actions">
+                        <button class="music-card__action-btn music-card__action-btn--secondary">
+                            <i class="fas fa-info-circle"></i>
+                            详情
+                        </button>
+                        <button class="music-card__action-btn music-card__action-btn--primary">
+                            <i class="fas fa-play"></i>
+                            播放
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 衍生音乐卡片示例 -->
+                <div class="music-card" data-type="derivative" data-id="YIN-2023-002">
+                    <div class="music-card__cover">
+                        <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop" alt="夏日变奏">
+                        <div class="music-card__cover-overlay"></div>
+                        
+                        <span class="music-card__type-badge">衍生</span>
+                        
+                        <button class="music-card__collect-btn collected">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                        
+                        <button class="music-card__play-btn">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        
+                        <span class="music-card__duration">4:12</span>
+                        
+                        <div class="music-card__visualizer">
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="music-card__content">
+                        <h3 class="music-card__title">夏日变奏 Remix</h3>
+                        <p class="music-card__artist">基于 StarWalker</p>
+                        <span class="music-card__genre">电子舞曲</span>
+                        
+                        <div class="music-card__footer">
+                            <div class="music-card__plays">
+                                <i class="fas fa-play"></i>
+                                <span>5.2K</span>
+                            </div>
+                            <div class="music-card__price">
+                                <span class="music-card__price-label">播放</span>
+                                <span class="music-card__price-value">
+                                    <i class="fab fa-ethereum"></i>
+                                    0.0005
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="music-card__actions">
+                        <button class="music-card__action-btn music-card__action-btn--secondary">
+                            <i class="fas fa-code-branch"></i>
+                            血缘
+                        </button>
+                        <button class="music-card__action-btn music-card__action-btn--primary">
+                            <i class="fas fa-play"></i>
+                            播放
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 原创音乐卡片示例 2 -->
+                <div class="music-card" data-type="original" data-id="YIN-2023-003">
+                    <div class="music-card__cover">
+                        <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=400&fit=crop" alt="城市夜行">
+                        <div class="music-card__cover-overlay"></div>
+                        
+                        <span class="music-card__type-badge">原创</span>
+                        
+                        <button class="music-card__collect-btn">
+                            <i class="far fa-heart"></i>
+                        </button>
+                        
+                        <button class="music-card__play-btn">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        
+                        <span class="music-card__duration">5:30</span>
+                        
+                        <div class="music-card__visualizer">
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="music-card__content">
+                        <h3 class="music-card__title">城市夜行 Night City</h3>
+                        <p class="music-card__artist">UrbanEcho</p>
+                        <span class="music-card__genre">Lofi / Hip-Hop</span>
+                        
+                        <div class="music-card__footer">
+                            <div class="music-card__plays">
+                                <i class="fas fa-play"></i>
+                                <span>28.9K</span>
+                            </div>
+                            <div class="music-card__price">
+                                <span class="music-card__price-label">播放</span>
+                                <span class="music-card__price-value">
+                                    <i class="fab fa-ethereum"></i>
+                                    0.002
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="music-card__actions">
+                        <button class="music-card__action-btn music-card__action-btn--secondary">
+                            <i class="fas fa-info-circle"></i>
+                            详情
+                        </button>
+                        <button class="music-card__action-btn music-card__action-btn--primary">
+                            <i class="fas fa-play"></i>
+                            播放
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 衍生音乐卡片示例 2 -->
+                <div class="music-card" data-type="derivative" data-id="YIN-2023-004">
+                    <div class="music-card__cover">
+                        <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=400&fit=crop" alt="城市夜行 Lofi">
+                        <div class="music-card__cover-overlay"></div>
+                        
+                        <span class="music-card__type-badge">衍生</span>
+                        
+                        <button class="music-card__collect-btn">
+                            <i class="far fa-heart"></i>
+                        </button>
+                        
+                        <button class="music-card__play-btn">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        
+                        <span class="music-card__duration">6:15</span>
+                        
+                        <div class="music-card__visualizer">
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="music-card__content">
+                        <h3 class="music-card__title">城市夜行 Lofi版</h3>
+                        <p class="music-card__artist">基于 UrbanEcho</p>
+                        <span class="music-card__genre">Lofi / 放松</span>
+                        
+                        <div class="music-card__footer">
+                            <div class="music-card__plays">
+                                <i class="fas fa-play"></i>
+                                <span>15.7K</span>
+                            </div>
+                            <div class="music-card__price">
+                                <span class="music-card__price-label">免费</span>
+                                <span class="music-card__price-value" style="color: var(--star-success);">
+                                    <i class="fas fa-gift"></i>
+                                    FREE
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="music-card__actions">
+                        <button class="music-card__action-btn music-card__action-btn--secondary">
+                            <i class="fas fa-code-branch"></i>
+                            血缘
+                        </button>
+                        <button class="music-card__action-btn music-card__action-btn--primary">
+                            <i class="fas fa-play"></i>
+                            播放
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 原创音乐卡片示例 3 -->
+                <div class="music-card" data-type="original" data-id="YIN-2023-005">
+                    <div class="music-card__cover">
+                        <img src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400&h=400&fit=crop" alt="深海回响">
+                        <div class="music-card__cover-overlay"></div>
+                        
+                        <span class="music-card__type-badge">原创</span>
+                        
+                        <button class="music-card__collect-btn">
+                            <i class="far fa-heart"></i>
+                        </button>
+                        
+                        <button class="music-card__play-btn">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        
+                        <span class="music-card__duration">7:20</span>
+                        
+                        <div class="music-card__visualizer">
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="music-card__content">
+                        <h3 class="music-card__title">深海回响 Deep Echo</h3>
+                        <p class="music-card__artist">OceanMind</p>
+                        <span class="music-card__genre">环境 / 冥想</span>
+                        
+                        <div class="music-card__footer">
+                            <div class="music-card__plays">
+                                <i class="fas fa-play"></i>
+                                <span>42.1K</span>
+                            </div>
+                            <div class="music-card__price">
+                                <span class="music-card__price-label">免费</span>
+                                <span class="music-card__price-value" style="color: var(--star-success);">
+                                    <i class="fas fa-gift"></i>
+                                    FREE
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="music-card__actions">
+                        <button class="music-card__action-btn music-card__action-btn--secondary">
+                            <i class="fas fa-info-circle"></i>
+                            详情
+                        </button>
+                        <button class="music-card__action-btn music-card__action-btn--primary">
+                            <i class="fas fa-play"></i>
+                            播放
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 衍生音乐卡片示例 3 -->
+                <div class="music-card" data-type="derivative" data-id="YIN-2023-006">
+                    <div class="music-card__cover">
+                        <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop" alt="深海混音">
+                        <div class="music-card__cover-overlay"></div>
+                        
+                        <span class="music-card__type-badge">衍生</span>
+                        
+                        <button class="music-card__collect-btn">
+                            <i class="far fa-heart"></i>
+                        </button>
+                        
+                        <button class="music-card__play-btn">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        
+                        <span class="music-card__duration">4:45</span>
+                        
+                        <div class="music-card__visualizer">
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                            <div class="music-card__visualizer-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="music-card__content">
+                        <h3 class="music-card__title">深海回响 Ambient Mix</h3>
+                        <p class="music-card__artist">基于 OceanMind</p>
+                        <span class="music-card__genre">环境 / 实验</span>
+                        
+                        <div class="music-card__footer">
+                            <div class="music-card__plays">
+                                <i class="fas fa-play"></i>
+                                <span>8.3K</span>
+                            </div>
+                            <div class="music-card__price">
+                                <span class="music-card__price-label">播放</span>
+                                <span class="music-card__price-value">
+                                    <i class="fab fa-ethereum"></i>
+                                    0.001
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="music-card__actions">
+                        <button class="music-card__action-btn music-card__action-btn--secondary">
+                            <i class="fas fa-code-branch"></i>
+                            血缘
+                        </button>
+                        <button class="music-card__action-btn music-card__action-btn--primary">
+                            <i class="fas fa-play"></i>
+                            播放
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <script>
+        /**
+         * 「音」项目 - 音乐卡片数据结构
+         */
+        const MusicCardSchema = {
+            example: {
+                id: "YIN-2023-001",                 // 资产唯一ID
+                title: "夏日旋律",                   // 歌曲名称
+                titleEn: "Summer Melody",           // 英文名称（可选）
+                artist: "StarWalker",               // 艺术家名
+                artistId: "user_123456",            // 艺术家ID
+                duration: "3:45",                   // 时长 MM:SS
+                durationSeconds: 225,               // 时长（秒）
+                genre: ["电子", "氛围"],            // 流派标签数组
+                genrePrimary: "电子",               // 主流派
+                playCount: 12500,                   // 总播放量
+                playCountFormatted: "12.5K",        // 格式化播放量
+                coverImage: "https://...",          // 封面图URL
+                coverImageSmall: "https://...",     // 缩略图URL
+                assetType: "original",              // 资产类型: original | derivative
+                parentAssetId: null,                // 父资产ID（衍生作品）
+                parentAssetArtist: null,            // 父资产艺术家
+                price: {
+                    play: 0.001,                    // 播放价格 (ETH)
+                    download: 0.01,                 // 下载价格 (ETH)
+                    currency: "ETH"                 // 货币类型
+                },
+                isFree: false,                      // 是否免费
+                isPlaying: false,                   // 是否正在播放
+                isCollected: false,                 // 是否已收藏
+                createdAt: "2023-06-15T10:30:00Z",  // 创建时间
+            }
+        };
+        
+        /**
+         * 音乐卡片组件 JavaScript 类
+         */
+        class MusicCard {
+            constructor(data) {
+                this.data = { ...MusicCardSchema.example, ...data };
+                this.element = null;
+            }
+            
+            static formatPlayCount(count) {
+                if (count >= 1000000) {
+                    return (count / 1000000).toFixed(1) + 'M';
+                } else if (count >= 1000) {
+                    return (count / 1000).toFixed(1) + 'K';
+                }
+                return count.toString();
+            }
+            
+            render() {
+                const isOriginal = this.data.assetType === 'original';
+                const typeLabel = isOriginal ? '原创' : '衍生';
+                const priceLabel = this.data.isFree ? '免费' : '播放';
+                const priceValue = this.data.isFree ? 'FREE' : this.data.price.play;
+                const priceIcon = this.data.isFree ? 'fa-gift' : 'fa-ethereum';
+                const priceColor = this.data.isFree ? 'var(--star-success)' : '';
+                const playCount = MusicCard.formatPlayCount(this.data.playCount);
+                
+                return `
+                    <div class="music-card" 
+                         data-type="${this.data.assetType}" 
+                         data-id="${this.data.id}"
+                         data-playing="${this.data.isPlaying}">
+                        <div class="music-card__cover">
+                            <img src="${this.data.coverImage}" alt="${this.data.title}">
+                            <div class="music-card__cover-overlay"></div>
+                            
+                            <span class="music-card__type-badge">${typeLabel}</span>
+                            
+                            <button class="music-card__collect-btn ${this.data.isCollected ? 'collected' : ''}">
+                                <i class="${this.data.isCollected ? 'fas' : 'far'} fa-heart"></i>
+                            </button>
+                            
+                            <button class="music-card__play-btn ${this.data.isPlaying ? 'playing' : ''}">
+                                <i class="fas ${this.data.isPlaying ? 'fa-pause' : 'fa-play'}"></i>
+                            </button>
+                            
+                            <span class="music-card__duration">${this.data.duration}</span>
+                            
+                            <div class="music-card__visualizer">
+                                <div class="music-card__visualizer-bar"></div>
+                                <div class="music-card__visualizer-bar"></div>
+                                <div class="music-card__visualizer-bar"></div>
+                                <div class="music-card__visualizer-bar"></div>
+                                <div class="music-card__visualizer-bar"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="music-card__content">
+                            <h3 class="music-card__title">${this.data.title}</h3>
+                            <p class="music-card__artist">
+                                ${isOriginal ? this.data.artist : '基于 ' + this.data.parentAssetArtist}
+                            </p>
+                            <span class="music-card__genre">${this.data.genrePrimary}</span>
+                            
+                            <div class="music-card__footer">
+                                <div class="music-card__plays">
+                                    <i class="fas fa-play"></i>
+                                    <span>${playCount}</span>
+                                </div>
+                                <div class="music-card__price">
+                                    <span class="music-card__price-label">${priceLabel}</span>
+                                    <span class="music-card__price-value" style="color: ${priceColor}">
+                                        <i class="${this.data.isFree ? 'fas' : 'fab'} ${priceIcon}"></i>
+                                        ${priceValue}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="music-card__actions">
+                            <button class="music-card__action-btn music-card__action-btn--secondary">
+                                <i class="fas ${isOriginal ? 'fa-info-circle' : 'fa-code-branch'}"></i>
+                                ${isOriginal ? '详情' : '血缘'}
+                            </button>
+                            <button class="music-card__action-btn music-card__action-btn--primary">
+                                <i class="fas fa-play"></i>
+                                播放
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // 控制台品牌信息
+        console.log('%c♪ 「音」音乐宇宙', 'font-size: 24px; font-weight: bold; color: #00F5FF;');
+        console.log('%c在音乐的星云中发现无限可能', 'font-size: 12px; color: #FF1493;');
+        
+        // 交互演示
+        document.querySelectorAll('.music-card__collect-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const icon = btn.querySelector('i');
+                btn.classList.toggle('collected');
+                icon.classList.toggle('far');
+                icon.classList.toggle('fas');
+            });
+        });
+        
+        document.querySelectorAll('.music-card__play-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const card = btn.closest('.music-card');
+                const icon = btn.querySelector('i');
+                const isPlaying = card.getAttribute('data-playing') === 'true';
+                
+                card.setAttribute('data-playing', !isPlaying);
+                btn.classList.toggle('playing');
+                icon.classList.toggle('fa-play');
+                icon.classList.toggle('fa-pause');
+            });
+        });
+    </script>
+</body>
+</html>
