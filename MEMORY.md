@@ -19,6 +19,11 @@
 ### 输出文件
 - **sound.html** - 完整的「音」项目页面（位于项目根目录）
 
+### GitHub 推送
+- 仓库: https://github.com/catgraceyao/ECHO-compose
+- 提交: f6f839c - 「音」项目完整实现
+- 新增文件: sound.html + 4个Agent组件文件
+
 ### 功能清单
 ✅ 宇宙/星云视觉风格（星空背景、星云动画）
 ✅ 导航栏（Logo「音」+ 发现/我的作品/创作）

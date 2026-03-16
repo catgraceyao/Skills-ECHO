@@ -6,10 +6,38 @@
 
 ---
 
+## 🎵 「音」项目
+
+**音** 是 ECHO Compose 生态中的独立音乐展示与播放平台。
+
+### 在线预览
+直接打开 `sound.html` 即可体验完整功能。
+
+### 功能特性
+| 功能 | 描述 |
+|------|------|
+| 🔍 搜索筛选 | 关键词、资产类型（原创/衍生）、流派、排序 |
+| 🎶 音乐播放 | 底部迷你播放器、频谱可视化、播放控制 |
+| 🎨 宇宙主题 | 星云/星系视觉风格、星空动画、青蓝+粉紫配色 |
+| 📝 创作面板 | 上传音乐、编辑信息、ECHO权利配置、价格设置 |
+
+### 快速开始
+```bash
+# 克隆仓库
+git clone https://github.com/catgraceyao/ECHO-compose.git
+cd ECHO-compose
+
+# 直接打开 sound.html（或使用本地服务器）
+open sound.html
+```
+
+---
+
 ## 📚 文档导航
 
 | 文档 | 内容 | 适合读者 |
 |------|------|----------|
+| [sound.html](./sound.html) | **「音」项目 - 完整音乐平台 Demo** | 所有人 |
 | [integration_summary.md](./integration_summary.md) | 项目总览、执行路线图、关键参数 | 所有人 |
 | [video_director.md](./video_director.md) | 75秒演示视频分镜脚本 | 视频制作人员 |
 | [interaction_designer.md](./interaction_designer.md) | UI设计、配色、CSS组件 | 前端开发 |
