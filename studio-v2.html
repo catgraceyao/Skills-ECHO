@@ -1,0 +1,2182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>谱 - 以音为墨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-rice: #F7F4ED;
+            --bg-paper: #FAF8F3;
+            --ink-black: #1A1A1A;
+            --ink-gray: #6B6B6B;
+            --ink-light: #9B9B9B;
+            --cinnabar: #C45C48;
+            --cinnabar-light: rgba(196, 92, 72, 0.1);
+            --stone-blue: #4A6B7C;
+            --wood-brown: #8B6F47;
+            --border-light: rgba(139, 111, 71, 0.2);
+            --track-bg: #EDE9E0;
+            --track-border: #D4CFC4;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'Songti SC', serif;
+            background: var(--bg-rice);
+            color: var(--ink-black);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            background: rgba(247, 244, 237, 0.98);
+            border-bottom: 1px solid var(--border-light);
+            padding: 16px 32px;
+        }
+        .nav-container {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-decoration: none;
+            color: var(--ink-black);
+        }
+        .nav-logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--cinnabar);
+            border: 2px solid var(--cinnabar);
+            width: 44px; height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+        .nav-title {
+            font-size: 20px;
+            letter-spacing: 0.2em;
+        }
+        .nav-actions {
+            display: flex;
+            gap: 16px;
+        }
+        .nav-btn {
+            padding: 10px 24px;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--ink-gray);
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            border-color: var(--wood-brown);
+            color: var(--ink-black);
+        }
+        .nav-btn.primary {
+            background: var(--ink-black);
+            color: var(--bg-rice);
+            border-color: var(--ink-black);
+        }
+        .nav-btn.primary:hover {
+            background: var(--cinnabar);
+            border-color: var(--cinnabar);
+        }
+
+        .studio-container {
+            position: fixed;
+            top: 77px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+        }
+
+        /* 左侧素材库 */
+        .library-panel {
+            width: 260px;
+            background: var(--bg-paper);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+        }
+        .library-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .library-title {
+            font-size: 14px;
+            color: var(--ink-light);
+            letter-spacing: 0.3em;
+            margin-bottom: 8px;
+        }
+        .library-subtitle {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .library-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .library-tab {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            color: var(--ink-gray);
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .library-tab.active {
+            color: var(--cinnabar);
+            border-bottom: 2px solid var(--cinnabar);
+        }
+        .library-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        .audio-item {
+            padding: 14px;
+            background: var(--bg-rice);
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            cursor: grab;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .audio-item:hover {
+            border-color: var(--wood-brown);
+            transform: translateX(4px);
+        }
+        .audio-item.dragging {
+            opacity: 0.5;
+        }
+        .audio-item.foreign {
+            border-left: 3px solid var(--cinnabar);
+        }
+        .audio-item .rights-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .audio-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            padding-right: 60px;
+        }
+        .audio-meta {
+            font-size: 12px;
+            color: var(--ink-light);
+            display: flex;
+            justify-content: space-between;
+        }
+        .audio-tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 2px;
+        }
+        .audio-tag.foreign {
+            background: var(--cinnabar-light);
+            color: var(--cinnabar);
+        }
+        .audio-tag.mine {
+            background: var(--border-light);
+            color: var(--ink-gray);
+        }
+
+        /* 本地导入 */
+        .import-zone {
+            margin: 16px;
+            padding: 20px;
+            border: 2px dashed var(--border-light);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .import-zone:hover {
+            border-color: var(--cinnabar);
+            background: var(--cinnabar-light);
+        }
+        .import-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .import-text {
+            font-size: 13px;
+            color: var(--ink-gray);
+        }
+
+        /* 主编辑区 */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            padding: 12px 24px;
+            background: var(--bg-paper);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .tool-group {
+            display: flex;
+            gap: 8px;
+            padding-right: 16px;
+            border-right: 1px solid var(--border-light);
+        }
+        .tool-group:last-child {
+            border-right: none;
+        }
+        .tool-btn {
+            width: 36px; height: 36px;
+            background: transparent;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            color: var(--ink-gray);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        .tool-btn:hover, .tool-btn.active {
+            border-color: var(--cinnabar);
+            color: var(--cinnabar);
+        }
+
+        /* 轨道容器 */
+        .tracks-wrapper {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .tracks-area {
+            flex: 1;
+            overflow: auto;
+            background: var(--bg-rice);
+        }
+
+        /* 时间轴标尺 */
+        .timeline-ruler {
+            height: 30px;
+            background: var(--bg-paper);
+            border-bottom: 1px solid var(--border-light);
+            position: relative;
+            margin-left: 70px;
+        }
+        .ruler-marks {
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 100%;
+        }
+        .ruler-mark {
+            position: absolute;
+            bottom: 0;
+            width: 1px;
+            background: var(--border-light);
+        }
+        .ruler-mark.major {
+            height: 12px;
+            background: var(--ink-gray);
+        }
+        .ruler-mark.minor {
+            height: 6px;
+        }
+        .ruler-label {
+            position: absolute;
+            bottom: 14px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 11px;
+            color: var(--ink-light);
+        }
+
+        /* 轨道 */
+        .track {
+            height: 120px;
+            border-bottom: 1px solid var(--track-border);
+            display: flex;
+            position: relative;
+        }
+        .track-header {
+            width: 70px;
+            background: var(--bg-paper);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .track-number {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px;
+            color: var(--ink-light);
+        }
+        .track-controls {
+            display: flex;
+            gap: 6px;
+        }
+        .track-btn {
+            width: 22px; height: 22px;
+            background: transparent;
+            border: 1px solid var(--border-light);
+            border-radius: 3px;
+            color: var(--ink-light);
+            font-size: 9px;
+            cursor: pointer;
+        }
+        .track-btn:hover {
+            border-color: var(--cinnabar);
+            color: var(--cinnabar);
+        }
+        .track-content {
+            flex: 1;
+            position: relative;
+            background: 
+                repeating-linear-gradient(90deg, transparent, transparent 99px, var(--track-border) 99px, var(--track-border) 100px),
+                var(--bg-rice);
+            min-width: 2000px;
+        }
+        .track-content.drag-over {
+            background: var(--cinnabar-light);
+        }
+
+        /* 音频块 */
+        .clip {
+            position: absolute;
+            height: 100px;
+            top: 10px;
+            background: var(--stone-blue);
+            border-radius: 4px;
+            cursor: move;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .clip.foreign {
+            background: var(--cinnabar);
+        }
+        .clip.selected {
+            box-shadow: 0 0 0 2px var(--cinnabar);
+        }
+        .clip-header {
+            height: 24px;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            color: white;
+            font-size: 11px;
+        }
+        .clip-waveform {
+            flex: 1;
+            position: relative;
+        }
+        .clip canvas {
+            width: 100%; height: 100%;
+        }
+        .clip-handle {
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 8px;
+            cursor: col-resize;
+            background: rgba(255,255,255,0.2);
+        }
+        .clip-handle:hover {
+            background: rgba(255,255,255,0.4);
+        }
+        .clip-handle.left { left: 0; }
+        .clip-handle.right { right: 0; }
+
+        /* 播放头 */
+        .playhead {
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 2px;
+            background: var(--cinnabar);
+            pointer-events: none;
+            z-index: 10;
+        }
+        .playhead::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: -4px;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid var(--cinnabar);
+        }
+
+        /* 右侧参数面板 */
+        .params-panel {
+            width: 280px;
+            background: var(--bg-paper);
+            border-left: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .panel-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .panel-title {
+            font-size: 13px;
+            color: var(--ink-light);
+            letter-spacing: 0.2em;
+            margin-bottom: 16px;
+        }
+
+        /* 参数控制 */
+        .param-row {
+            margin-bottom: 16px;
+        }
+        .param-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--ink-gray);
+            margin-bottom: 8px;
+        }
+        .param-value {
+            color: var(--cinnabar);
+            font-family: 'Cormorant Garamond', serif;
+        }
+        .param-slider {
+            width: 100%;
+            height: 4px;
+            background: var(--border-light);
+            border-radius: 2px;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+        .param-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px; height: 14px;
+            background: var(--cinnabar);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* 效果器 */
+        .effect-item {
+            padding: 12px;
+            background: var(--bg-rice);
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .effect-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .effect-name {
+            font-size: 13px;
+        }
+        .effect-toggle {
+            width: 36px; height: 18px;
+            background: var(--border-light);
+            border-radius: 9px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .effect-toggle.active {
+            background: var(--cinnabar);
+        }
+        .effect-toggle::after {
+            content: '';
+            position: absolute;
+            width: 14px; height: 14px;
+            background: white;
+            border-radius: 50%;
+            top: 2px; left: 2px;
+            transition: transform 0.3s;
+        }
+        .effect-toggle.active::after {
+            transform: translateX(18px);
+        }
+
+        /* EQ 可视化 */
+        .eq-visualizer {
+            height: 60px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            gap: 8px;
+            padding: 10px;
+            background: var(--bg-rice);
+            border-radius: 4px;
+        }
+        .eq-band {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .eq-bar-container {
+            width: 100%;
+            height: 40px;
+            background: var(--border-light);
+            border-radius: 2px;
+            position: relative;
+        }
+        .eq-bar {
+            position: absolute;
+            bottom: 50%;
+            left: 0; right: 0;
+            background: var(--cinnabar);
+            border-radius: 2px;
+        }
+        .eq-bar.negative {
+            bottom: auto;
+            top: 50%;
+        }
+        .eq-label {
+            font-size: 10px;
+            color: var(--ink-light);
+        }
+
+        /* 底部面板 */
+        .bottom-panel {
+            height: 180px;
+            background: var(--bg-paper);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+        }
+        .lineage-panel {
+            width: 40%;
+            border-right: 1px solid var(--border-light);
+            padding: 16px 20px;
+            overflow-y: auto;
+        }
+        .lineage-title {
+            font-size: 12px;
+            color: var(--ink-light);
+            letter-spacing: 0.3em;
+            margin-bottom: 12px;
+        }
+        .lineage-tree {
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        .lineage-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .lineage-branch {
+            color: var(--ink-light);
+        }
+        .lineage-tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 2px;
+        }
+        .lineage-tag.mine {
+            background: var(--border-light);
+            color: var(--ink-gray);
+        }
+        .lineage-tag.derived {
+            background: var(--cinnabar-light);
+            color: var(--cinnabar);
+        }
+        .lineage-rel {
+            color: var(--stone-blue);
+            font-size: 11px;
+        }
+
+        .transport-panel {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 0 32px;
+            background: var(--bg-paper);
+        }
+        .transport-panel .transport-btn {
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            color: var(--ink-gray);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+        .transport-panel .transport-btn:hover {
+            border-color: var(--cinnabar);
+            color: var(--cinnabar);
+        }
+        .transport-panel .transport-btn.play {
+            width: 44px;
+            height: 44px;
+            background: var(--cinnabar);
+            border-color: var(--cinnabar);
+            color: white;
+            font-size: 14px;
+            border-radius: 50%;
+        }
+        .transport-panel .transport-btn.play:hover {
+            background: #B54A3A;
+            border-color: #B54A3A;
+            transform: scale(1.05);
+        }
+        .transport-panel .time-display {
+            font-family: 'Cormorant Garamond', monospace;
+            font-size: 16px;
+            color: var(--ink-black);
+            min-width: 80px;
+            text-align: center;
+            padding: 6px 16px;
+            background: var(--bg-rice);
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+        }
+
+        /* 权属标识 */
+        .rights-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .rights-badge.free {
+            background: rgba(74, 107, 124, 0.12);
+            color: var(--stone-blue);
+            border: 1px solid rgba(74, 107, 124, 0.25);
+        }
+        .rights-badge.paid {
+            background: rgba(196, 92, 72, 0.12);
+            color: var(--cinnabar);
+            border: 1px solid rgba(196, 92, 72, 0.25);
+        }
+        .rights-badge.owned {
+            background: rgba(139, 111, 71, 0.12);
+            color: var(--wood-brown);
+            border: 1px solid rgba(139, 111, 71, 0.25);
+        }
+
+        /* 频谱可视化 */
+        .spectrum-container {
+            width: 200px;
+            height: 60px;
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+        }
+        .spectrum-bar {
+            flex: 1;
+            background: var(--cinnabar);
+            border-radius: 1px;
+            transition: height 0.1s ease;
+        }
+
+        /* 播放控制条 - 与编辑器协调 */
+        .transport-bar {
+            position: absolute;
+            bottom: 180px;
+            left: 260px;
+            right: 280px;
+            height: 48px;
+            background: var(--bg-paper);
+            border-top: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            padding: 0 24px;
+        }
+
+        .transport-bar .transport-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--ink-gray);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .transport-bar .transport-btn:hover {
+            border-color: var(--cinnabar);
+            color: var(--cinnabar);
+        }
+
+        .transport-bar .transport-btn.play {
+            width: 36px;
+            height: 36px;
+            background: var(--cinnabar);
+            border-color: var(--cinnabar);
+            color: white;
+            font-size: 14px;
+        }
+
+        .transport-bar .transport-btn.play:hover {
+            background: #B54A3A;
+            border-color: #B54A3A;
+        }
+
+        .transport-bar .time-display {
+            font-family: 'Cormorant Garamond', monospace;
+            font-size: 15px;
+            color: var(--ink-black);
+            min-width: 80px;
+            text-align: center;
+            padding: 4px 12px;
+            background: var(--bg-rice);
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+        }
+
+        .transport-bar .transport-rights {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: auto;
+        }
+
+        .transport-bar .transport-rights.free {
+            background: rgba(74, 107, 124, 0.1);
+            color: var(--stone-blue);
+            border: 1px solid rgba(74, 107, 124, 0.3);
+        }
+
+        .transport-bar .transport-rights.paid {
+            background: rgba(196, 92, 72, 0.1);
+            color: var(--cinnabar);
+            border: 1px solid rgba(196, 92, 72, 0.3);
+        }
+
+        .transport-bar .transport-rights.owned {
+            background: rgba(139, 111, 71, 0.1);
+            color: var(--wood-brown);
+            border: 1px solid rgba(139, 111, 71, 0.3);
+        }
+
+        /* 查重弹窗 */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            width: 560px;
+            background: var(--bg-rice);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-light);
+            text-align: center;
+        }
+        .modal-title {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+        .modal-subtitle {
+            font-size: 14px;
+            color: var(--ink-gray);
+        }
+        .modal-body {
+            padding: 28px;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .scan-progress {
+            margin-bottom: 24px;
+        }
+        .scan-status {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        .scan-bar {
+            height: 4px;
+            background: var(--border-light);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .scan-fill {
+            height: 100%;
+            background: var(--cinnabar);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .similarity-list {
+            margin-top: 20px;
+        }
+        .similarity-item {
+            padding: 14px;
+            background: var(--bg-paper);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .similarity-bar {
+            width: 80px;
+            height: 4px;
+            background: var(--border-light);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .similarity-fill {
+            height: 100%;
+            border-radius: 2px;
+        }
+        .similarity-fill.high { background: var(--cinnabar); }
+        .similarity-fill.medium { background: #D4A574; }
+        .similarity-fill.low { background: var(--stone-blue); }
+        .similarity-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px;
+            font-weight: 600;
+            min-width: 40px;
+        }
+        .similarity-value.high { color: var(--cinnabar); }
+        .similarity-info {
+            flex: 1;
+        }
+        .similarity-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .similarity-artist {
+            font-size: 12px;
+            color: var(--ink-gray);
+        }
+
+        /* 发布页 */
+        .publish-panel {
+            position: fixed;
+            inset: 77px 0 0 0;
+            background: var(--bg-rice);
+            display: none;
+            overflow-y: auto;
+            z-index: 50;
+        }
+        .publish-panel.active {
+            display: block;
+        }
+        .publish-container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 50px 40px;
+        }
+        .publish-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .publish-header h1 {
+            font-size: 42px;
+            letter-spacing: 0.3em;
+            margin-bottom: 12px;
+        }
+        .publish-header p {
+            color: var(--ink-gray);
+            letter-spacing: 0.2em;
+        }
+        .publish-section {
+            margin-bottom: 36px;
+        }
+        .publish-section-title {
+            font-size: 13px;
+            color: var(--ink-light);
+            letter-spacing: 0.3em;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .preview-player {
+            padding: 32px;
+            background: var(--bg-paper);
+            border-radius: 8px;
+            text-align: center;
+        }
+        .play-big {
+            width: 72px;
+            height: 72px;
+            background: var(--cinnabar);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            margin-bottom: 16px;
+            transition: transform 0.3s;
+        }
+        .play-big:hover {
+            transform: scale(1.05);
+        }
+
+        .rights-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .right-item {
+            padding: 16px;
+            background: var(--bg-paper);
+            border-radius: 4px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .right-checkbox {
+            width: 16px; height: 16px;
+            accent-color: var(--cinnabar);
+            margin-top: 2px;
+        }
+        .right-label {
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+        .right-desc {
+            font-size: 12px;
+            color: var(--ink-gray);
+        }
+
+        .price-input-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .price-input-group input {
+            width: 160px;
+            padding: 12px 14px;
+            background: var(--bg-paper);
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .price-symbol {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            color: var(--cinnabar);
+        }
+
+        .publish-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 48px;
+        }
+        .btn-large {
+            padding: 16px 40px;
+            font-size: 15px;
+            letter-spacing: 0.15em;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--ink-black);
+            color: var(--bg-rice);
+            padding: 14px 28px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 2000;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* 支付弹窗 */
+        .payment-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .payment-modal-overlay.active {
+            display: flex;
+        }
+        .payment-modal {
+            width: 480px;
+            background: var(--bg-rice);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .payment-modal-header {
+            padding: 28px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .payment-modal-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(196, 92, 72, 0.1);
+            border: 1px solid rgba(196, 92, 72, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+            color: var(--cinnabar);
+        }
+        .payment-modal-title {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+        .payment-modal-desc {
+            font-size: 14px;
+            color: var(--ink-gray);
+        }
+        .payment-modal-body {
+            padding: 24px 28px;
+        }
+        .payment-track-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            background: var(--bg-paper);
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .payment-track-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 4px;
+            background: var(--bg-rice);
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--stone-blue);
+        }
+        .payment-track-detail {
+            flex: 1;
+        }
+        .payment-track-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+        .payment-track-artist {
+            font-size: 13px;
+            color: var(--ink-gray);
+        }
+        .payment-amount {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--cinnabar);
+        }
+        .payment-modal-footer {
+            padding: 16px 28px 28px;
+            display: flex;
+            gap: 12px;
+        }
+        .payment-modal-footer .nav-btn {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="sound-v2.html" class="nav-brand">
+                <div class="nav-logo">音</div>
+                <span class="nav-title">谱 · 以音为墨</span>
+            </a>
+            <div class="nav-actions">
+                <button class="nav-btn" onclick="undo()" title="撤销">↶</button>
+                <button class="nav-btn" onclick="redo()" title="重做">↷</button>
+                <button class="nav-btn" onclick="checkSimilarity()">查重</button>
+                <button class="nav-btn primary" onclick="goToPublish()">生</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="studio-container">
+        <!-- 左侧素材库 -->
+        <aside class="library-panel">
+            <div class="library-header">
+                <div class="library-title">素材库</div>
+                <div class="library-subtitle">我的收藏</div>
+            </div>
+            <div class="library-tabs">
+                <button class="library-tab active" onclick="switchTab('collected', this)">收</button>
+                <button class="library-tab" onclick="switchTab('mine', this)">我</button>
+            </div>
+            <div class="library-content" id="libraryContent">
+                <!-- 动态生成 -->
+            </div>
+            <div class="import-zone" onclick="document.getElementById('localFileInput').click()">
+                <div class="import-icon">+</div>
+                <div class="import-text">本地导入</div>
+                <input type="file" id="localFileInput" accept="audio/*" multiple style="display: none;">
+            </div>
+        </aside>
+
+        <!-- 主编辑区 -->
+        <main class="editor-area">
+            <!-- 工具栏 -->
+            <div class="toolbar">
+                <div class="tool-group">
+                    <button class="tool-btn active" id="tool-select" onclick="selectTool('select')" title="选择">◇</button>
+                    <button class="tool-btn" id="tool-cut" onclick="selectTool('cut')" title="切割">✂</button>
+                    <button class="tool-btn" id="tool-copy" onclick="copyClip()" title="复制">◫</button>
+                    <button class="tool-btn" id="tool-delete" onclick="deleteClip()" title="删除">✕</button>
+                </div>
+                <div class="tool-group">
+                    <button class="tool-btn" onclick="addTrack()" title="添加轨道">+</button>
+                    <button class="tool-btn" onclick="removeTrack()" title="删除轨道">−</button>
+                </div>
+                <div class="tool-group">
+                    <button class="tool-btn" onclick="fadeIn()" title="淡入">◢</button>
+                    <button class="tool-btn" onclick="fadeOut()" title="淡出">◣</button>
+                </div>
+            </div>
+
+            <div class="tracks-wrapper">
+                <!-- 轨道区域 -->
+                <div class="tracks-area">
+                    <div class="timeline-ruler">
+                        <div class="ruler-marks" id="rulerMarks"></div>
+                    </div>
+                    <div id="tracksContainer">
+                        <!-- 动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 右侧参数面板 -->
+                <aside class="params-panel">
+                    <div class="panel-section">
+                        <div class="panel-title">基础参数</div>
+                        
+                        <div class="param-row">
+                            <div class="param-label">
+                                <span>音调</span>
+                                <span class="param-value" id="pitchValue">0</span>
+                            </div>
+                            <input type="range" class="param-slider" min="-12" max="12" value="0" 
+                                   oninput="updateParam('pitch', this.value)">
+                        </div>
+
+                        <div class="param-row">
+                            <div class="param-label">
+                                <span>速度</span>
+                                <span class="param-value" id="tempoValue">100%</span>
+                            </div>
+                            <input type="range" class="param-slider" min="50" max="150" value="100"
+                                   oninput="updateParam('tempo', this.value)">
+                        </div>
+
+                        <div class="param-row">
+                            <div class="param-label">
+                                <span>音量</span>
+                                <span class="param-value" id="volumeValue">100%</span>
+                            </div>
+                            <input type="range" class="param-slider" min="0" max="200" value="100"
+                                   oninput="updateParam('volume', this.value)">
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <div class="panel-title">均衡器 (EQ)</div>
+                        <div class="eq-visualizer">
+                            <div class="eq-band">
+                                <div class="eq-bar-container">
+                                    <div class="eq-bar" id="eq-low" style="height: 20%"></div>
+                                </div>
+                                <span class="eq-label">低频</span>
+                                <input type="range" min="-12" max="12" value="0" 
+                                       style="width: 100%; height: 4px; -webkit-appearance: none;"
+                                       oninput="updateEQ('low', this.value)">
+                            </div>
+                            <div class="eq-band">
+                                <div class="eq-bar-container">
+                                    <div class="eq-bar" id="eq-mid" style="height: 20%"></div>
+                                </div>
+                                <span class="eq-label">中频</span>
+                                <input type="range" min="-12" max="12" value="0"
+                                       style="width: 100%; height: 4px; -webkit-appearance: none;"
+                                       oninput="updateEQ('mid', this.value)">
+                            </div>
+                            <div class="eq-band">
+                                <div class="eq-bar-container">
+                                    <div class="eq-bar" id="eq-high" style="height: 20%"></div>
+                                </div>
+                                <span class="eq-label">高频</span>
+                                <input type="range" min="-12" max="12" value="0"
+                                       style="width: 100%; height: 4px; -webkit-appearance: none;"
+                                       oninput="updateEQ('high', this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <div class="panel-title">效果器</div>
+                        
+                        <div class="effect-item">
+                            <div class="effect-header">
+                                <span class="effect-name">混响</span>
+                                <div class="effect-toggle" id="reverb-toggle" onclick="toggleEffect('reverb')"></div>
+                            </div>
+                            <input type="range" class="param-slider" min="0" max="100" value="30"
+                                   oninput="updateEffect('reverb', this.value)">
+                        </div>
+
+                        <div class="effect-item">
+                            <div class="effect-header">
+                                <span class="effect-name">压缩</span>
+                                <div class="effect-toggle" id="compress-toggle" onclick="toggleEffect('compress')"></div>
+                            </div>
+                            <input type="range" class="param-slider" min="0" max="100" value="50"
+                                   oninput="updateEffect('compress', this.value)">
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
+            <!-- 播放控制条 -->
+            <div class="transport-bar">
+                <button class="transport-btn" onclick="toStart()">|◀</button>
+                <button class="transport-btn" onclick="stepBack()">◀</button>
+                <button class="transport-btn play" onclick="togglePlay()" id="playBtn">▶</button>
+                <button class="transport-btn" onclick="stepForward()">▶</button>
+                <button class="transport-btn" onclick="toEnd()">▶|</button>
+                <div class="time-display" id="timeDisplay">00:00:00</div>
+                <div class="transport-rights free" id="transportRights">
+                    <i>◆</i> <span id="rightsText">免费试听</span>
+                </div>
+            </div>
+
+            <!-- 底部面板 -->
+            <div class="bottom-panel">
+                <div class="lineage-panel">
+                    <div class="lineage-title">血缘 · 衍生关系</div>
+                    <div class="lineage-tree" id="lineageTree">
+                        <div class="lineage-item">
+                            <span class="lineage-tag mine">本作品</span>
+                            <span>未命名</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="transport-panel">
+                    <button class="transport-btn" onclick="toStart()">|◀</button>
+                    <button class="transport-btn" onclick="stepBack()">◀</button>
+                    <button class="transport-btn play" onclick="togglePlay()">▶</button>
+                    <button class="transport-btn" onclick="stepForward()">▶</button>
+                    <button class="transport-btn" onclick="toEnd()">▶|</button>
+                    <div class="time-display" id="bottomTime">00:00:00</div>
+                    
+                    <div class="spectrum-container" id="spectrum">
+                        <!-- 动态生成频谱条 -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 查重弹窗 -->
+    <div class="modal-overlay" id="checkModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">音频指纹比对</h3>
+                <p class="modal-subtitle">正在检索链上相似作品</p>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div class="scan-progress">
+                    <div class="scan-status">
+                        <span id="scanText">正在分析音频特征...</span>
+                        <span id="scanPercent">0%</span>
+                    </div>
+                    <div class="scan-bar">
+                        <div class="scan-fill" id="scanFill"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nav-btn" onclick="closeModal()">取消</button>
+                <button class="nav-btn primary" id="modalAction" onclick="closeModal()" style="display:none">继续创作</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 发布页 -->
+    <div class="publish-panel" id="publishPanel">
+        <div class="publish-container">
+            <div class="publish-header">
+                <h1>生</h1>
+                <p>创作即生命，流转即生长</p>
+            </div>
+
+            <div class="publish-section">
+                <div class="publish-section-title">预览</div>
+                <div class="preview-player">
+                    <button class="play-big" onclick="togglePublishPlay()">▶</button>
+                    <p>《未命名作品》</p>
+                </div>
+            </div>
+
+            <div class="publish-section">
+                <div class="publish-section-title">血缘 · 衍生关系</div>
+                <div class="lineage-tree" id="publishLineage">
+                    <div class="lineage-item">
+                        <span class="lineage-tag mine">本作品</span>
+                        <span>未命名</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="publish-section">
+                <div class="publish-section-title">权利配置</div>
+                <div class="rights-grid">
+                    <label class="right-item">
+                        <input type="checkbox" class="right-checkbox" checked>
+                        <div>
+                            <div class="right-label">允许免费试听</div>
+                            <div class="right-desc">用户可以免费播放完整作品</div>
+                        </div>
+                    </label>
+                    <label class="right-item">
+                        <input type="checkbox" class="right-checkbox" checked>
+                        <div>
+                            <div class="right-label">允许下载</div>
+                            <div class="right-desc">用户可以下载音频文件</div>
+                        </div>
+                    </label>
+                    <label class="right-item">
+                        <input type="checkbox" class="right-checkbox">
+                        <div>
+                            <div class="right-label">允许他人衍生</div>
+                            <div class="right-desc">他人可基于此作品创作</div>
+                        </div>
+                    </label>
+                    <label class="right-item">
+                        <input type="checkbox" class="right-checkbox">
+                        <div>
+                            <div class="right-label">商业使用授权</div>
+                            <div class="right-desc">允许商业项目使用</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="publish-section">
+                <div class="publish-section-title">价格</div>
+                <div class="price-input-group">
+                    <span class="price-symbol">Ξ</span>
+                    <input type="number" placeholder="0.00" step="0.001">
+                    <span style="color: var(--ink-light); font-size: 14px;">ETH</span>
+                </div>
+            </div>
+
+            <div class="publish-actions">
+                <button class="nav-btn btn-large" onclick="backToEditor()">返回编辑</button>
+                <button class="nav-btn primary btn-large" onclick="publishWork()">落笔成音</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 支付弹窗 -->
+    <div class="payment-modal-overlay" id="paymentModal">
+        <div class="payment-modal">
+            <div class="payment-modal-header">
+                <div class="payment-modal-icon">◆</div>
+                <div class="payment-modal-title">使用授权</div>
+                <div class="payment-modal-desc">此素材需要支付使用费</div>
+            </div>
+            <div class="payment-modal-body">
+                <div class="payment-track-info">
+                    <div class="payment-track-icon">♪</div>
+                    <div class="payment-track-detail">
+                        <div class="payment-track-name" id="paymentTrackName">-</div>
+                        <div class="payment-track-artist" id="paymentTrackArtist">-</div>
+                    </div>
+                    <div class="payment-amount" id="paymentAmount">0.00</div>
+                </div>
+            </div>
+            <div class="payment-modal-footer">
+                <button class="nav-btn" onclick="closePaymentModal()">取消</button>
+                <button class="nav-btn primary" onclick="confirmPayment()">确认支付</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 素材库数据 - 包含权属信息
+        const libraryData = {
+            collected: [
+                { id: 1, name: '溪山琴况', artist: '云隐', duration: '3:45', type: 'foreign', genre: '宫', playPrice: 0, owned: true },
+                { id: 2, name: '松风引', artist: '竹里馆', duration: '4:15', type: 'foreign', genre: '角', playPrice: 0.002, owned: false },
+                { id: 3, name: '钟磬和鸣', artist: '古韵堂', duration: '5:20', type: 'foreign', genre: '商', playPrice: 0.001, owned: false },
+                { id: 4, name: '幽兰', artist: '琴心', duration: '3:30', type: 'foreign', genre: '宫', playPrice: 0, owned: true }
+            ],
+            mine: [
+                { id: 101, name: '自定义录音-1', artist: '我', duration: '2:30', type: 'mine', genre: '自定义', playPrice: 0, owned: true },
+                { id: 102, name: '自定义录音-2', artist: '我', duration: '1:45', type: 'mine', genre: '自定义', playPrice: 0, owned: true }
+            ]
+        };
+
+        let currentTab = 'collected';
+        let tracks = [
+            { id: 1, clips: [] },
+            { id: 2, clips: [] },
+            { id: 3, clips: [] },
+            { id: 4, clips: [] }
+        ];
+        let isPlaying = false;
+        let currentTime = 0;
+        let playInterval = null;
+        let selectedClip = null;
+        let clipboard = null;
+        let pendingAudio = null;
+
+        // 撤销/重做历史
+        let history = [];
+        let historyIndex = -1;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            renderLibrary();
+            renderTracks();
+            renderRuler();
+            initSpectrum();
+            saveHistory();
+        });
+
+        // 保存历史
+        function saveHistory() {
+            history = history.slice(0, historyIndex + 1);
+            history.push(JSON.parse(JSON.stringify(tracks)));
+            historyIndex++;
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                tracks = JSON.parse(JSON.stringify(history[historyIndex]));
+                renderTracks();
+                updateLineage();
+                showToast('已撤销');
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                tracks = JSON.parse(JSON.stringify(history[historyIndex]));
+                renderTracks();
+                updateLineage();
+                showToast('已重做');
+            }
+        }
+
+        // 渲染素材库
+        function renderLibrary() {
+            const container = document.getElementById('libraryContent');
+            const data = libraryData[currentTab];
+            
+            container.innerHTML = data.map(item => {
+                const canUseFree = item.playPrice === 0 || item.owned;
+                const badgeClass = canUseFree ? (item.owned ? 'owned' : 'free') : 'paid';
+                const badgeText = canUseFree ? (item.owned ? '已拥有' : '免费') : `◈ ${item.playPrice}`;
+                
+                return `
+                <div class="audio-item ${item.type}" draggable="true" data-id="${item.id}" data-type="${item.type}"
+                     data-name="${item.name}" data-artist="${item.artist}" data-price="${item.playPrice}" data-owned="${item.owned}"
+                     onclick="previewAudio(${item.id})">
+                    <span class="rights-badge ${badgeClass}">${badgeText}</span>
+                    <div class="audio-name">${item.name}</div>
+                    <div class="audio-meta">
+                        <span>${item.artist} · ${item.duration}</span>
+                        <span class="audio-tag ${item.type}">${item.type === 'foreign' ? '他' : '我'}</span>
+                    </div>
+                </div>
+            `}).join('');
+
+            document.querySelectorAll('.audio-item').forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        function switchTab(tab, btn) {
+            currentTab = tab;
+            document.querySelectorAll('.library-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            renderLibrary();
+        }
+
+        // 本地导入
+        document.getElementById('localFileInput').addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                const newAudio = {
+                    id: Date.now() + Math.random(),
+                    name: file.name.replace(/\.[^/.]+$/, ''),
+                    artist: '我',
+                    duration: '0:00',
+                    type: 'mine',
+                    genre: '本地'
+                };
+                libraryData.mine.push(newAudio);
+            });
+            if (currentTab !== 'mine') {
+                document.querySelectorAll('.library-tab')[1].click();
+            } else {
+                renderLibrary();
+            }
+            showToast(`已导入 ${files.length} 个文件`);
+        });
+
+        // 渲染时间轴标尺
+        function renderRuler() {
+            const container = document.getElementById('rulerMarks');
+            let html = '';
+            for (let i = 0; i <= 60; i++) {
+                const isMajor = i % 10 === 0;
+                const left = i * 100;
+                html += `<div class="ruler-mark ${isMajor ? 'major' : 'minor'}" style="left: ${left}px"></div>`;
+                if (isMajor) {
+                    const minutes = Math.floor(i / 60);
+                    const seconds = i % 60;
+                    const label = minutes > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${seconds}s`;
+                    html += `<div class="ruler-label" style="left: ${left - 15}px">${label}</div>`;
+                }
+            }
+            container.innerHTML = html;
+        }
+
+        // 渲染轨道
+        function renderTracks() {
+            const container = document.getElementById('tracksContainer');
+            container.innerHTML = tracks.map((track, index) => `
+                <div class="track" data-track-id="${track.id}">
+                    <div class="track-header">
+                        <span class="track-number">${String(index + 1).padStart(2, '0')}</span>
+                        <div class="track-controls">
+                            <button class="track-btn" onclick="toggleMute(${track.id})">M</button>
+                            <button class="track-btn" onclick="toggleSolo(${track.id})">S</button>
+                        </div>
+                    </div>
+                    <div class="track-content" 
+                         ondragover="handleDragOver(event)" 
+                         ondrop="handleDrop(event, ${track.id})" 
+                         ondragleave="handleDragLeave(event)"
+                         onclick="deselectClip()">
+                        ${renderClips(track.clips, track.id)}
+                        <div class="playhead" id="playhead-${track.id}" style="left: ${currentTime}px"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderClips(clips, trackId) {
+            return clips.map((clip, index) => `
+                <div class="clip ${clip.type} ${selectedClip?.id === clip.id ? 'selected' : ''}" 
+                     style="left: ${clip.start}px; width: ${clip.duration}px"
+                     onclick="selectClip(event, ${trackId}, ${clip.id})">
+                    <div class="clip-header">
+                        <span>${clip.name}</span>
+                    </div>
+                    <div class="clip-waveform">
+                        <canvas id="waveform-${clip.id}"></canvas>
+                    </div>
+                    <div class="clip-handle left" onclick="event.stopPropagation()"></div>
+                    <div class="clip-handle right" onclick="event.stopPropagation()"></div>
+                </div>
+            `).join('');
+        }
+
+        // 绘制波形
+        function drawWaveform(clipId) {
+            const canvas = document.getElementById(`waveform-${clipId}`);
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            const bars = 50;
+            const barWidth = canvas.width / bars;
+            
+            for (let i = 0; i < bars; i++) {
+                const height = Math.random() * canvas.height * 0.8 + canvas.height * 0.1;
+                const x = i * barWidth;
+                const y = (canvas.height - height) / 2;
+                ctx.fillRect(x, y, barWidth - 1, height);
+            }
+        }
+
+        // 拖拽处理
+        function handleDragStart(e) {
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('audioId', e.target.dataset.id);
+            e.dataTransfer.setData('audioType', e.target.dataset.type);
+            e.dataTransfer.setData('audioName', e.target.dataset.name);
+            e.dataTransfer.setData('audioArtist', e.target.dataset.artist);
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e, trackId) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            const audioId = e.dataTransfer.getData('audioId');
+            const audioType = e.dataTransfer.getData('audioType');
+            const audioName = e.dataTransfer.getData('audioName');
+            const audioArtist = e.dataTransfer.getData('audioArtist');
+            
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            
+            const track = tracks.find(t => t.id === trackId);
+            const newClip = {
+                id: Date.now(),
+                name: audioName,
+                type: audioType,
+                artist: audioArtist,
+                start: Math.max(0, x - 100),
+                duration: 200,
+                pitch: 0,
+                tempo: 100,
+                volume: 100,
+                fadeIn: 0,
+                fadeOut: 0
+            };
+            track.clips.push(newClip);
+
+            renderTracks();
+            updateLineage();
+            saveHistory();
+            showToast(`已添加: ${audioName}`);
+            
+            setTimeout(() => drawWaveform(newClip.id), 100);
+        }
+
+        // 选择音频块
+        function selectClip(e, trackId, clipId) {
+            e.stopPropagation();
+            selectedClip = { trackId, id: clipId };
+            renderTracks();
+        }
+
+        function deselectClip() {
+            selectedClip = null;
+            renderTracks();
+        }
+
+        // 工具功能
+        function selectTool(tool) {
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tool-${tool}`).classList.add('active');
+        }
+
+        function copyClip() {
+            if (!selectedClip) {
+                showToast('请先选择音频块');
+                return;
+            }
+            const track = tracks.find(t => t.id === selectedClip.trackId);
+            const clip = track.clips.find(c => c.id === selectedClip.id);
+            clipboard = { ...clip, id: null };
+            showToast('已复制');
+        }
+
+        function deleteClip() {
+            if (!selectedClip) {
+                showToast('请先选择音频块');
+                return;
+            }
+            const track = tracks.find(t => t.id === selectedClip.trackId);
+            track.clips = track.clips.filter(c => c.id !== selectedClip.id);
+            selectedClip = null;
+            renderTracks();
+            updateLineage();
+            saveHistory();
+            showToast('已删除');
+        }
+
+        function fadeIn() {
+            if (!selectedClip) {
+                showToast('请先选择音频块');
+                return;
+            }
+            showToast('已添加淡入效果');
+        }
+
+        function fadeOut() {
+            if (!selectedClip) {
+                showToast('请先选择音频块');
+                return;
+            }
+            showToast('已添加淡出效果');
+        }
+
+        // 参数调节
+        function updateParam(param, value) {
+            const display = document.getElementById(`${param}Value`);
+            if (param === 'pitch') {
+                display.textContent = value > 0 ? `+${value}` : value;
+            } else {
+                display.textContent = value + '%';
+            }
+            
+            if (selectedClip) {
+                const track = tracks.find(t => t.id === selectedClip.trackId);
+                const clip = track.clips.find(c => c.id === selectedClip.id);
+                clip[param] = parseInt(value);
+            }
+        }
+
+        // EQ调节
+        function updateEQ(band, value) {
+            const bar = document.getElementById(`eq-${band}`);
+            const height = 50 + (parseInt(value) * 3);
+            const isNegative = parseInt(value) < 0;
+            bar.style.height = Math.abs(height - 50) + '%';
+            bar.classList.toggle('negative', isNegative);
+            bar.style.bottom = isNegative ? 'auto' : '50%';
+            bar.style.top = isNegative ? '50%' : 'auto';
+        }
+
+        // 效果器
+        function toggleEffect(effect) {
+            const toggle = document.getElementById(`${effect}-toggle`);
+            toggle.classList.toggle('active');
+            showToast(`${effect === 'reverb' ? '混响' : '压缩'} ${toggle.classList.contains('active') ? '开启' : '关闭'}`);
+        }
+
+        function updateEffect(effect, value) {
+            // 效果器强度调节
+        }
+
+        // 更新血缘树
+        function updateLineage() {
+            const allClips = tracks.flatMap(t => t.clips);
+            const foreignClips = allClips.filter(c => c.type === 'foreign');
+            
+            let html = `
+                <div class="lineage-item">
+                    <span class="lineage-tag mine">本作品</span>
+                    <span>未命名</span>
+                </div>
+            `;
+            
+            foreignClips.forEach(clip => {
+                html += `
+                    <div class="lineage-item" style="margin-left: 20px">
+                        <span class="lineage-branch">└─</span>
+                        <span class="lineage-tag derived">衍生</span>
+                        <span>${clip.name}</span>
+                        <span style="color: var(--ink-light); font-size: 11px;">(${clip.artist})</span>
+                        <span class="lineage-rel">[使用权] [衍生权]</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('lineageTree').innerHTML = html;
+        }
+
+        // 轨道操作
+        function addTrack() {
+            tracks.push({ id: Date.now(), clips: [] });
+            renderTracks();
+            saveHistory();
+        }
+
+        function removeTrack() {
+            if (tracks.length > 1) {
+                tracks.pop();
+                renderTracks();
+                saveHistory();
+            }
+        }
+
+        function toggleMute(trackId) {
+            showToast(`轨道静音切换`);
+        }
+
+        function toggleSolo(trackId) {
+            showToast(`轨道独奏切换`);
+        }
+
+        // 播放控制
+        function initSpectrum() {
+            const container = document.getElementById('spectrum');
+            for (let i = 0; i < 20; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'spectrum-bar';
+                bar.style.height = '10%';
+                container.appendChild(bar);
+            }
+        }
+
+        function updateSpectrum() {
+            if (!isPlaying) return;
+            const bars = document.querySelectorAll('.spectrum-bar');
+            bars.forEach(bar => {
+                bar.style.height = Math.random() * 80 + 10 + '%';
+            });
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            document.getElementById('playBtn').textContent = isPlaying ? '❚❚' : '▶';
+            
+            if (isPlaying) {
+                playInterval = setInterval(() => {
+                    currentTime += 2;
+                    if (currentTime > 6000) currentTime = 0;
+                    updatePlayhead();
+                    updateSpectrum();
+                }, 50);
+            } else {
+                clearInterval(playInterval);
+            }
+        }
+
+        function updatePlayhead() {
+            const timeStr = formatTime(currentTime);
+            document.getElementById('timeDisplay').textContent = timeStr;
+            document.getElementById('bottomTime').textContent = timeStr;
+            
+            tracks.forEach(track => {
+                const playhead = document.getElementById(`playhead-${track.id}`);
+                if (playhead) playhead.style.left = `${currentTime}px`;
+            });
+        }
+
+        function formatTime(ticks) {
+            const seconds = Math.floor(ticks / 10);
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            const ms = Math.floor((ticks % 10) * 10);
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}:${String(ms).padStart(2, '0')}`;
+        }
+
+        function toStart() {
+            currentTime = 0;
+            updatePlayhead();
+        }
+
+        function toEnd() {
+            currentTime = 6000;
+            updatePlayhead();
+        }
+
+        function stepBack() {
+            currentTime = Math.max(0, currentTime - 100);
+            updatePlayhead();
+        }
+
+        function stepForward() {
+            currentTime = Math.min(6000, currentTime + 100);
+            updatePlayhead();
+        }
+
+        // 查重
+        function checkSimilarity() {
+            const modal = document.getElementById('checkModal');
+            modal.classList.add('active');
+            
+            document.getElementById('scanFill').style.width = '0%';
+            document.getElementById('scanPercent').textContent = '0%';
+            document.getElementById('scanText').textContent = '正在分析音频特征...';
+            document.getElementById('modalAction').style.display = 'none';
+            
+            let progress = 0;
+            const steps = [
+                { pct: 15, text: '提取频谱特征...' },
+                { pct: 35, text: '提取节奏特征...' },
+                { pct: 55, text: '比对链上作品库...' },
+                { pct: 75, text: '计算相似度矩阵...' },
+                { pct: 95, text: '生成查重报告...' }
+            ];
+            
+            const interval = setInterval(() => {
+                progress += 2;
+                document.getElementById('scanFill').style.width = `${progress}%`;
+                document.getElementById('scanPercent').textContent = `${progress}%`;
+                
+                const step = steps.find(s => Math.abs(progress - s.pct) < 3);
+                if (step) document.getElementById('scanText').textContent = step.text;
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(showCheckResults, 300);
+                }
+            }, 50);
+        }
+
+        function showCheckResults() {
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 40px; color: var(--cinnabar); margin-bottom: 12px;">⚠</div>
+                    <h4 style="font-size: 16px; margin-bottom: 6px;">发现 3 个高相似度作品</h4>
+                    <p style="color: var(--ink-gray); font-size: 13px;">建议修改后再发布</p>
+                </div>
+                <div class="similarity-list">
+                    <div class="similarity-item">
+                        <div class="similarity-bar"><div class="similarity-fill high" style="width: 92%"></div></div>
+                        <span class="similarity-value high">92%</span>
+                        <div class="similarity-info">
+                            <div class="similarity-title">高山流水</div>
+                            <div class="similarity-artist">太古 · 宫</div>
+                        </div>
+                    </div>
+                    <div class="similarity-item">
+                        <div class="similarity-bar"><div class="similarity-fill high" style="width: 87%"></div></div>
+                        <span class="similarity-value high">87%</span>
+                        <div class="similarity-info">
+                            <div class="similarity-title">流水</div>
+                            <div class="similarity-artist">清音 · 徵</div>
+                        </div>
+                    </div>
+                    <div class="similarity-item">
+                        <div class="similarity-bar"><div class="similarity-fill medium" style="width: 64%"></div></div>
+                        <span class="similarity-value medium">64%</span>
+                        <div class="similarity-info">
+                            <div class="similarity-title">平沙落雁</div>
+                            <div class="similarity-artist">飞鸣 · 商</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalAction').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('checkModal').classList.remove('active');
+        }
+
+        // 发布
+        function goToPublish() {
+            document.getElementById('publishPanel').classList.add('active');
+            updatePublishLineage();
+        }
+
+        function backToEditor() {
+            document.getElementById('publishPanel').classList.remove('active');
+        }
+
+        function updatePublishLineage() {
+            const allClips = tracks.flatMap(t => t.clips);
+            const foreignClips = allClips.filter(c => c.type === 'foreign');
+            
+            let html = `
+                <div class="lineage-item">
+                    <span class="lineage-tag mine">本作品</span>
+                    <span>未命名</span>
+                </div>
+            `;
+            
+            foreignClips.forEach(clip => {
+                html += `
+                    <div class="lineage-item" style="margin-left: 24px">
+                        <span class="lineage-branch">↑</span>
+                        <span class="lineage-tag derived">衍生</span>
+                        <span>${clip.name}</span>
+                        <span style="color: var(--ink-light);">(${clip.artist})</span>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('publishLineage').innerHTML = html;
+        }
+
+        function togglePublishPlay() {
+            showToast('播放预览');
+        }
+
+        function publishWork() {
+            showToast('作品已生成！');
+            setTimeout(() => {
+                window.location.href = 'sound-v2.html';
+            }, 1500);
+        }
+
+        // Toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // 预览音频 - 检查权属
+        function previewAudio(audioId) {
+            const allAudio = [...libraryData.collected, ...libraryData.mine];
+            const audio = allAudio.find(a => a.id === audioId);
+            if (!audio) return;
+
+            const canUseFree = audio.playPrice === 0 || audio.owned;
+
+            if (canUseFree) {
+                // 免费或已拥有，直接播放
+                playAudio(audio);
+            } else {
+                // 需要付费，显示支付弹窗
+                showPaymentModal(audio);
+            }
+        }
+
+        // 播放音频
+        function playAudio(audio) {
+            // 更新播放器状态
+            const rightsEl = document.getElementById('transportRights');
+            const rightsText = document.getElementById('rightsText');
+            
+            rightsEl.className = 'transport-rights ' + (audio.playPrice === 0 ? 'free' : (audio.owned ? 'owned' : 'paid'));
+            rightsText.textContent = audio.playPrice === 0 ? '免费试听' : (audio.owned ? '已授权' : `付费 ◈ ${audio.playPrice}`);
+
+            // 开始播放
+            if (!isPlaying) {
+                togglePlay();
+            }
+            showToast(`正在播放: ${audio.name}`);
+        }
+
+        // 显示支付弹窗
+        function showPaymentModal(audio) {
+            pendingAudio = audio;
+            document.getElementById('paymentTrackName').textContent = audio.name;
+            document.getElementById('paymentTrackArtist').textContent = audio.artist;
+            document.getElementById('paymentAmount').textContent = `◈ ${audio.playPrice}`;
+            document.getElementById('paymentModal').classList.add('active');
+        }
+
+        // 关闭支付弹窗
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('active');
+            pendingAudio = null;
+        }
+
+        // 确认支付
+        function confirmPayment() {
+            if (pendingAudio) {
+                // 模拟支付成功
+                pendingAudio.owned = true;
+                
+                // 更新素材库显示
+                renderLibrary();
+                
+                // 播放音频
+                playAudio(pendingAudio);
+                
+                // 关闭弹窗
+                closePaymentModal();
+                
+                showToast('支付成功，已获得使用授权');
+            }
+        }
+    </script>
+</body>
+</html>
