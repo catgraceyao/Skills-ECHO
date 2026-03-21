@@ -38,11 +38,36 @@ open sound.html
 | 文档 | 内容 | 适合读者 |
 |------|------|----------|
 | [sound.html](./sound.html) | **「音」项目 - 完整音乐平台 Demo** | 所有人 |
+| [ECHO-MultiAgent-Fusion.html](./ECHO-MultiAgent-Fusion.html) | **ECHO与多Agent融合 - 三大场景PPT** | 所有人 |
+| [ECHO-Agent-Presentation.html](./ECHO-Agent-Presentation.html) | ECHO与Agent关系演示 | 所有人 |
 | [integration_summary.md](./integration_summary.md) | 项目总览、执行路线图、关键参数 | 所有人 |
 | [video_director.md](./video_director.md) | 75秒演示视频分镜脚本 | 视频制作人员 |
 | [interaction_designer.md](./interaction_designer.md) | UI设计、配色、CSS组件 | 前端开发 |
 | [protocol_architect.md](./protocol_architect.md) | 智能合约架构、部署脚本 | 合约开发 |
 | [economy_analyst.md](./economy_analyst.md) | 分润模型、数值案例 | 产品经理、经济设计 |
+
+---
+
+## 🤖 ECHO与多Agent融合
+
+ECHO与AI Agent不是简单的"确权工具"关系，而是**势场与导航员**的共生关系。
+
+### 核心场景
+
+| 场景 | 描述 | Agent角色 |
+|------|------|----------|
+| **创作者生态闭环** | 从想法到收益，Agent全程护航创作生命周期 | 导航Agent、铸造Agent、监测Agent、跃迁Agent、收益Agent |
+| **多Agent势场网络** | 五维Agent分工协作，形成技能血缘链 | 创作Agent、分析Agent(时间维)、传播Agent(空间维)、连接Agent(关系维)、导航Agent(综合) |
+| **AI训练数据ECHO化** | Agent服务数据确权交易，使用即收益 | 数据打包Agent、查询Agent、协调Agent |
+
+### 核心洞察
+
+- **Agent不是工具** —— 是用户在势场中的导航员
+- **三场景并存** —— 共享同一个ECHO协议层，相互嵌套赋能
+- **技能血缘链** —— Agent能力可被引用、衍生，形成技能谱系
+
+### 查看PPT
+直接打开 [ECHO-MultiAgent-Fusion.html](./ECHO-MultiAgent-Fusion.html) 查看完整演示（13页东方美学风格）。
 
 ---
 
