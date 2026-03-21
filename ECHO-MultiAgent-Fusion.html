@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECHO与多Agent融合 - 三大场景</title>
+    <title>ECHO与多Agent融合</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,409 +13,506 @@
         }
         
         :root {
-            --bg-color: #f5f0e8;
-            --text-color: #2c2c2c;
-            --accent-red: #c45c48;
-            --accent-blue: #5a7a7a;
-            --accent-wood: #8b6914;
-            --border-color: #d4cfc7;
-            --light-bg: rgba(255,255,255,0.4);
+            --rice-paper: #f8f5f0;
+            --ink: #1a1a1a;
+            --ink-light: #4a4a4a;
+            --cinnabar: #b83e2f;
+            --cinnabar-light: #d4725a;
+            --jade: #2d5a52;
+            --gold: #8b6914;
+            --stone: #8c8680;
         }
         
         body {
-            font-family: "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
-            background: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.8;
-            overflow-x: hidden;
+            font-family: "Noto Serif SC", serif;
+            background: var(--rice-paper);
+            color: var(--ink);
+            line-height: 1.9;
         }
         
         .slide {
             min-height: 100vh;
-            padding: 60px 80px;
+            padding: 80px 100px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             position: relative;
-            page-break-after: always;
+            overflow: hidden;
         }
         
+        /* 水墨背景效果 */
         .slide::before {
             content: "";
             position: absolute;
-            top: 40px;
-            left: 40px;
-            right: 40px;
-            bottom: 40px;
-            border: 1px solid var(--border-color);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(180, 170, 160, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 105, 20, 0.05) 0%, transparent 50%);
             pointer-events: none;
         }
         
-        .slide-number {
+        /* 边框装饰 */
+        .slide::after {
+            content: "";
             position: absolute;
+            top: 50px;
+            left: 50px;
+            right: 50px;
             bottom: 50px;
-            right: 60px;
+            border: 1px solid rgba(0,0,0,0.08);
+            pointer-events: none;
+        }
+        
+        /* 角落印章装饰 */
+        .corner-seal {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 2px solid var(--cinnabar);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Ma Shan Zheng", cursive;
+            font-size: 24px;
+            color: var(--cinnabar);
+            opacity: 0.6;
+        }
+        
+        .corner-seal.top-left { top: 30px; left: 30px; }
+        .corner-seal.top-right { top: 30px; right: 30px; }
+        .corner-seal.bottom-left { bottom: 30px; left: 30px; }
+        .corner-seal.bottom-right { bottom: 30px; right: 30px; }
+        
+        .page-num {
+            position: absolute;
+            bottom: 60px;
+            right: 70px;
             font-size: 14px;
-            color: var(--accent-blue);
+            color: var(--stone);
             font-family: monospace;
         }
         
-        h1 {
-            font-size: 48px;
-            font-weight: 600;
-            margin-bottom: 30px;
-            text-align: center;
-            letter-spacing: 0.1em;
-        }
-        
-        h2 {
-            font-size: 36px;
-            font-weight: 600;
-            margin-bottom: 25px;
-            border-left: 4px solid var(--accent-red);
-            padding-left: 20px;
-        }
-        
-        h3 {
-            font-size: 24px;
-            font-weight: 600;
-            margin: 20px 0 15px;
-            color: var(--accent-blue);
-        }
-        
-        p {
-            font-size: 18px;
-            margin-bottom: 15px;
-            text-align: justify;
-        }
-        
-        .subtitle {
-            font-size: 24px;
-            color: var(--accent-blue);
-            text-align: center;
-            margin-top: 15px;
-        }
-        
-        .highlight {
-            color: var(--accent-red);
-            font-weight: 600;
-        }
-        
-        .divider {
-            width: 120px;
-            height: 2px;
-            background: var(--accent-red);
-            margin: 25px auto;
-        }
-        
-        /* 封面样式 */
+        /* 封面 */
         .cover {
             text-align: center;
         }
         
+        .cover .gua-row {
+            font-size: 42px;
+            letter-spacing: 0.5em;
+            color: var(--cinnabar);
+            opacity: 0.7;
+            margin-bottom: 50px;
+        }
+        
         .cover h1 {
-            font-size: 52px;
-            margin-bottom: 15px;
+            font-size: 64px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            margin-bottom: 30px;
         }
         
-        .gua-symbols {
-            font-size: 72px;
-            color: var(--accent-red);
-            margin: 30px 0;
+        .cover .subtitle {
+            font-size: 24px;
+            color: var(--jade);
             letter-spacing: 0.3em;
-            opacity: 0.8;
+            margin-bottom: 60px;
         }
         
-        /* 流程图样式 */
-        .flow-container {
-            margin: 30px 0;
-            padding: 25px;
-            background: var(--light-bg);
-            border: 1px solid var(--border-color);
+        .cover .divider {
+            width: 200px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--cinnabar), transparent);
+            margin: 0 auto 40px;
         }
         
-        .flow-step {
+        .cover .tagline {
+            font-size: 18px;
+            color: var(--ink-light);
+            letter-spacing: 0.1em;
+        }
+        
+        /* 章节页 */
+        .chapter {
+            text-align: center;
+        }
+        
+        .chapter-num {
+            font-size: 120px;
+            font-weight: 100;
+            color: var(--cinnabar);
+            opacity: 0.15;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: "Ma Shan Zheng", cursive;
+        }
+        
+        .chapter-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .chapter h2 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            letter-spacing: 0.1em;
+        }
+        
+        .chapter .chapter-title-en {
+            font-size: 16px;
+            color: var(--stone);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+        
+        /* 内容页标题 */
+        .content-slide h2 {
+            font-size: 36px;
+            font-weight: 600;
+            margin-bottom: 50px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--cinnabar);
+            display: inline-block;
+        }
+        
+        /* 核心观点框 */
+        .insight-box {
+            background: rgba(184, 62, 47, 0.05);
+            border-left: 3px solid var(--cinnabar);
+            padding: 30px 35px;
+            margin: 40px 0;
+            font-size: 20px;
+            line-height: 2;
+        }
+        
+        .insight-box strong {
+            color: var(--cinnabar);
+        }
+        
+        /* 场景卡片 */
+        .scene-container {
+            margin-top: 50px;
+        }
+        
+        .scene-header {
             display: flex;
             align-items: center;
-            margin-bottom: 12px;
-            padding: 12px 15px;
-            background: rgba(255,255,255,0.6);
-            border-left: 3px solid var(--accent-blue);
+            margin-bottom: 40px;
         }
         
-        .flow-step.agent {
-            border-left-color: var(--accent-red);
-            background: rgba(196, 92, 72, 0.08);
-        }
-        
-        .flow-step-number {
-            width: 28px;
-            height: 28px;
-            background: var(--accent-blue);
-            color: white;
+        .scene-icon {
+            width: 80px;
+            height: 80px;
+            border: 2px solid var(--cinnabar);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            margin-right: 15px;
+            font-size: 36px;
+            margin-right: 30px;
             flex-shrink: 0;
         }
         
-        .flow-step.agent .flow-step-number {
-            background: var(--accent-red);
+        .scene-title-group h3 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
         
-        .flow-arrow {
-            text-align: center;
-            color: var(--accent-blue);
-            font-size: 20px;
-            margin: 8px 0;
+        .scene-title-group .scene-subtitle {
+            font-size: 16px;
+            color: var(--stone);
+            letter-spacing: 0.1em;
         }
         
-        /* 三栏布局 */
-        .three-col {
+        /* 流程图 - 垂直 */
+        .flow-vertical {
+            position: relative;
+            padding-left: 40px;
+        }
+        
+        .flow-vertical::before {
+            content: "";
+            position: absolute;
+            left: 15px;
+            top: 20px;
+            bottom: 20px;
+            width: 1px;
+            background: linear-gradient(180deg, var(--cinnabar), var(--gold), var(--jade));
+        }
+        
+        .flow-item {
+            position: relative;
+            padding: 20px 0 20px 40px;
+        }
+        
+        .flow-item::before {
+            content: "";
+            position: absolute;
+            left: -32px;
+            top: 28px;
+            width: 12px;
+            height: 12px;
+            background: var(--rice-paper);
+            border: 2px solid var(--cinnabar);
+            border-radius: 50%;
+        }
+        
+        .flow-item.agent::before {
+            background: var(--cinnabar);
+            border-color: var(--cinnabar);
+        }
+        
+        .flow-item h4 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ink);
+        }
+        
+        .flow-item.agent h4 {
+            color: var(--cinnabar);
+        }
+        
+        .flow-item p {
+            font-size: 16px;
+            color: var(--ink-light);
+            margin: 0;
+        }
+        
+        /* Agent类型网格 */
+        .agent-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 25px;
-            margin: 30px 0;
+            gap: 30px;
+            margin-top: 40px;
         }
         
-        .col-card {
-            border: 1px solid var(--border-color);
-            padding: 25px;
-            background: var(--light-bg);
-        }
-        
-        .col-card h3 {
-            margin-top: 0;
+        .agent-card {
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 30px;
             text-align: center;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s;
         }
         
-        /* 表格样式 */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 25px 0;
-            font-size: 16px;
+        .agent-card:hover {
+            border-color: var(--cinnabar);
+            box-shadow: 0 4px 20px rgba(184, 62, 47, 0.1);
         }
         
-        th, td {
-            border: 1px solid var(--border-color);
-            padding: 12px 15px;
-            text-align: left;
+        .agent-card .icon {
+            font-size: 40px;
+            margin-bottom: 15px;
         }
         
-        th {
-            background: rgba(90, 122, 122, 0.15);
+        .agent-card h4 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .agent-card .dimension {
+            font-size: 13px;
+            color: var(--cinnabar);
+            letter-spacing: 0.1em;
+            margin-bottom: 15px;
+        }
+        
+        .agent-card p {
+            font-size: 14px;
+            color: var(--ink-light);
+            margin: 0;
+        }
+        
+        /* 血缘图 */
+        .lineage-container {
+            margin-top: 40px;
+            padding: 40px;
+            background: rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+        
+        .lineage-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .lineage-node {
+            padding: 20px 30px;
+            border: 2px solid var(--jade);
+            text-align: center;
+            min-width: 150px;
+        }
+        
+        .lineage-node.parent {
+            border-color: var(--cinnabar);
+            background: rgba(184, 62, 47, 0.05);
+        }
+        
+        .lineage-node .label {
+            font-size: 13px;
+            color: var(--stone);
+            margin-bottom: 5px;
+        }
+        
+        .lineage-node .name {
+            font-size: 18px;
             font-weight: 600;
         }
         
-        /* 架构图样式 */
+        .lineage-arrow {
+            color: var(--cinnabar);
+            font-size: 24px;
+        }
+        
+        /* 对比表格 */
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 40px;
+            font-size: 15px;
+        }
+        
+        .compare-table th {
+            background: rgba(184, 62, 47, 0.1);
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--cinnabar);
+        }
+        
+        .compare-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+        
+        .compare-table tr:hover {
+            background: rgba(0,0,0,0.02);
+        }
+        
+        /* 架构图 */
         .arch-layer {
-            padding: 18px 25px;
-            margin-bottom: 12px;
-            border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
-            gap: 20px;
+            padding: 25px 30px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.5);
         }
         
         .arch-layer-name {
             font-weight: 600;
-            min-width: 140px;
-            color: var(--accent-red);
-            font-size: 18px;
+            min-width: 160px;
+            font-size: 17px;
+            color: var(--cinnabar);
         }
         
         .arch-layer-desc {
             flex: 1;
-            font-size: 16px;
+            font-size: 15px;
+            color: var(--ink-light);
         }
         
         .arch-arrow {
             text-align: center;
-            color: var(--accent-blue);
-            font-size: 24px;
-            margin: 8px 0;
+            color: var(--stone);
+            font-size: 20px;
+            margin: 10px 0;
         }
         
-        /* 标签样式 */
-        .tag {
-            display: inline-block;
-            padding: 4px 12px;
-            border: 1px solid var(--accent-blue);
-            font-size: 13px;
-            margin-right: 8px;
-            margin-bottom: 8px;
-            background: rgba(255,255,255,0.5);
-        }
-        
-        .tag.red {
-            border-color: var(--accent-red);
-            color: var(--accent-red);
-            background: rgba(196, 92, 72, 0.1);
-        }
-        
-        /* 强调框 */
-        .quote-box {
-            border-left: 4px solid var(--accent-red);
-            padding: 20px 25px;
-            margin: 25px 0;
-            background: rgba(196, 92, 72, 0.05);
-            font-size: 18px;
-        }
-        
-        /* Agent卡片 */
-        .agent-card {
-            border: 1px solid var(--border-color);
-            padding: 20px;
-            margin-bottom: 15px;
-            background: var(--light-bg);
-        }
-        
-        .agent-card h4 {
-            color: var(--accent-red);
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-        
-        .agent-icon {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-        
-        /* 血缘图 */
-        .lineage-tree {
+        /* 核心公式 */
+        .formula {
             text-align: center;
-            padding: 25px;
-            background: var(--light-bg);
-            border: 1px solid var(--border-color);
-            margin: 25px 0;
+            padding: 40px;
+            margin: 40px 0;
+            background: rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.08);
         }
         
-        .lineage-node {
-            display: inline-block;
-            padding: 15px 25px;
-            border: 2px solid var(--accent-blue);
-            margin: 10px;
-            background: white;
-        }
-        
-        .lineage-node.parent {
-            border-color: var(--accent-red);
-            background: rgba(196, 92, 72, 0.05);
-        }
-        
-        .lineage-arrow {
-            color: var(--accent-blue);
-            font-size: 24px;
-            margin: 0 15px;
-        }
-        
-        .echo-flow {
-            color: var(--accent-red);
+        .formula .equation {
+            font-size: 28px;
             font-weight: 600;
-        }
-        
-        /* 价值卡片 */
-        .value-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 25px;
-            margin: 30px 0;
-        }
-        
-        .value-card {
-            text-align: center;
-            padding: 35px 25px;
-            border: 1px solid var(--border-color);
-            background: var(--light-bg);
-        }
-        
-        .value-card .icon {
-            font-size: 48px;
+            letter-spacing: 0.1em;
             margin-bottom: 20px;
         }
         
-        .value-card h3 {
-            color: var(--accent-red);
-            margin-bottom: 15px;
+        .formula .explain {
+            font-size: 15px;
+            color: var(--ink-light);
         }
         
-        /* 目录样式 */
-        .toc-item {
-            display: flex;
-            align-items: center;
-            padding: 18px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .toc-num {
-            font-size: 36px;
-            color: var(--accent-red);
-            width: 80px;
-            font-weight: 100;
-        }
-        
-        .toc-content h3 {
-            margin: 0 0 5px 0;
-            color: var(--text-color);
-        }
-        
-        .toc-content p {
-            margin: 0;
-            color: var(--accent-blue);
-            font-size: 16px;
-        }
-        
-        /* 总结三栏 */
+        /* 总结页 */
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 30px;
-            margin: 40px 0;
+            gap: 40px;
+            margin-top: 60px;
         }
         
         .summary-item {
             text-align: center;
-            padding: 40px 25px;
-            border: 1px solid var(--border-color);
-            background: var(--light-bg);
+            padding: 50px 30px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .summary-item.highlight {
+            border-color: var(--cinnabar);
+            background: rgba(184, 62, 47, 0.03);
+        }
+        
+        .summary-item .symbol {
+            font-size: 48px;
+            margin-bottom: 20px;
         }
         
         .summary-item h3 {
-            color: var(--accent-red);
+            font-size: 24px;
+            font-weight: 600;
             margin-bottom: 15px;
         }
         
-        /* 打印样式 */
-        @media print {
-            .slide {
-                page-break-after: always;
-                min-height: auto;
-                height: 100vh;
-            }
+        .summary-item p {
+            font-size: 15px;
+            color: var(--ink-light);
+            margin: 0;
+        }
+        
+        /* 引言页 */
+        .quote-large {
+            font-size: 32px;
+            line-height: 2;
+            text-align: center;
+            margin: 60px 0;
+            padding: 0 60px;
+        }
+        
+        .quote-large .highlight {
+            color: var(--cinnabar);
+            font-weight: 600;
         }
         
         /* 响应式 */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             .slide {
-                padding: 40px;
+                padding: 60px 40px;
             }
             
-            h1 {
-                font-size: 32px;
+            .cover h1 {
+                font-size: 40px;
             }
             
-            h2 {
-                font-size: 24px;
+            .agent-grid {
+                grid-template-columns: 1fr;
             }
             
-            .three-col,
-            .value-grid,
             .summary-grid {
                 grid-template-columns: 1fr;
             }
@@ -425,612 +523,412 @@
 
 <!-- 封面 -->
 <div class="slide cover">
-    <div class="gua-symbols">☰ ☷ ☳ ☴ ☵ ☶ ☲ ☱</div>
+    <div class="corner-seal top-left">勢</div>
+    <div class="corner-seal bottom-right">音</div>
+    
+    <div class="gua-row">☰ ☷ ☳ ☴ ☵ ☶ ☲ ☱</div>
+    
     <h1>ECHO与多Agent融合</h1>
+    
+    <div class="subtitle">三大场景 · 一个生态</div>
+    
     <div class="divider"></div>
-    <p class="subtitle">三大场景 · 一个生态 · 万物生长</p>
-    <p style="margin-top: 40px; color: var(--accent-blue); font-size: 20px;">
-        创作者生态闭环 × 多Agent势场网络 × AI训练数据ECHO化
-    </p>
-    <div class="slide-number">01</div>
-</div>
-
-<!-- 目录 -->
-<div class="slide">
-    <h2>目录</h2>
     
-    <div class="toc-item">
-        <div class="toc-num">壹</div>
-        <div class="toc-content">
-            <h3>引言：ECHO与Agent的关系</h3>
-            <p>从"确权工具"到"势场导航员"</p>
-        </div>
-    </div>
+    <p class="tagline">从确权工具到势场导航员的范式跃迁</p>
     
-    <div class="toc-item">
-        <div class="toc-num">贰</div>
-        <div class="toc-content">
-            <h3>场景一：创作者生态闭环</h3>
-            <p>从想法到收益，Agent全程护航</p>
-        </div>
-    </div>
-    
-    <div class="toc-item">
-        <div class="toc-num">叁</div>
-        <div class="toc-content">
-            <h3>场景二：多Agent势场网络</h3>
-            <p>五维分工，协作共生</p>
-        </div>
-    </div>
-    
-    <div class="toc-item">
-        <div class="toc-num">肆</div>
-        <div class="toc-content">
-            <h3>场景三：AI训练数据ECHO化</h3>
-            <p>数据即资产，使用即收益</p>
-        </div>
-    </div>
-    
-    <div class="toc-item">
-        <div class="toc-num">伍</div>
-        <div class="toc-content">
-            <h3>融合与架构</h3>
-            <p>三场景并存的技术实现</p>
-        </div>
-    </div>
-    
-    <div class="toc-item" style="border-bottom: none;">
-        <div class="toc-num">陆</div>
-        <div class="toc-content">
-            <h3>总结</h3>
-            <p>Agent = 导航员 · ECHO = 势场 · 你 = 创作者</p>
-        </div>
-    </div>
-    
-    <div class="slide-number">02</div>
+    <div class="page-num">壹</div>
 </div>
 
 <!-- 引言 -->
 <div class="slide">
-    <div style="text-align: center; margin-bottom: 30px;">
-        <div style="font-size: 56px; color: var(--accent-red); font-weight: 100;">壹</div>
-        <h1 style="margin-top: 15px;">引言</h1>
-    </div>
-    <div class="divider"></div>
+    <div class="corner-seal top-right">悟</div>
     
-    <div class="quote-box" style="margin-top: 40px;">
-        Agent不是ECHO的"确权工具"<br>
-        Agent是用户在<strong style="color: var(--accent-red);">势场</strong>中的<strong style="color: var(--accent-red);">导航员</strong>
+    <h2 style="border-bottom: none; text-align: center; display: block;">引言</h2>
+    
+    <div class="quote-large">
+        Agent不是ECHO的<span class="highlight">确权工具</span><br>
+        Agent是用户在<span class="highlight">势场</span>中的<span class="highlight">导航员</span>
     </div>
     
-    <div class="three-col" style="margin-top: 40px;">
-        <div class="col-card">
-            <h3>传统认知</h3>
-            <p style="font-size: 16px;">❌ Agent帮用户"确权上链"</p>
-            <p style="font-size: 16px;">❌ 然后等待别人来买</p>
-            <p style="font-size: 16px;">❌ 静态的、被动的</p>
-        </div>
-        <div class="col-card" style="border-color: var(--accent-red);">
-            <h3 style="color: var(--accent-red);">ECHO范式</h3>
-            <p style="font-size: 16px;">✓ Agent帮用户找到<strong>最佳势位</strong></p>
-            <p style="font-size: 16px;">✓ 让资产在势场中<strong>自然生长</strong></p>
-            <p style="font-size: 16px;">✓ 动态的、涌现的</p>
-        </div>
-        <div class="col-card">
-            <h3>核心价值</h3>
-            <p style="font-size: 16px;">创作者不需要懂区块链</p>
-            <p style="font-size: 16px;">只需要跟Agent对话</p>
-            <p style="font-size: 16px;">Agent帮你 navigate 势场</p>
-        </div>
+    <div class="insight-box" style="margin-top: 60px;">
+        <strong>核心转变：</strong><br>
+        传统认知：Agent帮用户"确权上链"，然后等待交易 —— 静态的、被动的<br>
+        ECHO范式：Agent帮用户找到最佳势位，让资产自然生长 —— 动态的、涌现的
     </div>
     
-    <div class="slide-number">03</div>
+    <div class="page-num">贰</div>
 </div>
 
-<!-- 场景一 -->
-<div class="slide">
-    <div style="text-align: center; margin-bottom: 25px;">
-        <div style="font-size: 56px; color: var(--accent-red); font-weight: 100;">贰</div>
-        <h1 style="margin-top: 15px;">场景一</h1>
-        <p class="subtitle">创作者生态闭环</p>
-    </div>
-    <div class="divider"></div>
+<!-- 场景一：章节页 -->
+<div class="slide chapter">
+    <div class="chapter-num">壹</div>
     
+    <div class="chapter-content">
+        <h2>场景一</h2>
+        <p class="chapter-title-en">Creator Ecosystem Loop</p>
+        <p style="margin-top: 30px; font-size: 20px; color: var(--ink-light);">创作者生态闭环</p>
+    </div>
+    
+    <div class="corner-seal bottom-left">創</div>
+    <div class="page-num">叁</div>
+</div>
+
+<!-- 场景一：内容 -->
+<div class="slide content-slide">
     <h2>从想法到收益，Agent全程护航</h2>
     
-    <div class="flow-container">
-        <div class="flow-step">
-            <div class="flow-step-number">1</div>
-            <div>创作者提出想法："我想创作一首适合社群滋养的音乐"</div>
-        </div>
-        <div class="flow-arrow">↓</div>
-        <div class="flow-step agent">
-            <div class="flow-step-number">A</div>
-            <div><strong>导航Agent分析</strong>：当前家人卦区域正在上升期，建议配置「用=4, 扩=3, 衍=4, 益=5」</div>
-        </div>
-        <div class="flow-arrow">↓</div>
-        <div class="flow-step">
-            <div class="flow-step-number">2</div>
-            <div>创作完成《墨竹》，Agent协助铸造，资产进入势场 T[0][0][0] = <strong>坤卦·初九</strong></div>
-        </div>
-        <div class="flow-arrow">↓</div>
-        <div class="flow-step agent">
-            <div class="flow-step-number">B</div>
-            <div><strong>监测Agent持续追踪</strong>：时间维排名后30%，空间维单平台，关系维孤立</div>
-        </div>
-        <div class="flow-arrow">↓</div>
-        <div class="flow-step agent">
-            <div class="flow-step-number">C</div>
-            <div><strong>跃迁提醒</strong>："检测到即将进入九二，建议尝试跨平台传播"</div>
-        </div>
-        <div class="flow-arrow">↓</div>
-        <div class="flow-step">
-            <div class="flow-step-number">3</div>
-            <div>被引用3次，衍生2个作品，<strong>收益自动回流</strong> +45 ECHO</div>
-        </div>
-        <div class="flow-arrow">↓</div>
-        <div class="flow-step agent">
-            <div class="flow-step-number">D</div>
-            <div><strong>转化期建议</strong>："《墨竹》已进入上九·转化期，建议创作续作承接势能"</div>
+    <div class="scene-container">
+        <div class="flow-vertical">
+            <div class="flow-item">
+                <h4>创作者提出想法</h4>
+                <p>"我想创作一首适合社群滋养的音乐"</p>
+            </div>
+            
+            <div class="flow-item agent">
+                <h4>导航Agent · 势场分析</h4>
+                <p>当前家人卦区域正在上升期，建议配置「用=4, 扩=3, 衍=4, 益=5」</p>
+            </div>
+            
+            <div class="flow-item">
+                <h4>创作完成《墨竹》</h4>
+                <p>Agent协助铸造，资产进入势场 T[0][0][0] = 坤卦·初九</p>
+            </div>
+            
+            <div class="flow-item agent">
+                <h4>监测Agent · 持续追踪</h4>
+                <p>时间维排名后30%，空间维单平台，关系维孤立</p>
+            </div>
+            
+            <div class="flow-item agent">
+                <h4>跃迁Agent · 时机提醒</h4>
+                <p>"检测到即将进入九二，建议尝试跨平台传播"</p>
+            </div>
+            
+            <div class="flow-item">
+                <h4>被引用3次，衍生2个作品</h4>
+                <p>收益自动回流 +45 ECHO</p>
+            </div>
+            
+            <div class="flow-item agent">
+                <h4>转化Agent · 周期建议</h4>
+                <p>"《墨竹》已进入上九·转化期，建议创作续作承接势能"</p>
+            </div>
         </div>
     </div>
     
-    <div class="slide-number">04</div>
+    <div class="page-num">肆</div>
 </div>
 
-<!-- 场景一：详细 -->
-<div class="slide">
-    <h2>创作者生态闭环：Agent分工</h2>
+<!-- 场景二：章节页 -->
+<div class="slide chapter">
+    <div class="chapter-num">貳</div>
     
-    <table>
+    <div class="chapter-content">
+        <h2>场景二</h2>
+        <p class="chapter-title-en">Multi-Agent Shi-Field Network</p>
+        <p style="margin-top: 30px; font-size: 20px; color: var(--ink-light);">多Agent势场网络</p>
+    </div>
+    
+    <div class="corner-seal bottom-right">協</div>
+    <div class="page-num">伍</div>
+</div>
+
+<!-- 场景二：内容 -->
+<div class="slide content-slide">
+    <h2>五维分工，协作共生</h2>
+    
+    <div class="formula">
+        <div class="equation">T[时间][空间][关系] = 势位</div>
+        <div class="explain">每个Agent处理一个维度，导航Agent综合计算</div>
+    </div>
+    
+    <div class="agent-grid">
+        <div class="agent-card">
+            <div class="icon">🎨</div>
+            <h4>创作Agent</h4>
+            <div class="dimension">内容生产</div>
+            <p>产出原始数字资产</p>
+        </div>
+        
+        <div class="agent-card">
+            <div class="icon">📊</div>
+            <h4>分析Agent</h4>
+            <div class="dimension">时间维 · 使用频率</div>
+            <p>追踪使用次数、时间分布</p>
+        </div>
+        
+        <div class="agent-card">
+            <div class="icon">🌐</div>
+            <h4>传播Agent</h4>
+            <div class="dimension">空间维 · 平台分布</div>
+            <p>监测跨平台传播</p>
+        </div>
+        
+        <div class="agent-card">
+            <div class="icon">🔗</div>
+            <h4>连接Agent</h4>
+            <div class="dimension">关系维 · 引用网络</div>
+            <p>分析引用关系图谱</p>
+        </div>
+        
+        <div class="agent-card" style="border-color: var(--cinnabar);">
+            <div class="icon">🧭</div>
+            <h4>导航Agent</h4>
+            <div class="dimension">综合 · 势位计算</div>
+            <p>整合三维，给出建议</p>
+        </div>
+        
+        <div class="agent-card">
+            <div class="icon">⚡</div>
+            <h4>协调Agent</h4>
+            <div class="dimension">调度 · 任务分配</div>
+            <p>调度其他Agent协作</p>
+        </div>
+    </div>
+    
+    <div class="page-num">陆</div>
+</div>
+
+<!-- 场景二：技能血缘 -->
+<div class="slide content-slide">
+    <h2>Agent技能的血缘链</h2>
+    
+    <p style="margin-bottom: 30px;">Agent之间的协作形成「技能血缘链」，可被ECHO记录和追踪。</p>
+    
+    <div class="lineage-container">
+        <div class="lineage-flow">
+            <div class="lineage-node parent">
+                <div class="label">基础Agent</div>
+                <div class="name">音乐分析Agent v1.0</div>
+                <div style="font-size: 13px; color: var(--cinnabar); margin-top: 8px;">衍=4（允许混剪）</div>
+            </div>
+            
+            <div class="lineage-arrow">→</div>
+            
+            <div class="lineage-node">
+                <div class="label">衍生Agent</div>
+                <div class="name">国风分析Agent</div>
+                <div style="font-size: 13px; color: var(--cinnabar); margin-top: 8px;">收益回流20%</div>
+            </div>
+            
+            <div class="lineage-arrow">→</div>
+            
+            <div class="lineage-node">
+                <div class="label">衍生Agent</div>
+                <div class="name">电子分析Agent</div>
+                <div style="font-size: 13px; color: var(--cinnabar); margin-top: 8px;">收益回流20%</div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1);">
+            <p style="font-size: 15px;">当国风分析Agent被使用时，收益的20%自动回流给音乐分析Agent创作者</p>
+        </div>
+    </div>
+    
+    <div class="insight-box" style="margin-top: 30px;">
+        <strong>范式转变：</strong>Agent不再是孤立的工具，而是ECHO生态中的可组合资产。优秀的Agent可以被引用、衍生，形成技能的血缘网络。
+    </div>
+    
+    <div class="page-num">柒</div>
+</div>
+
+<!-- 场景三：章节页 -->
+<div class="slide chapter">
+    <div class="chapter-num">參</div>
+    
+    <div class="chapter-content">
+        <h2>场景三</h2>
+        <p class="chapter-title-en">AI Training Data ECHO-ization</p>
+        <p style="margin-top: 30px; font-size: 20px; color: var(--ink-light);">AI训练数据ECHO化</p>
+    </div>
+    
+    <div class="corner-seal bottom-left">數</div>
+    <div class="page-num">捌</div>
+</div>
+
+<!-- 场景三：内容 -->
+<div class="slide content-slide">
+    <h2>数据即资产，使用即收益</h2>
+    
+    <div class="flow-vertical">
+        <div class="flow-item">
+            <h4>Agent A 服务用户</h4>
+            <p>累计服务1000小时，产生大量优质对话数据</p>
+        </div>
+        
+        <div class="flow-item agent">
+            <h4>打包Agent · 数据确权</h4>
+            <p>筛选高价值对话，配置四权力（用=3, 扩=4, 衍=3, 益=4），铸造ECHO资产</p>
+        </div>
+        
+        <div class="flow-item">
+            <h4>数据资产进入势场</h4>
+            <p>获得势位坐标：九四·试探期</p>
+        </div>
+        
+        <div class="flow-item">
+            <h4>Agent B 想使用数据训练</h4>
+            <p>发起数据使用请求</p>
+        </div>
+        
+        <div class="flow-item agent">
+            <h4>查询Agent · 权限检查</h4>
+            <p>检索数据势位，检查四权力（衍=3，允许采样），计算使用费</p>
+        </div>
+        
+        <div class="flow-item">
+            <h4>Agent B 购买使用权</h4>
+            <p>收益自动回流 Agent A 创作者</p>
+        </div>
+    </div>
+    
+    <div class="page-num">玖</div>
+</div>
+
+<!-- 场景三：修正 -->
+<div class="slide content-slide">
+    <h2>澄清：三层分离</h2>
+    
+    <table class="compare-table">
         <tr>
-            <th>Agent角色</th>
-            <th>职能</th>
-            <th>关键动作</th>
-            <th>用户感知</th>
+            <th style="width: 20%;"></th>
+            <th style="width: 40%;">❌ 误解</th>
+            <th style="width: 40%;">✓ 正确理解</th>
         </tr>
         <tr>
-            <td><strong style="color: var(--accent-red);">导航Agent</strong></td>
-            <td>势位分析</td>
-            <td>分析当前势场状态，建议四权力配置</td>
-            <td>"你的作品性格是家人卦，适合..."</td>
+            <td><strong>主体</strong></td>
+            <td>Agent A 训练 Agent B</td>
+            <td><strong>用户A</strong>的Agent产出数据</td>
         </tr>
         <tr>
-            <td><strong style="color: var(--accent-red);">铸造Agent</strong></td>
-            <td>资产上链</td>
-            <td>协助生成基因码、卦象、完成铸造</td>
-            <td>一键发布，自动进入势场</td>
+            <td><strong>确权</strong></td>
+            <td>Agent之间直接交换</td>
+            <td>数据打包为<strong>ECHO资产</strong></td>
         </tr>
         <tr>
-            <td><strong style="color: var(--accent-red);">监测Agent</strong></td>
-            <td>势位追踪</td>
-            <td>实时监测三维数据变化</td>
-            <td>生命仪表盘展示</td>
+            <td><strong>使用</strong></td>
+            <td>Agent互相学习</td>
+            <td><strong>用户B</strong>的Agent付费使用</td>
         </tr>
         <tr>
-            <td><strong style="color: var(--accent-red);">跃迁Agent</strong></td>
-            <td>时机提醒</td>
-            <td>检测到跨越势场边界时主动提醒</td>
-            <td>"你的势位即将跃迁..."</td>
-        </tr>
-        <tr>
-            <td><strong style="color: var(--accent-red);">收益Agent</strong></td>
-            <td>价值回流</td>
-            <td>自动处理引用链，分配收益</td>
-            <td>血缘图谱展示收益来源</td>
+            <td><strong>收益</strong></td>
+            <td>不涉及</td>
+            <td><strong>自动回流</strong>用户A</td>
         </tr>
     </table>
     
-    <div class="quote-box" style="margin-top: 25px;">
-        <strong>核心洞察</strong>：创作者不需要懂「势枢」「六爻」「百分位」，只需要跟Agent对话。<br>
-        Agent将复杂的势场逻辑，转化为可理解的建议。
-    </div>
-    
-    <div class="slide-number">05</div>
-</div>
-
-<!-- 场景二 -->
-<div class="slide">
-    <div style="text-align: center; margin-bottom: 25px;">
-        <div style="font-size: 56px; color: var(--accent-red); font-weight: 100;">叁</div>
-        <h1 style="margin-top: 15px;">场景二</h1>
-        <p class="subtitle">多Agent势场网络</p>
-    </div>
-    <div class="divider"></div>
-    
-    <h2>五维分工，协作共生</h2>
-    
-    <p>每个用户拥有多个Agent，形成<span class="highlight">"势场中的势场"</span>。不同Agent处理不同维度，协同完成复杂的势场导航任务。</p>
-    
-    <div class="three-col" style="margin-top: 30px;">
-        <div class="agent-card">
-            <div class="agent-icon">🎨</div>
-            <h4>创作Agent</h4>
-            <p style="font-size: 15px;"><strong>职能：</strong>内容生产</p>
-            <p style="font-size: 15px;"><strong>输出：</strong>原始数字资产</p>
-            <p style="font-size: 15px;"><strong>ECHO化：</strong>创作过程数据可打包为资产</p>
-        </div>
-        
-        <div class="agent-card">
-            <div class="agent-icon">📊</div>
-            <h4>分析Agent</h4>
-            <p style="font-size: 15px;"><strong>职能：</strong>处理<strong>时间维</strong>数据</p>
-            <p style="font-size: 15px;"><strong>输出：</strong>使用频率报告、趋势预测</p>
-            <p style="font-size: 15px;"><strong>ECHO化：</strong>分析模型可授权使用</p>
-        </div>
-        
-        <div class="agent-card">
-            <div class="agent-icon">🌐</div>
-            <h4>传播Agent</h4>
-            <p style="font-size: 15px;"><strong>职能：</strong>处理<strong>空间维</strong>数据</p>
-            <p style="font-size: 15px;"><strong>输出：</strong>跨平台分发、渠道优化</p>
-            <p style="font-size: 15px;"><strong>ECHO化：</strong>传播策略可交易</p>
-        </div>
-    </div>
-    
-    <div class="three-col">
-        <div class="agent-card">
-            <div class="agent-icon">🔗</div>
-            <h4>连接Agent</h4>
-            <p style="font-size: 15px;"><strong>职能：</strong>处理<strong>关系维</strong>数据</p>
-            <p style="font-size: 15px;"><strong>输出：</strong>引用网络分析、合作匹配</p>
-            <p style="font-size: 15px;"><strong>ECHO化：</strong>人脉图谱有价值</p>
-        </div>
-        
-        <div class="agent-card" style="border-color: var(--accent-red); background: rgba(196, 92, 72, 0.08);">
-            <div class="agent-icon">🧭</div>
-            <h4>导航Agent</h4>
-            <p style="font-size: 15px;"><strong>职能：</strong>综合三维数据</p>
-            <p style="font-size: 15px;"><strong>输出：</strong>势位建议、变爻预警</p>
-            <p style="font-size: 15px;"><strong>ECHO化：</strong>导航能力本身可交易</p>
-        </div>
-        
-        <div class="agent-card">
-            <div class="agent-icon">⚡</div>
-            <h4>协调Agent</h4>
-            <p style="font-size: 15px;"><strong>职能：</strong>调度其他Agent协作</p>
-            <p style="font-size: 15px;"><strong>输出：</strong>任务分配、结果整合</p>
-            <p style="font-size: 15px;"><strong>ECHO化：</strong>协调策略可复用</p>
-        </div>
-    </div>
-    
-    <div class="slide-number">06</div>
-</div>
-
-<!-- 场景二：技能血缘链 -->
-<div class="slide">
-    <h2>Agent技能的血缘链</h2>
-    
-    <p>Agent之间的协作形成<span class="highlight">"技能血缘链"</span>，可被ECHO记录和追踪。</p>
-    
-    <div class="lineage-tree">
-        <div class="lineage-node parent">
-            <div style="font-size: 14px; color: var(--accent-blue);">基础Agent</div>
-            <div style="font-weight: 600;">音乐分析Agent v1.0</div>
-            <div style="font-size: 13px; margin-top: 5px;">衍=4（允许混剪）</div>
-        </div>
-        
-        <div style="margin: 20px 0;">
-            <span class="lineage-arrow">↙</span>
-            <span class="lineage-arrow">↓</span>
-            <span class="lineage-arrow">↘</span>
-        </div>
-        
-        <div>
-            <div class="lineage-node">
-                <div style="font-size: 13px;">衍生Agent A</div>
-                <div style="font-weight: 600;">国风分析Agent</div>
-                <div style="font-size: 12px; color: var(--accent-red);">收益回流20%</div>
-            </div>
-            <div class="lineage-node">
-                <div style="font-size: 13px;">衍生Agent B</div>
-                <div style="font-weight: 600;">电子分析Agent</div>
-                <div style="font-size: 12px; color: var(--accent-red);">收益回流20%</div>
-            </div>
-            <div class="lineage-node">
-                <div style="font-size: 13px;">衍生Agent C</div>
-                <div style="font-weight: 600;">融合分析Agent</div>
-                <div style="font-size: 12px; color: var(--accent-red);">收益回流20%</div>
-            </div>
-        </div>
-        
-        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-            <p style="font-size: 16px; margin: 0;">
-                <strong>机制</strong>：当国风分析Agent被使用时，收益的20%自动回流给音乐分析Agent创作者
-            </p>
-        </div>
-    </div>
-    
-    <div class="quote-box">
-        <strong>范式转变</strong>：Agent不再是孤立的工具，而是ECHO生态中的<strong>可组合资产</strong>。<br>
-        优秀的Agent可以被引用、衍生，形成技能的血缘网络。
-    </div>
-    
-    <div class="slide-number">07</div>
-</div>
-
-<!-- 场景三 -->
-<div class="slide">
-    <div style="text-align: center; margin-bottom: 25px;">
-        <div style="font-size: 56px; color: var(--accent-red); font-weight: 100;">肆</div>
-        <h1 style="margin-top: 15px;">场景三</h1>
-        <p class="subtitle">AI训练数据ECHO化</p>
-    </div>
-    <div class="divider"></div>
-    
-    <h2>数据即资产，使用即收益</h2>
-    
-    <p>Agent在服务用户过程中产生的<span class="highlight">"优质对话数据"</span>，可以被确权为ECHO资产，供其他Agent付费使用。</p>
-    
-    <div class="flow-container" style="margin-top: 30px;">
-        <div class="flow-step">
-            <div class="flow-step-number">1</div>
-            <div><strong>Agent A</strong> 为用户服务1000小时，产生大量优质对话数据</div>
-        </div>
-        <div class="flow-arrow">↓</div>
-        <div class="flow-step agent">
-            <div class="flow-step-number">A</div>
-            <div><strong>打包Agent</strong>：筛选高价值对话，配置四权力（用=3, 扩=4, 衍=3, 益=4），铸造ECHO资产</div>
-        </div>
-        <div class="flow-arrow">↓</div>
-        <div class="flow-step">
-            <div class="flow-step-number">2</div>
-            <div>数据资产进入势场，获得势位坐标：<strong>九四·试探期</strong></div>
-        </div>
-        <div class="flow-arrow">↓</div>
-        <div class="flow-step">
-            <div class="flow-step-number">3</div>
-            <div><strong>Agent B</strong> 想使用数据训练自己</div>
-        </div>
-        <div class="flow-arrow">↓</div>
-        <div class="flow-step agent">
-            <div class="flow-step-number">B</div>
-            <div><strong>查询Agent</strong>：检索数据势位，检查四权力（衍=3，允许采样），计算使用费</div>
-        </div>
-        <div class="flow-arrow">↓</div>
-        <div class="flow-step">
-            <div class="flow-step-number">4</div>
-            <div>Agent B购买使用权，<strong>收益自动回流</strong> Agent A创作者</div>
-        </div>
-    </div>
-    
-    <div class="slide-number">08</div>
-</div>
-
-<!-- 场景三：修正Cat的想法 -->
-<div class="slide">
-    <h2>修正：Agent训练数据ECHO化</h2>
-    
-    <div class="three-col">
-        <div class="col-card wrong" style="opacity: 0.7;">
-            <h3 style="color: #999;">❌ Cat的原设想</h3>
-            <p style="font-size: 15px;">"Agent之间互相训练"</p>
-            <p style="font-size: 15px;">"利用ECHO数据来训练Agent"</p>
-            <p style="font-size: 15px;">"Agent通过ECHO互相学习"</p>
-            <p style="font-size: 14px; color: #999; margin-top: 15px;">混淆了确权层和训练层</p>
-        </div>
-        
-        <div class="col-card" style="border-color: var(--accent-red); background: rgba(196, 92, 72, 0.08);">
-            <h3 style="color: var(--accent-red);">✓ 正确理解</h3>
-            <p style="font-size: 15px;"><strong>用户</strong>的Agent产出数据</p>
-            <p style="font-size: 15px;">数据<strong>确权</strong>为ECHO资产</p>
-            <p style="font-size: 15px;"><strong>其他用户</strong>的Agent付费使用</p>
-            <p style="font-size: 15px;">收益<strong>自动回流</strong>数据创作者</p>
-        </div>
-        
-        <div class="col-card">
-            <h3>关键区分</h3>
-            <p style="font-size: 15px;"><strong>训练层</strong>：Agent学习用户偏好</p>
-            <p style="font-size: 15px;"><strong>确权层</strong>：ECHO记录数据权属</p>
-            <p style="font-size: 15px;"><strong>交易层</strong>：数据买卖授权使用</p>
-            <p style="font-size: 14px; color: var(--accent-blue); margin-top: 15px;">三层分离，ECHO只在确权层</p>
-        </div>
-    </div>
-    
-    <div class="quote-box" style="margin-top: 30px;">
-        <strong>一句话澄清</strong>：<br>
+    <div class="insight-box" style="margin-top: 30px;">
+        <strong>一句话澄清：</strong><br>
         不是 "Agent A通过ECHO训练Agent B"<br>
         而是 "用户A的Agent产出数据 → ECHO确权 → 用户B的Agent付费使用"
     </div>
     
-    <div class="slide-number">09</div>
+    <div class="page-num">拾</div>
 </div>
 
-<!-- 三场景融合 -->
+<!-- 融合 -->
 <div class="slide">
-    <h2>三场景如何并存？</h2>
+    <div class="corner-seal top-left">融</div>
     
-    <p>三个场景不是孤立的，而是<span class="highlight">同一个ECHO生态</span>的不同侧面。</p>
+    <h2 style="border-bottom: 2px solid var(--cinnabar); display: inline-block; padding-bottom: 15px;">三场景如何并存</h2>
     
-    <div style="margin-top: 30px; padding: 25px; background: var(--light-bg); border: 1px solid var(--border-color);">
-        <div style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 20px;">
-            <div style="text-align: center; padding: 20px; border: 2px solid var(--accent-blue); min-width: 180px;">
-                <div style="font-size: 32px; margin-bottom: 10px;">🎨</div>
-                <div style="font-weight: 600;">创作者</div>
-                <div style="font-size: 14px; color: var(--accent-blue); margin-top: 5px;">场景一</div>
-            </div>
-            
-            <div style="color: var(--accent-blue); font-size: 28px;">⇄</div>
-            
-            <div style="text-align: center; padding: 20px; border: 2px solid var(--accent-red); min-width: 180px; background: rgba(196, 92, 72, 0.05);">
-                <div style="font-size: 32px; margin-bottom: 10px;">🤖</div>
-                <div style="font-weight: 600;">多Agent网络</div>
-                <div style="font-size: 14px; color: var(--accent-red); margin-top: 5px;">场景二</div>
-            </div>
-            
-            <div style="color: var(--accent-blue); font-size: 28px;">⇄</div>
-            
-            <div style="text-align: center; padding: 20px; border: 2px solid var(--accent-blue); min-width: 180px;">
-                <div style="font-size: 32px; margin-bottom: 10px;">📊</div>
-                <div style="font-weight: 600;">数据资产</div>
-                <div style="font-size: 14px; color: var(--accent-blue); margin-top: 5px;">场景三</div>
-            </div>
+    <div style="display: flex; gap: 30px; margin-top: 50px;">
+        <div style="flex: 1; text-align: center; padding: 40px 20px; border: 1px solid rgba(0,0,0,0.1);">
+            <div style="font-size: 48px; margin-bottom: 15px;">🎨</div>
+            <h4 style="font-size: 20px; margin-bottom: 10px;">场景一</h4>
+            <p style="font-size: 14px; color: var(--ink-light);">创作者闭环</p>
         </div>
         
-        <div style="margin-top: 25px; text-align: center; padding-top: 20px; border-top: 1px solid var(--border-color);">
-            <p style="font-size: 16px; margin: 0;">
-                三个场景共享同一个<strong style="color: var(--accent-red);">势场</strong>，由同一套<strong style="color: var(--accent-red);">ECHO协议</strong>支撑
-            </p>
+        <div style="flex: 1; text-align: center; padding: 40px 20px; border: 2px solid var(--cinnabar); background: rgba(184, 62, 47, 0.03);">
+            <div style="font-size: 48px; margin-bottom: 15px;">🤖</div>
+            <h4 style="font-size: 20px; margin-bottom: 10px; color: var(--cinnabar);">场景二</h4>
+            <p style="font-size: 14px; color: var(--ink-light);">多Agent网络</p>
+        </div>
+        
+        <div style="flex: 1; text-align: center; padding: 40px 20px; border: 1px solid rgba(0,0,0,0.1);">
+            <div style="font-size: 48px; margin-bottom: 15px;">📊</div>
+            <h4 style="font-size: 20px; margin-bottom: 10px;">场景三</h4>
+            <p style="font-size: 14px; color: var(--ink-light);">数据资产化</p>
         </div>
     </div>
     
-    <div class="three-col" style="margin-top: 25px;">
-        <div class="col-card">
-            <h3>场景一 → 场景二</h3>
-            <p style="font-size: 15px;">创作者使用的Agent，本身就是多Agent网络中的一员</p>
-            <p style="font-size: 15px;">Agent的能力来自其他Agent的数据（场景三）</p>
-        </div>
-        <div class="col-card">
-            <h3>场景二 → 场景三</h3>
-            <p style="font-size: 15px;">Agent协作过程中产生的大量数据，可以被确权交易</p>
-            <p style="font-size: 15px;">Agent技能形成血缘链，收益自动分配</p>
-        </div>
-        <div class="col-card">
-            <h3>场景三 → 场景一</h3>
-            <p style="font-size: 15px;">训练数据ECHO化，让创作者能获得更多优质Agent服务</p>
-            <p style="font-size: 15px;">数据资产化激励Agent持续进化</p>
-        </div>
-    </div>
-    
-    <div class="slide-number">10</div>
-</div>
-
-<!-- 技术架构 -->
-<div class="slide">
-    <h2>技术架构：三层融合</h2>
-    
-    <div class="arch-layer" style="background: rgba(90, 122, 122, 0.1);">
-        <div class="arch-layer-name">AI Agent 生态层</div>
-        <div class="arch-layer-desc">
-            <span class="tag">创作Agent</span>
-            <span class="tag">导航Agent</span>
-            <span class="tag">分析Agent</span>
-            <span class="tag">传播Agent</span>
-            <span class="tag">连接Agent</span>
-            <span class="tag">追踪Agent</span>
-            <span class="tag">协调Agent</span>
-        </div>
-    </div>
-    
-    <div class="arch-arrow">↓</div>
-    
-    <div class="arch-layer" style="background: rgba(196, 92, 72, 0.08); border-color: var(--accent-red);">
-        <div class="arch-layer-name">ECHO 协议层</div>
-        <div class="arch-layer-desc">
-            <span class="tag red">势枢合约</span>
-            <span class="tag red">势场合约</span>
-            <span class="tag red">势位合约</span>
-            <span class="tag red">验证合约</span>
-            <span class="tag red">引用链合约</span>
-            <span class="tag red">分润合约</span>
-        </div>
-    </div>
-    
-    <div class="arch-arrow">↓</div>
-    
-    <div class="arch-layer" style="background: rgba(139, 105, 20, 0.1);">
-        <div class="arch-layer-name">基础设施层</div>
-        <div class="arch-layer-desc">
-            <span class="tag" style="border-color: var(--accent-wood); color: var(--accent-wood);">QITMEER区块链</span>
-            <span class="tag" style="border-color: var(--accent-wood); color: var(--accent-wood);">IPFS/Arweave存储</span>
-            <span class="tag" style="border-color: var(--accent-wood); color: var(--accent-wood);">图数据库</span>
-            <span class="tag" style="border-color: var(--accent-wood); color: var(--accent-wood);">ZK证明系统</span>
-        </div>
-    </div>
-    
-    <div style="margin-top: 30px; padding: 20px; background: var(--light-bg); border: 1px solid var(--border-color);">
-        <h3 style="margin-top: 0;">多Agent协作流程示例</h3>
-        <p style="font-size: 15px; margin-bottom: 10px;">
-            1. <strong>创作Agent</strong>生成音乐 → 2. <strong>分析Agent</strong>计算时间维数据 → 3. <strong>传播Agent</strong>追踪平台分布 → 4. <strong>连接Agent</strong>监测引用关系 → 5. <strong>导航Agent</strong>综合计算势位 → 6. <strong>协调Agent</strong>调用铸造Agent上链 → 7. <strong>追踪Agent</strong>持续监测收益回流
-        </p>
-        <p style="font-size: 14px; color: var(--accent-blue); margin: 0;">
-            七个Agent协作，全程自动化，创作者只需与导航Agent对话
+    <div style="margin-top: 40px; padding: 30px; background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.08);">
+        <p style="font-size: 16px; text-align: center; margin: 0;">
+            三个场景共享同一个<span style="color: var(--cinnabar); font-weight: 600;">势场</span>，由同一套<span style="color: var(--cinnabar); font-weight: 600;">ECHO协议</span>支撑<br>
+            场景一使用场景二的Agent网络，场景二产生场景三的数据资产，场景三反哺场景一的Agent能力
         </p>
     </div>
     
-    <div class="slide-number">11</div>
+    <div class="page-num">拾壹</div>
 </div>
 
-<!-- 价值主张 -->
-<div class="slide">
-    <h2>价值主张：三个维度</h2>
+<!-- 架构 -->
+<div class="slide content-slide">
+    <h2>技术架构</h2>
     
-    <div class="value-grid">
-        <div class="value-card">
-            <div class="icon">🎯</div>
-            <h3>对创作者</h3>
-            <p style="font-size: 15px; text-align: left;">✓ 不懂区块链也能用</p>
-            <p style="font-size: 15px; text-align: left;">✓ 作品像生命一样生长</p>
-            <p style="font-size: 15px; text-align: left;">✓ 收益自动回流，无需追讨</p>
-            <p style="font-size: 15px; text-align: left;">✓ 多Agent全程护航</p>
+    <div style="margin-top: 40px;">
+        <div class="arch-layer">
+            <div class="arch-layer-name">AI Agent 生态</div>
+            <div class="arch-layer-desc">创作Agent · 导航Agent · 分析Agent · 传播Agent · 连接Agent · 追踪Agent</div>
         </div>
         
-        <div class="value-card" style="border-color: var(--accent-red); background: rgba(196, 92, 72, 0.05);">
-            <div class="icon">🤖</div>
-            <h3>对Agent开发者</h3>
-            <p style="font-size: 15px; text-align: left;">✓ 技能可确权交易</p>
-            <p style="font-size: 15px; text-align: left;">✓ 形成技能血缘链</p>
-            <p style="font-size: 15px; text-align: left;">✓ 被引用即收益</p>
-            <p style="font-size: 15px; text-align: left;">✓ 五维分工协作</p>
+        <div class="arch-arrow">↓</div>
+        
+        <div class="arch-layer" style="border-color: var(--cinnabar); background: rgba(184, 62, 47, 0.05);">
+            <div class="arch-layer-name" style="color: var(--cinnabar);">ECHO 协议层</div>
+            <div class="arch-layer-desc">势枢合约 · 势场合约 · 势位合约 · 验证合约 · 引用链合约 · 分润合约</div>
         </div>
         
-        <div class="value-card">
-            <div class="icon">🌐</div>
-            <h3>对生态</h3>
-            <p style="font-size: 15px; text-align: left;">✓ 无需平台控制</p>
-            <p style="font-size: 15px; text-align: left;">✓ 规则从数据涌现</p>
-            <p style="font-size: 15px; text-align: left;">✓ 价值自动分配</p>
-            <p style="font-size: 15px; text-align: left;">✓ 万物生长不息</p>
+        <div class="arch-arrow">↓</div>
+        
+        <div class="arch-layer">
+            <div class="arch-layer-name" style="color: var(--gold);">基础设施层</div>
+            <div class="arch-layer-desc">QITMEER区块链 · IPFS存储 · 图数据库 · ZK证明系统</div>
         </div>
     </div>
     
-    <div class="quote-box" style="margin-top: 30px;">
-        <strong>范式总结</strong>：<br>
-        从「确权等交易」到「势场自生长」<br>
-        从「Agent是工具」到「Agent是生态参与者」<br>
-        从「数据被平台占有」到「数据资产化可交易」
-    </div>
-    
-    <div class="slide-number">12</div>
+    <div class="page-num">拾貳</div>
 </div>
 
 <!-- 总结 -->
 <div class="slide cover">
-    <div class="gua-symbols">☰ ☷ ☳ ☴ ☵ ☶ ☲ ☱</div>
-    <h1 style="font-size: 42px;">总结</h1>
-    <div class="divider"></div>
+    <div class="corner-seal top-left">結</div>
+    <div class="corner-seal bottom-right">語</div>
     
-    <div class="summary-grid" style="margin-top: 40px;">
+    <div class="gua-row" style="opacity: 0.5;">☰ ☷ ☳ ☴ ☵ ☶ ☲ ☱</div>
+    
+    <h1 style="font-size: 48px;">总结</h1>
+    
+    <div class="divider" style="width: 150px;"></div>
+    
+    <div class="summary-grid" style="margin-top: 50px;">
         <div class="summary-item">
-            <div style="font-size: 56px; margin-bottom: 15px;">🤖</div>
+            <div class="symbol">🤖</div>
             <h3>Agent</h3>
-            <p style="font-size: 16px;">势场导航员</p>
-            <p style="font-size: 14px; color: var(--accent-blue);">帮你找到最佳位置</p>
+            <p>势场导航员<br>帮你找到最佳位置</p>
         </div>
         
-        <div class="summary-item" style="border-color: var(--accent-red); background: rgba(196, 92, 72, 0.05);">
-            <div style="font-size: 56px; margin-bottom: 15px;">🌌</div>
+        <div class="summary-item highlight">
+            <div class="symbol">🌌</div>
             <h3>ECHO</h3>
-            <p style="font-size: 16px;">势场本身</p>
-            <p style="font-size: 14px; color: var(--accent-red);">让价值在流动中涌现</p>
+            <p>势场本身<br>让价值在流动中涌现</p>
         </div>
         
         <div class="summary-item">
-            <div style="font-size: 56px; margin-bottom: 15px;">👤</div>
+            <div class="symbol">👤</div>
             <h3>你</h3>
-            <p style="font-size: 16px;">创作者</p>
-            <p style="font-size: 14px; color: var(--accent-blue);">在势场中生长</p>
+            <p>创作者<br>在势场中生长</p>
         </div>
     </div>
     
-    <div style="margin-top: 50px; text-align: center;">
-        <p style="color: var(--accent-blue); font-size: 20px; letter-spacing: 0.1em;">
+    <div style="margin-top: 60px; text-align: center;">
+        <p style="color: var(--jade); font-size: 18px; letter-spacing: 0.15em;">
             万物有灵，皆可生长<br>
             势在流动，位在变化
         </p>
     </div>
     
-    <div class="slide-number">13</div>
+    <div class="page-num">拾叁</div>
 </div>
 
 </body>
