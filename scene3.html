@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景三：AI训练数据ECHO化</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --rice-paper: #f8f5f0;
+            --ink: #1a1a1a;
+            --ink-light: #4a4a4a;
+            --cinnabar: #b83e2f;
+            --cinnabar-light: #d4725a;
+            --cinnabar-bg: rgba(184, 62, 47, 0.08);
+            --jade: #2d5a52;
+            --jade-light: #3d7a72;
+            --gold: #8b6914;
+            --gold-light: #b89b44;
+            --stone: #8c8680;
+            --stone-light: #b8b2ac;
+        }
+        
+        body {
+            font-family: "Noto Serif SC", serif;
+            background: var(--rice-paper);
+            color: var(--ink);
+            line-height: 1.9;
+            overflow-x: hidden;
+        }
+        
+        /* 页面容器 */
+        .slide {
+            min-height: 100vh;
+            padding: 80px 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 水墨背景效果 */
+        .slide::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(180, 170, 160, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 105, 20, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        /* 边框装饰 */
+        .slide::after {
+            content: "";
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            right: 50px;
+            bottom: 50px;
+            border: 1px solid rgba(0,0,0,0.08);
+            pointer-events: none;
+        }
+        
+        /* 角落印章装饰 */
+        .corner-seal {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 2px solid var(--cinnabar);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Ma Shan Zheng", cursive;
+            font-size: 24px;
+            color: var(--cinnabar);
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+        
+        .corner-seal:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        
+        .corner-seal.top-left { top: 30px; left: 30px; }
+        .corner-seal.top-right { top: 30px; right: 30px; }
+        .corner-seal.bottom-left { bottom: 30px; left: 30px; }
+        .corner-seal.bottom-right { bottom: 30px; right: 30px; }
+        
+        /* 页码 */
+        .page-num {
+            position: absolute;
+            bottom: 60px;
+            right: 70px;
+            font-size: 14px;
+            color: var(--stone);
+            font-family: monospace;
+        }
+        
+        /* 场景标识 */
+        .scene-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 25px;
+            background: var(--cinnabar-bg);
+            border: 1px solid var(--cinnabar);
+            border-radius: 2px;
+            margin-bottom: 30px;
+        }
+        
+        .scene-badge .num {
+            font-family: "Ma Shan Zheng", cursive;
+            font-size: 36px;
+            color: var(--cinnabar);
+        }
+        
+        .scene-badge .text {
+            font-size: 18px;
+            color: var(--cinnabar);
+            letter-spacing: 0.1em;
+        }
+        
+        /* 封面样式 */
+        .cover {
+            text-align: center;
+            justify-content: center;
+        }
+        
+        .cover .gua-row {
+            font-size: 42px;
+            letter-spacing: 0.5em;
+            color: var(--cinnabar);
+            opacity: 0.7;
+            margin-bottom: 50px;
+        }
+        
+        .cover h1 {
+            font-size: 56px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            margin-bottom: 20px;
+        }
+        
+        .cover .subtitle {
+            font-size: 24px;
+            color: var(--jade);
+            letter-spacing: 0.3em;
+            margin-bottom: 40px;
+        }
+        
+        .cover .divider {
+            width: 200px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--cinnabar), transparent);
+            margin: 0 auto 40px;
+        }
+        
+        .cover .tagline {
+            font-size: 18px;
+            color: var(--ink-light);
+            letter-spacing: 0.1em;
+        }
+        
+        /* 内容页标题 */
+        h2 {
+            font-size: 36px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--cinnabar);
+            display: inline-block;
+        }
+        
+        /* 核心观点框 */
+        .insight-box {
+            background: var(--cinnabar-bg);
+            border-left: 3px solid var(--cinnabar);
+            padding: 30px 35px;
+            margin: 40px 0;
+            font-size: 18px;
+            line-height: 2;
+        }
+        
+        .insight-box strong {
+            color: var(--cinnabar);
+        }
+        
+        /* ========== 交互式时间线 ========== */
+        .timeline-container {
+            margin-top: 30px;
+            position: relative;
+        }
+        
+        .timeline-progress {
+            position: absolute;
+            left: 20px;
+            top: 30px;
+            bottom: 30px;
+            width: 2px;
+            background: linear-gradient(180deg, var(--cinnabar), var(--gold), var(--jade));
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding: 20px 0 20px 60px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+        
+        .timeline-item:hover {
+            background: rgba(0,0,0,0.02);
+        }
+        
+        .timeline-item.active {
+            background: var(--cinnabar-bg);
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: 12px;
+            top: 28px;
+            width: 16px;
+            height: 16px;
+            background: var(--rice-paper);
+            border: 2px solid var(--cinnabar);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+        
+        .timeline-item.agent .timeline-dot {
+            background: var(--cinnabar);
+        }
+        
+        .timeline-item.active .timeline-dot {
+            transform: scale(1.3);
+            box-shadow: 0 0 15px rgba(184, 62, 47, 0.4);
+        }
+        
+        .timeline-item.completed .timeline-dot {
+            background: var(--jade);
+            border-color: var(--jade);
+        }
+        
+        .timeline-content h4 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ink);
+        }
+        
+        .timeline-item.agent h4 {
+            color: var(--cinnabar);
+        }
+        
+        .timeline-content p {
+            font-size: 15px;
+            color: var(--ink-light);
+            margin: 0;
+        }
+        
+        .timeline-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+        }
+        
+        .timeline-item.active .timeline-detail {
+            max-height: 200px;
+            padding-top: 15px;
+        }
+        
+        .detail-box {
+            background: rgba(255,255,255,0.6);
+            border: 1px solid rgba(184, 62, 47, 0.2);
+            padding: 15px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: var(--ink-light);
+        }
+        
+        .detail-box .label {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--cinnabar);
+            color: white;
+            font-size: 12px;
+            border-radius: 2px;
+            margin-right: 8px;
+        }
+        
+        /* 控制按钮 */
+        .timeline-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            padding-left: 60px;
+        }
+        
+        .btn {
+            padding: 12px 28px;
+            border: 1px solid var(--cinnabar);
+            background: transparent;
+            color: var(--cinnabar);
+            font-family: "Noto Serif SC", serif;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+        
+        .btn:hover {
+            background: var(--cinnabar);
+            color: white;
+        }
+        
+        .btn.primary {
+            background: var(--cinnabar);
+            color: white;
+        }
+        
+        .btn.primary:hover {
+            background: var(--cinnabar-light);
+        }
+        
+        /* ========== 数据包表格 ========== */
+        .data-table-container {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+        
+        .data-table th {
+            background: var(--cinnabar-bg);
+            padding: 18px 20px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--cinnabar);
+            color: var(--ink);
+        }
+        
+        .data-table td {
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            vertical-align: middle;
+        }
+        
+        .data-table tr:hover {
+            background: rgba(0,0,0,0.02);
+        }
+        
+        .data-table tr:hover td {
+            border-bottom-color: rgba(184, 62, 47, 0.3);
+        }
+        
+        .data-package-name {
+            font-weight: 600;
+            color: var(--ink);
+        }
+        
+        .data-package-desc {
+            font-size: 13px;
+            color: var(--stone);
+            margin-top: 4px;
+        }
+        
+        .price-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            color: white;
+            font-weight: 600;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .price-tag::before {
+            content: "◆";
+            font-size: 10px;
+        }
+        
+        .usage-count {
+            font-family: monospace;
+            color: var(--jade);
+            font-weight: 600;
+        }
+        
+        .btn-use {
+            padding: 8px 20px;
+            background: var(--jade);
+            color: white;
+            border: none;
+            font-family: "Noto Serif SC", serif;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-use:hover {
+            background: var(--jade-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(45, 90, 82, 0.3);
+        }
+        
+        .btn-use:disabled {
+            background: var(--stone-light);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* ========== 收益计算器 ========== */
+        .calculator-container {
+            margin-top: 30px;
+            padding: 35px;
+            background: rgba(255,255,255,0.5);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+        
+        .calculator-row {
+            display: flex;
+            gap: 40px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        
+        .calc-input-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .calc-input-group label {
+            display: block;
+            font-size: 14px;
+            color: var(--stone);
+            margin-bottom: 10px;
+        }
+        
+        .calc-input-group input, .calc-input-group select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid rgba(0,0,0,0.15);
+            background: white;
+            font-family: "Noto Serif SC", serif;
+            font-size: 16px;
+            color: var(--ink);
+            border-radius: 2px;
+            transition: border-color 0.3s;
+        }
+        
+        .calc-input-group input:focus, .calc-input-group select:focus {
+            outline: none;
+            border-color: var(--cinnabar);
+        }
+        
+        .calc-result {
+            min-width: 250px;
+            padding: 25px 30px;
+            background: var(--cinnabar-bg);
+            border: 2px solid var(--cinnabar);
+            text-align: center;
+            border-radius: 4px;
+        }
+        
+        .calc-result .label {
+            font-size: 14px;
+            color: var(--stone);
+            margin-bottom: 10px;
+        }
+        
+        .calc-result .value {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--cinnabar);
+            font-family: "Ma Shan Zheng", cursive;
+        }
+        
+        .calc-result .unit {
+            font-size: 16px;
+            color: var(--cinnabar);
+            margin-left: 8px;
+        }
+        
+        /* 收益分配图表 */
+        .distribution-chart {
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(0,0,0,0.02);
+            border-radius: 4px;
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: var(--ink);
+        }
+        
+        .chart-bar-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .chart-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .chart-label {
+            min-width: 140px;
+            font-size: 14px;
+            color: var(--ink-light);
+        }
+        
+        .chart-bar-wrap {
+            flex: 1;
+            height: 32px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .chart-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cinnabar), var(--cinnabar-light));
+            border-radius: 2px;
+            transition: width 0.8s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+        }
+        
+        .chart-bar.jade {
+            background: linear-gradient(90deg, var(--jade), var(--jade-light));
+        }
+        
+        .chart-bar.gold {
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
+        }
+        
+        .chart-value {
+            font-size: 13px;
+            color: white;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .chart-amount {
+            min-width: 120px;
+            text-align: right;
+            font-size: 15px;
+            color: var(--cinnabar);
+            font-weight: 600;
+        }
+        
+        /* 贡献者可视化 */
+        .contributors-visual {
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(255,255,255,0.6);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 4px;
+        }
+        
+        .contributors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .contributor-avatar {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, var(--cinnabar-bg), rgba(184, 62, 47, 0.15));
+            border: 1px solid rgba(184, 62, 47, 0.3);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: var(--cinnabar);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .contributor-avatar:hover {
+            transform: scale(1.1);
+            background: var(--cinnabar);
+            color: white;
+            border-color: var(--cinnabar);
+        }
+        
+        .contributor-avatar .id {
+            font-family: monospace;
+            font-size: 10px;
+            opacity: 0.8;
+        }
+        
+        .contributor-avatar .reward {
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        
+        /* 流程演示动画区 */
+        .demo-area {
+            margin-top: 30px;
+            padding: 30px;
+            background: rgba(0,0,0,0.02);
+            border-radius: 4px;
+            min-height: 200px;
+        }
+        
+        .demo-status {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .demo-status .icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .demo-status .text {
+            font-size: 20px;
+            color: var(--ink);
+            margin-bottom: 10px;
+        }
+        
+        .demo-status .subtext {
+            font-size: 14px;
+            color: var(--stone);
+        }
+        
+        /* 脉冲动画 */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+        
+        .pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        /* 成功提示 */
+        .success-toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--jade);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 4px;
+            font-size: 15px;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 20px rgba(45, 90, 82, 0.3);
+        }
+        
+        .success-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        /* 数据流动画 */
+        @keyframes flow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        
+        .flowing-border {
+            background: linear-gradient(90deg, var(--cinnabar), var(--gold), var(--jade), var(--cinnabar));
+            background-size: 300% 100%;
+            animation: flow 3s linear infinite;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 900px) {
+            .slide {
+                padding: 60px 40px;
+            }
+            
+            .cover h1 {
+                font-size: 36px;
+            }
+            
+            .calculator-row {
+                flex-direction: column;
+            }
+            
+            .calc-result {
+                width: 100%;
+            }
+            
+            .timeline-controls {
+                padding-left: 0;
+                flex-wrap: wrap;
+            }
+            
+            .chart-item {
+                flex-wrap: wrap;
+            }
+            
+            .chart-label {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 封面页 -->
+<div class="slide cover">
+    <div class="corner-seal top-left">數</div>
+    <div class="corner-seal top-right">智</div>
+    <div class="corner-seal bottom-left">據</div>
+    <div class="corner-seal bottom-right">源</div>
+    
+    <div class="gua-row">☰ ☷ ☳ ☴ ☵ ☶ ☲ ☱</div>
+    
+    <div class="scene-badge" style="margin: 0 auto 40px;">
+        <span class="num">叁</span>
+        <span class="text">场景三</span>
+    </div>
+    
+    <h1>AI训练数据ECHO化</h1>
+    
+    <div class="subtitle">Agent服务数据确权交易</div>
+    
+    <div class="divider"></div>
+    
+    <p class="tagline">使用即收益 · 数据即资产</p>
+    
+    <div class="page-num">壹</div>
+</div>
+
+<!-- 核心流程演示页 -->
+<div class="slide">
+    <div class="corner-seal top-left">流</div>
+    <div class="corner-seal top-right">程</div>
+    
+    <div class="scene-badge">
+        <span class="num">叁</span>
+        <span class="text">核心流程演示</span>
+    </div>
+    
+    <h2>古琴情绪分析请求的处理流程</h2>
+    
+    <div class="timeline-container">
+        <div class="timeline-progress"></div>
+        
+        <div class="timeline-item" data-step="1" onclick="toggleTimeline(this)">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <h4>👤 用户请求</h4>
+                <p>"帮我分析这首古琴曲的情绪"</p>
+                <div class="timeline-detail">
+                    <div class="detail-box">
+                        <span class="label">触发</span> 用户提交古琴音频文件，请求情绪识别分析
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="timeline-item agent" data-step="2" onclick="toggleTimeline(this)">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <h4>🤖 协调Agent · 任务分配</h4>
+                <p>解析请求，调度相关Agent协作</p>
+                <div class="timeline-detail">
+                    <div class="detail-box">
+                        <span class="label">调度</span> 调用数据打包Agent + 查询Agent协同处理
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="timeline-item agent" data-step="3" onclick="toggleTimeline(this)">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <h4>📦 数据打包Agent · 检索</h4>
+                <p>在古琴情绪识别库中检索相关数据</p>
+                <div class="timeline-detail">
+                    <div class="detail-box">
+                        <span class="label">匹配</span> 找到 300 条相关对话记录，置信度 94%
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="timeline-item agent" data-step="4" onclick="toggleTimeline(this)">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <h4>🔍 查询Agent · 执行分析</h4>
+                <p>基于检索数据进行情绪分析，返回结果</p>
+                <div class="timeline-detail">
+                    <div class="detail-box">
+                        <span class="label">结果</span> 检测到「宁静」「悠远」「思古」三种情绪，置信度 89%
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="timeline-item" data-step="5" onclick="toggleTimeline(this)">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <h4>💰 收益分配 · 自动执行</h4>
+                <p>300条数据贡献者各获得 0.01 ECHO</p>
+                <div class="timeline-detail">
+                    <div class="detail-box">
+                        <span class="label">分润</span> 总费用 3 ECHO，平均分配给 300 位数据贡献者
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="timeline-controls">
+        <button class="btn primary" onclick="startDemo()">▶ 演示完整流程</button>
+        <button class="btn" onclick="resetTimeline()">⟲ 重置</button>
+    </div>
+    
+    <div class="demo-area" id="demoArea" style="display: none;">
+        <div class="demo-status" id="demoStatus">
+            <div class="icon pulse">🔄</div>
+            <div class="text">处理中...</div>
+            <div class="subtext">协调Agent正在分配任务</div>
+        </div>
+    </div>
+    
+    <div class="page-num">貳</div>
+</div>
+
+<!-- 数据包展示页 -->
+<div class="slide">
+    <div class="corner-seal top-left">庫</div>
+    <div class="corner-seal top-right">藏</div>
+    
+    <div class="scene-badge">
+        <span class="num">叁</span>
+        <span class="text">Agent服务数据包</span>
+    </div>
+    
+    <h2>可供使用的数据资产</h2>
+    
+    <div class="data-table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 35%;">数据包</th>
+                    <th style="width: 20%;">内容</th>
+                    <th style="width: 15%;">价格</th>
+                    <th style="width: 15%;">使用次数</th>
+                    <th style="width: 15%;">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-package="guqin">
+                    <td>
+                        <div class="data-package-name">古琴情绪识别库 v2.1</div>
+                        <div class="data-package-desc">基于5000条专业标注，涵盖50首经典古琴曲</div>
+                    </td>
+                    <td>5000条标注数据</td>
+                    <td><span class="price-tag">0.5 ECHO</span></td>
+                    <td><span class="usage-count">1,247 次</span></td>
+                    <td><button class="btn-use" onclick="usePackage('guqin', 0.5)">使用数据包</button></td>
+                </tr>
+                <tr data-package="guofeng">
+                    <td>
+                        <div class="data-package-name">国风编曲知识库</div>
+                        <div class="data-package-desc">3000条创作记录，包含编曲思路与技巧</div>
+                    </td>
+                    <td>3000条创作记录</td>
+                    <td><span class="price-tag">0.3 ECHO</span></td>
+                    <td><span class="usage-count">892 次</span></td>
+                    <td><button class="btn-use" onclick="usePackage('guofeng', 0.3)">使用数据包</button></td>
+                </tr>
+                <tr data-package="pentatonic">
+                    <td>
+                        <div class="data-package-name">五声音阶分析集</div>
+                        <div class="data-package-desc">2000条分析结果，覆盖宫商角徵羽五调</div>
+                    </td>
+                    <td>2000条分析结果</td>
+                    <td><span class="price-tag">0.2 ECHO</span></td>
+                    <td><span class="usage-count">567 次</span></td>
+                    <td><button class="btn-use" onclick="usePackage('pentatonic', 0.2)">使用数据包</button></td>
+                </tr>
+                <tr data-package="jazz-fusion">
+                    <td>
+                        <div class="data-package-name">爵士融合风格库</div>
+                        <div class="data-package-desc">1500条跨风格创作数据，中西结合</div>
+                    </td>
+                    <td>1500条创作数据</td>
+                    <td><span class="price-tag">0.4 ECHO</span></td>
+                    <td><span class="usage-count">423 次</span></td>
+                    <td><button class="btn-use" onclick="usePackage('jazz-fusion', 0.4)">使用数据包</button></td>
+                </tr>
+                <tr data-package="lyrics">
+                    <td>
+                        <div class="data-package-name">古诗词歌词生成库</div>
+                        <div class="data-package-desc">2500条诗词化歌词，韵律与意境并重</div>
+                    </td>
+                    <td>2500条歌词数据</td>
+                    <td><span class="price-tag">0.35 ECHO</span></td>
+                    <td><span class="usage-count">678 次</span></td>
+                    <td><button class="btn-use" onclick="usePackage('lyrics', 0.35)">使用数据包</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="insight-box" style="margin-top: 30px;">
+        <strong>数据确权说明：</strong>每个数据包均已通过ECHO协议铸造为NFT资产，配置四维权力（使用权/扩展权/衍生权/收益权）。使用数据包时，费用将自动分配给所有数据贡献者。
+    </div>
+    
+    <div class="page-num">叁</div>
+</div>
+
+<!-- 收益计算器页 -->
+<div class="slide">
+    <div class="corner-seal top-left">算</div>
+    <div class="corner-seal top-right">益</div>
+    
+    <div class="scene-badge">
+        <span class="num">叁</span>
+        <span class="text">收益计算器</span>
+    </div>
+    
+    <h2>数据贡献者收益预估</h2>
+    
+    <div class="calculator-container">
+        <div class="calculator-row">
+            <div class="calc-input-group">
+                <label>选择数据包</label>
+                <select id="packageSelect" onchange="calculateRevenue()">
+                    <option value="0.5" data-contributors="5000">古琴情绪识别库 v2.1 (5000人)</option>
+                    <option value="0.3" data-contributors="3000">国风编曲知识库 (3000人)</option>
+                    <option value="0.2" data-contributors="2000">五声音阶分析集 (2000人)</option>
+                    <option value="0.4" data-contributors="1500">爵士融合风格库 (1500人)</option>
+                    <option value="0.35" data-contributors="2500">古诗词歌词生成库 (2500人)</option>
+                </select>
+            </div>
+            
+            <div class="calc-input-group">
+                <label>预估使用次数</label>
+                <input type="number" id="usageInput" value="1000" min="1" oninput="calculateRevenue()">
+            </div>
+            
+            <div class="calc-result">
+                <div class="label">预估总收益</div>
+                <div class="value">
+                    <span id="totalRevenue">500</span>
+                    <span class="unit">ECHO</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 收益分配可视化 -->
+    <div class="distribution-chart">
+        <div class="chart-title">💰 收益分配结构</div>
+        <div class="chart-bar-container">
+            <div class="chart-item">
+                <div class="chart-label">数据贡献者 (80%)</div>
+                <div class="chart-bar-wrap">
+                    <div class="chart-bar" id="barContributors" style="width: 80%;">
+                        <span class="chart-value" id="valueContributors">400 ECHO</span>
+                    </div>
+                </div>
+                <div class="chart-amount" id="amountContributors">400 ECHO</div>
+            </div>
+            <div class="chart-item">
+                <div class="chart-label">平台运营 (10%)</div>
+                <div class="chart-bar-wrap">
+                    <div class="chart-bar jade" id="barPlatform" style="width: 10%;">
+                        <span class="chart-value" id="valuePlatform">50 ECHO</span>
+                    </div>
+                </div>
+                <div class="chart-amount" id="amountPlatform" style="color: var(--jade);">50 ECHO</div>
+            </div>
+            <div class="chart-item">
+                <div class="chart-label">协议储备 (10%)</div>
+                <div class="chart-bar-wrap">
+                    <div class="chart-bar gold" id="barReserve" style="width: 10%;">
+                        <span class="chart-value" id="valueReserve">50 ECHO</span>
+                    </div>
+                </div>
+                <div class="chart-amount" id="amountReserve" style="color: var(--gold);">50 ECHO</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 人均收益 -->
+    <div class="contributors-visual">
+        <div class="chart-title">👥 每位数据贡献者可获得</div>
+        <div style="display: flex; align-items: center; gap: 30px; margin-top: 20px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <div style="font-size: 14px; color: var(--stone); margin-bottom: 10px;">总贡献者数量</div>
+                <div style="font-size: 32px; font-weight: 700; color: var(--ink);" id="contributorCount">5,000 人</div>
+            </div>
+            <div style="width: 1px; height: 60px; background: rgba(0,0,0,0.1);"></div>
+            <div style="flex: 1; min-width: 200px;">
+                <div style="font-size: 14px; color: var(--stone); margin-bottom: 10px;">人均收益</div>
+                <div style="font-size: 42px; font-weight: 700; color: var(--cinnabar); font-family: 'Ma Shan Zheng', cursive;" id="perPersonRevenue">0.08 ECHO</div>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <div style="font-size: 14px; color: var(--stone); margin-bottom: 10px;">年化预估（按每月1000次使用）</div>
+                <div style="font-size: 28px; font-weight: 600; color: var(--jade);" id="yearlyRevenue">0.96 ECHO</div>
+            </div>
+        </div>
+        
+        <!-- 贡献者网格示意 -->
+        <div style="margin-top: 30px;">
+            <div style="font-size: 14px; color: var(--stone); margin-bottom: 15px;">贡献者分布示意（显示前30位）</div>
+            <div class="contributors-grid" id="contributorsGrid">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="page-num">肆</div>
+</div>
+
+<!-- 收益分配示意图页 -->
+<div class="slide">
+    <div class="corner-seal top-left">分</div>
+    <div class="corner-seal top-right">润</div>
+    
+    <div class="scene-badge">
+        <span class="num">叁</span>
+        <span class="text">收益分配机制</span>
+    </div>
+    
+    <h2>300条数据贡献者的收益分配</h2>
+    
+    <div style="margin-top: 30px; padding: 40px; background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.08); border-radius: 4px;">
+        <!-- 流程图 -->
+        <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 40px;">
+            <div style="text-align: center; padding: 25px 35px; background: var(--cinnabar-bg); border: 2px solid var(--cinnabar); border-radius: 4px;">
+                <div style="font-size: 13px; color: var(--stone); margin-bottom: 5px;">用户支付</div>
+                <div style="font-size: 28px; font-weight: 700; color: var(--cinnabar);">3 ECHO</div>
+                <div style="font-size: 13px; color: var(--cinnabar); margin-top: 5px;">使用古琴情绪库</div>
+            </div>
+            
+            <div style="font-size: 36px; color: var(--cinnabar);">→</div>
+            
+            <div style="text-align: center; padding: 25px 35px; background: rgba(45, 90, 82, 0.08); border: 2px solid var(--jade); border-radius: 4px;">
+                <div style="font-size: 13px; color: var(--stone); margin-bottom: 5px;">智能合约</div>
+                <div style="font-size: 24px; font-weight: 600; color: var(--jade);">自动分润</div>
+                <div style="font-size: 13px; color: var(--jade); margin-top: 5px;">实时结算</div>
+            </div>
+            
+            <div style="font-size: 36px; color: var(--cinnabar);">→</div>
+            
+            <div style="text-align: center; padding: 25px 35px; background: rgba(139, 105, 20, 0.08); border: 2px solid var(--gold); border-radius: 4px;">
+                <div style="font-size: 13px; color: var(--stone); margin-bottom: 5px;">贡献者收益</div>
+                <div style="font-size: 28px; font-weight: 700; color: var(--gold);">0.01 ECHO</div>
+                <div style="font-size: 13px; color: var(--gold); margin-top: 5px;">每人</div>
+            </div>
+        </div>
+        
+        <!-- 详细分配 -->
+        <div style="border-top: 1px solid rgba(0,0,0,0.1); padding-top: 30px;">
+            <div style="font-size: 16px; font-weight: 600; margin-bottom: 25px; text-align: center;">详细分配明细</div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div style="padding: 20px; background: rgba(184, 62, 47, 0.05); border-radius: 4px; text-align: center;">
+                    <div style="font-size: 13px; color: var(--stone); margin-bottom: 8px;">匹配数据量</div>
+                    <div style="font-size: 32px; font-weight: 700; color: var(--cinnabar);">300 条</div>
+                </div>
+                <div style="padding: 20px; background: rgba(184, 62, 47, 0.05); border-radius: 4px; text-align: center;">
+                    <div style="font-size: 13px; color: var(--stone); margin-bottom: 8px;">贡献者数量</div>
+                    <div style="font-size: 32px; font-weight: 700; color: var(--cinnabar);">300 人</div>
+                </div>
+                <div style="padding: 20px; background: rgba(184, 62, 47, 0.05); border-radius: 4px; text-align: center;">
+                    <div style="font-size: 13px; color: var(--stone); margin-bottom: 8px;">每人获得</div>
+                    <div style="font-size: 32px; font-weight: 700; color: var(--cinnabar);">0.01</div>
+                </div>
+                <div style="padding: 20px; background: rgba(184, 62, 47, 0.05); border-radius: 4px; text-align: center;">
+                    <div style="font-size: 13px; color: var(--stone); margin-bottom: 8px;">结算时间</div>
+                    <div style="font-size: 24px; font-weight: 600; color: var(--cinnabar);">实时</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 贡献者列表示意 -->
+    <div style="margin-top: 30px;">
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 20px;">📊 数据贡献者分布（示例）</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 12px;" id="finalContributorsGrid">
+            <!-- 动态生成300个贡献者 -->
+        </div>
+    </div>
+    
+    <div class="page-num">伍</div>
+</div>
+
+<!-- 场景总结页 -->
+<div class="slide cover">
+    <div class="corner-seal top-left">參</div>
+    <div class="corner-seal top-right">ECHO</div>
+    <div class="corner-seal bottom-left">據</div>
+    <div class="corner-seal bottom-right">智</div>
+    
+    <div class="gua-row" style="opacity: 0.5; margin-bottom: 30px;">☰ ☷ ☳ ☴ ☵ ☶ ☲ ☱</div>
+    
+    <div class="scene-badge" style="margin: 0 auto 30px;">
+        <span class="num">叁</span>
+        <span class="text">场景三总结</span>
+    </div>
+    
+    <h1 style="font-size: 42px; margin-bottom: 30px;">AI训练数据ECHO化</h1>
+    
+    <div class="divider" style="width: 150px;"></div>
+    
+    <div style="max-width: 800px; margin: 40px auto; text-align: left;">
+        <div class="insight-box" style="margin: 0;">
+            <strong>核心范式：</strong><br>
+            Agent服务数据 → ECHO确权 → 链上资产 → 使用即收益 → 自动分润<br><br>
+            <strong>价值创造：</strong><br>
+            每一次Agent服务都在积累数据资产，每一次数据使用都在为贡献者创造收益
+        </div>
+    </div>
+    
+    <div style="display: flex; justify-content: center; gap: 40px; margin-top: 40px; flex-wrap: wrap;">
+        <div style="text-align: center; padding: 25px 40px; border: 1px solid rgba(0,0,0,0.1);">
+            <div style="font-size: 36px; margin-bottom: 10px;">📦</div>
+            <div style="font-size: 16px; font-weight: 600;">数据打包</div>
+            <div style="font-size: 13px; color: var(--stone); margin-top: 5px;">服务数据确权上链</div>
+        </div>
+        <div style="text-align: center; padding: 25px 40px; border: 2px solid var(--cinnabar); background: var(--cinnabar-bg);">
+            <div style="font-size: 36px; margin-bottom: 10px;">💰</div>
+            <div style="font-size: 16px; font-weight: 600; color: var(--cinnabar);">使用即收益</div>
+            <div style="font-size: 13px; color: var(--cinnabar); margin-top: 5px;">自动分润机制</div>
+        </div>
+        <div style="text-align: center; padding: 25px 40px; border: 1px solid rgba(0,0,0,0.1);">
+            <div style="font-size: 36px; margin-bottom: 10px;">🔄</div>
+            <div style="font-size: 16px; font-weight: 600;">价值循环</div>
+            <div style="font-size: 13px; color: var(--stone); margin-top: 5px;">持续创造价值</div>
+        </div>
+    </div>
+    
+    <div class="page-num">陆</div>
+</div>
+
+<!-- 成功提示 -->
+<div class="success-toast" id="successToast">
+    ✅ 操作成功！收益已自动分配
+</div>
+
+<script>
+// ========== 时间线交互 ==========
+function toggleTimeline(element) {
+    // 移除其他激活状态
+    document.querySelectorAll('.timeline-item').forEach(item => {
+        if (item !== element) {
+            item.classList.remove('active');
+        }
+    });
+    // 切换当前状态
+    element.classList.toggle('active');
+}
+
+function resetTimeline() {
+    document.querySelectorAll('.timeline-item').forEach(item => {
+        item.classList.remove('active', 'completed');
+    });
+    document.getElementById('demoArea').style.display = 'none';
+}
+
+let demoInterval = null;
+
+function startDemo() {
+    resetTimeline();
+    document.getElementById('demoArea').style.display = 'block';
+    
+    const steps = document.querySelectorAll('.timeline-item');
+    const demoStatus = document.getElementById('demoStatus');
+    const statusTexts = [
+        { icon: '👤', text: '收到用户请求', sub: '正在解析古琴情绪分析需求...' },
+        { icon: '🤖', text: '协调Agent调度中', sub: '分配数据打包Agent与查询Agent...' },
+        { icon: '📦', text: '检索相关数据', sub: '在古琴情绪识别库中匹配...' },
+        { icon: '🔍', text: '执行分析', sub: '基于300条数据进行情绪识别...' },
+        { icon: '✅', text: '分析完成', sub: '检测到「宁静」「悠远」「思古」情绪' }
+    ];
+    
+    let currentStep = 0;
+    
+    if (demoInterval) clearInterval(demoInterval);
+    
+    function processStep() {
+        if (currentStep > 0) {
+            steps[currentStep - 1].classList.remove('active');
+            steps[currentStep - 1].classList.add('completed');
+        }
+        
+        if (currentStep < steps.length) {
+            steps[currentStep].classList.add('active');
+            
+            // 更新演示区域状态
+            const status = statusTexts[currentStep] || statusTexts[statusTexts.length - 1];
+            demoStatus.innerHTML = `
+                <div class="icon pulse">${status.icon}</div>
+                <div class="text">${status.text}</div>
+                <div class="subtext">${status.sub}</div>
+            `;
+            
+            currentStep++;
+        } else {
+            // 演示完成
+            clearInterval(demoInterval);
+            demoStatus.innerHTML = `
+                <div class="icon" style="color: var(--jade);">✅</div>
+                <div class="text" style="color: var(--jade);">流程完成</div>
+                <div class="subtext">300位数据贡献者各获得 0.01 ECHO</div>
+            `;
+            showToast();
+        }
+    }
+    
+    processStep();
+    demoInterval = setInterval(processStep, 1500);
+}
+
+// ========== 数据包使用 ==========
+function usePackage(packageId, price) {
+    const btn = document.querySelector(`tr[data-package="${packageId}"] .btn-use`);
+    const originalText = btn.textContent;
+    
+    btn.disabled = true;
+    btn.textContent = '处理中...';
+    
+    setTimeout(() => {
+        btn.textContent = '✓ 已使用';
+        btn.style.background = 'var(--stone-light)';
+        
+        // 更新使用次数
+        const countEl = document.querySelector(`tr[data-package="${packageId}"] .usage-count`);
+        const currentCount = parseInt(countEl.textContent.replace(/[^0-9]/g, ''));
+        countEl.textContent = (currentCount + 1).toLocaleString() + ' 次';
+        
+        showToast(`✅ 已使用数据包！${price} ECHO 将分配给数据贡献者`);
+        
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+            btn.style.background = '';
+        }, 2000);
+    }, 800);
+}
+
+// ========== 收益计算器 ==========
+function calculateRevenue() {
+    const select = document.getElementById('packageSelect');
+    const price = parseFloat(select.value);
+    const contributors = parseInt(select.options[select.selectedIndex].dataset.contributors);
+    const usage = parseInt(document.getElementById('usageInput').value) || 0;
+    
+    const totalRevenue = (price * usage).toFixed(2);
+    const contributorsShare = (totalRevenue * 0.8).toFixed(2);
+    const platformShare = (totalRevenue * 0.1).toFixed(2);
+    const reserveShare = (totalRevenue * 0.1).toFixed(2);
+    const perPerson = (contributorsShare / contributors).toFixed(4);
+    const yearly = (perPerson * 12).toFixed(2);
+    
+    // 更新显示
+    document.getElementById('totalRevenue').textContent = totalRevenue;
+    document.getElementById('valueContributors').textContent = contributorsShare + ' ECHO';
+    document.getElementById('amountContributors').textContent = contributorsShare + ' ECHO';
+    document.getElementById('valuePlatform').textContent = platformShare + ' ECHO';
+    document.getElementById('amountPlatform').textContent = platformShare + ' ECHO';
+    document.getElementById('valueReserve').textContent = reserveShare + ' ECHO';
+    document.getElementById('amountReserve').textContent = reserveShare + ' ECHO';
+    
+    document.getElementById('contributorCount').textContent = contributors.toLocaleString() + ' 人';
+    document.getElementById('perPersonRevenue').textContent = perPerson + ' ECHO';
+    document.getElementById('yearlyRevenue').textContent = yearly + ' ECHO';
+    
+    // 动画更新进度条
+    setTimeout(() => {
+        document.getElementById('barContributors').style.width = '80%';
+        document.getElementById('barPlatform').style.width = '10%';
+        document.getElementById('barReserve').style.width = '10%';
+    }, 100);
+    
+    // 更新贡献者网格
+    updateContributorsGrid(contributors, perPerson);
+}
+
+function updateContributorsGrid(total, perPerson) {
+    const grid = document.getElementById('contributorsGrid');
+    const displayCount = Math.min(30, total);
+    
+    let html = '';
+    for (let i = 1; i <= displayCount; i++) {
+        html += `
+            <div class="contributor-avatar" title="贡献者 #${i}">
+                <div class="id">#${i}</div>
+                <div class="reward">+${perPerson}</div>
+            </div>
+        `;
+    }
+    
+    if (total > displayCount) {
+        html += `
+            <div class="contributor-avatar" style="background: var(--stone-light); border-color: var(--stone);">
+                <div style="font-size: 14px; color: var(--stone);">+${total - displayCount}</div>
+            </div>
+        `;
+    }
+    
+    grid.innerHTML = html;
+}
+
+// ========== 生成300个贡献者网格 ==========
+function generateFinalContributors() {
+    const grid = document.getElementById('finalContributorsGrid');
+    let html = '';
+    
+    for (let i = 1; i <= 100; i++) {
+        const isHighlighted = i <= 10;
+        html += `
+            <div style="
+                aspect-ratio: 1;
+                background: ${isHighlighted ? 'var(--cinnabar)' : 'rgba(184, 62, 47, 0.1)'};
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                color: ${isHighlighted ? 'white' : 'var(--cinnabar)'};
+                font-family: monospace;
+                cursor: pointer;
+                transition: all 0.2s;
+            " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                +0.01
+            </div>
+        `;
+    }
+    
+    html += `
+        <div style="
+            aspect-ratio: 1;
+            background: var(--stone-light);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: var(--stone);
+        ">
+            +200
+        </div>
+    `;
+    
+    grid.innerHTML = html;
+}
+
+// ========== 提示框 ==========
+function showToast(message) {
+    const toast = document.getElementById('successToast');
+    if (message) {
+        toast.textContent = message;
+    }
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// ========== 初始化 ==========
+document.addEventListener('DOMContentLoaded', function() {
+    calculateRevenue();
+    generateFinalContributors();
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景一：创作者生态闭环 - ECHO协议演示</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --rice-paper: #f8f5f0;
+            --ink: #1a1a1a;
+            --ink-light: #4a4a4a;
+            --cinnabar: #b83e2f;
+            --cinnabar-light: #d4725a;
+            --cinnabar-pale: rgba(184, 62, 47, 0.08);
+            --jade: #2d5a52;
+            --gold: #8b6914;
+            --stone: #8c8680;
+        }
+        
+        body {
+            font-family: "Noto Serif SC", serif;
+            background: var(--rice-paper);
+            color: var(--ink);
+            line-height: 1.9;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* 页面容器 */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 40px;
+            position: relative;
+        }
+        
+        /* 水墨背景效果 */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse 60% 40% at 10% 30%, rgba(139, 105, 20, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 30% at 90% 70%, rgba(45, 90, 82, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse 40% 50% at 30% 80%, rgba(184, 62, 47, 0.03) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        /* 四角印章装饰 */
+        .seal {
+            position: fixed;
+            width: 56px;
+            height: 56px;
+            border: 2px solid var(--cinnabar);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Ma Shan Zheng", cursive;
+            font-size: 26px;
+            color: var(--cinnabar);
+            opacity: 0.7;
+            z-index: 100;
+        }
+        
+        .seal.top-left { top: 20px; left: 20px; }
+        .seal.top-right { top: 20px; right: 20px; }
+        .seal.bottom-left { bottom: 20px; left: 20px; }
+        .seal.bottom-right { bottom: 20px; right: 20px; }
+        
+        /* 头部区域 */
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .chapter-label {
+            font-size: 14px;
+            color: var(--stone);
+            letter-spacing: 0.4em;
+            margin-bottom: 10px;
+        }
+        
+        .chapter-title {
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            margin-bottom: 15px;
+        }
+        
+        .chapter-subtitle {
+            font-size: 16px;
+            color: var(--jade);
+            letter-spacing: 0.2em;
+        }
+        
+        .chapter-number {
+            font-size: 180px;
+            font-weight: 100;
+            color: var(--cinnabar);
+            opacity: 0.06;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: "Ma Shan Zheng", cursive;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* 引言 */
+        .intro {
+            text-align: center;
+            padding: 40px 60px;
+            margin-bottom: 50px;
+            font-size: 18px;
+            color: var(--ink-light);
+            line-height: 2.2;
+            position: relative;
+        }
+        
+        .intro::before,
+        .intro::after {
+            content: "";
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(184, 62, 47, 0.2);
+        }
+        
+        .intro::before {
+            top: 0;
+            left: 0;
+            border-right: none;
+            border-bottom: none;
+        }
+        
+        .intro::after {
+            bottom: 0;
+            right: 0;
+            border-left: none;
+            border-top: none;
+        }
+        
+        /* 时间线 */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--cinnabar), var(--gold), var(--jade), var(--stone));
+        }
+        
+        /* 步骤卡片 */
+        .step {
+            position: relative;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.5);
+            border: 1px solid rgba(0,0,0,0.08);
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+        
+        .step:hover {
+            border-color: var(--cinnabar);
+            box-shadow: 0 4px 20px rgba(184, 62, 47, 0.1);
+        }
+        
+        .step.active {
+            border-color: var(--cinnabar);
+            box-shadow: 0 6px 30px rgba(184, 62, 47, 0.15);
+        }
+        
+        .step::before {
+            content: "";
+            position: absolute;
+            left: -37px;
+            top: 24px;
+            width: 14px;
+            height: 14px;
+            background: var(--rice-paper);
+            border: 3px solid var(--cinnabar);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active::before {
+            background: var(--cinnabar);
+            transform: scale(1.2);
+        }
+        
+        .step.agent-step::before {
+            background: var(--cinnabar);
+        }
+        
+        .step-header {
+            padding: 24px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .step-number {
+            font-family: "Ma Shan Zheng", cursive;
+            font-size: 32px;
+            color: var(--cinnabar);
+            opacity: 0.5;
+            min-width: 40px;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            letter-spacing: 0.05em;
+        }
+        
+        .step-desc {
+            font-size: 15px;
+            color: var(--ink-light);
+        }
+        
+        .agent-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: var(--cinnabar-pale);
+            color: var(--cinnabar);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+        
+        .agent-badge::before {
+            content: "◉";
+            font-size: 10px;
+        }
+        
+        /* 展开详情 */
+        .step-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+            background: rgba(0,0,0,0.02);
+        }
+        
+        .step.active .step-detail {
+            max-height: 300px;
+            padding: 0 30px 24px;
+        }
+        
+        .detail-content {
+            padding: 20px;
+            border-left: 3px solid var(--cinnabar);
+            background: rgba(255,255,255,0.6);
+        }
+        
+        .detail-title {
+            font-size: 14px;
+            color: var(--cinnabar);
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: 0.1em;
+        }
+        
+        .detail-text {
+            font-size: 15px;
+            line-height: 1.8;
+            color: var(--ink);
+        }
+        
+        .detail-meta {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed rgba(0,0,0,0.1);
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            font-size: 13px;
+            color: var(--stone);
+        }
+        
+        .meta-item strong {
+            color: var(--jade);
+        }
+        
+        /* 收益展示 */
+        .echo-gain {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: linear-gradient(135deg, var(--gold), #a67c1a);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        
+        .echo-gain::before {
+            content: "◈";
+        }
+        
+        /* 卦象展示 */
+        .gua-display {
+            font-family: "Ma Shan Zheng", cursive;
+            font-size: 18px;
+            color: var(--jade);
+            letter-spacing: 0.1em;
+        }
+        
+        /* 底部总结 */
+        .summary {
+            margin-top: 60px;
+            padding: 40px;
+            background: rgba(184, 62, 47, 0.03);
+            border: 1px solid rgba(184, 62, 47, 0.15);
+            text-align: center;
+        }
+        
+        .summary-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--cinnabar);
+        }
+        
+        .summary-text {
+            font-size: 16px;
+            line-height: 2;
+            color: var(--ink-light);
+        }
+        
+        .flow-arrow {
+            color: var(--cinnabar);
+            font-size: 20px;
+            margin: 0 10px;
+        }
+        
+        /* 页脚 */
+        .footer {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        
+        .footer-text {
+            font-size: 13px;
+            color: var(--stone);
+            letter-spacing: 0.15em;
+        }
+        
+        .gua-row {
+            font-size: 24px;
+            letter-spacing: 0.3em;
+            color: var(--cinnabar);
+            opacity: 0.4;
+            margin-bottom: 20px;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 20px;
+            }
+            
+            .chapter-title {
+                font-size: 28px;
+            }
+            
+            .step-header {
+                flex-wrap: wrap;
+                padding: 20px;
+            }
+            
+            .agent-badge {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+            
+            .intro {
+                padding: 30px 20px;
+            }
+            
+            .seal {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 四角印章 -->
+    <div class="seal top-left">創</div>
+    <div class="seal top-right">勢</div>
+    <div class="seal bottom-left">音</div>
+    <div class="seal bottom-right">壹</div>
+    
+    <div class="container">
+        <!-- 章节号背景 -->
+        <div class="chapter-number">壹</div>
+        
+        <!-- 头部 -->
+        <header class="header">
+            <div class="chapter-label">ECHO 协议 · 场景演示</div>
+            <h1 class="chapter-title">创作者生态闭环</h1>
+            <p class="chapter-subtitle">从想法到收益，Agent全程护航创作生命周期</p>
+        </header>
+        
+        <!-- 引言 -->
+        <div class="intro">
+            <p>万物有灵，皆可生长。在ECHO势场中，创作者不再是孤独的原子，</p>
+            <p>而是与导航Agent、监测Agent、跃迁Agent共舞的生态节点。</p>
+        </div>
+        
+        <!-- 时间线 -->
+        <div class="timeline">
+            <!-- 步骤1 -->
+            <div class="step" onclick="toggleStep(this)">
+                <div class="step-header">
+                    <div class="step-number">一</div>
+                    <div class="step-content">
+                        <h3 class="step-title">创作者提出想法</h3>
+                        <p class="step-desc">"我想创作一首适合社群滋养的音乐"</p>
+                    </div>
+                </div>
+                <div class="step-detail">
+                    <div class="detail-content">
+                        <div class="detail-title">起点 · 灵感萌发</div>
+                        <p class="detail-text">创作者产生创作意图，但尚未确定具体形式与发布策略。此时作品处于「无形」状态，需要势场导航进行定位分析。</p>
+                        <div class="detail-meta">
+                            <span class="meta-item"><strong>状态：</strong>待确权</span>
+                            <span class="meta-item"><strong>下一步：</strong>势场分析</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 步骤2 -->
+            <div class="step agent-step" onclick="toggleStep(this)">
+                <div class="step-header">
+                    <div class="step-number">二</div>
+                    <div class="step-content">
+                        <h3 class="step-title">导航Agent · 势场分析</h3>
+                        <p class="step-desc">"当前家人卦区域正在上升期，建议配置「用=4, 扩=3, 衍=4, 益=5」"</p>
+                    </div>
+                    <span class="agent-badge">导航Agent</span>
+                </div>
+                <div class="step-detail">
+                    <div class="detail-content">
+                        <div class="detail-title">分析 · 势位定位</div>
+                        <p class="detail-text">导航Agent扫描当前势场状态，识别适合音乐类内容生长的时空坐标。家人卦象征和谐共生，适合社群滋养类内容发展。四维权利配置建议最大化衍生与扩展收益。</p>
+                        <div class="detail-meta">
+                            <span class="meta-item"><strong>卦象：</strong>家人卦（巽上离下）</span>
+                            <span class="meta-item"><strong>配置：</strong>用=4, 扩=3, 衍=4, 益=5</span>
+                            <span class="meta-item"><strong>趋势：</strong>上升期</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 步骤3 -->
+            <div class="step" onclick="toggleStep(this)">
+                <div class="step-header">
+                    <div class="step-number">三</div>
+                    <div class="step-content">
+                        <h3 class="step-title">创作完成《墨竹》</h3>
+                        <p class="step-desc">Agent协助铸造，资产进入势场 T[0][0][0] = 坤卦·初九</p>
+                    </div>
+                </div>
+                <div class="step-detail">
+                    <div class="detail-content">
+                        <div class="detail-title">铸造 · 资产确权</div>
+                        <p class="detail-text">创作者完成作品《墨竹》，ECHO协议自动执行铸造流程，将数字资产上链确权。作品获得初始势位坐标T[0][0][0]，对应坤卦初九——潜龙勿用，静待时机。</p>
+                        <div class="detail-meta">
+                            <span class="meta-item"><strong>作品：</strong>《墨竹》</span>
+                            <span class="meta-item"><strong>类型：</strong>音乐</span>
+                            <span class="meta-item"><strong>势位：</strong>T[0][0][0] 坤卦·初九</span>
+                            <span class="meta-item"><strong>状态：</strong>已确权</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 步骤4 -->
+            <div class="step agent-step" onclick="toggleStep(this)">
+                <div class="step-header">
+                    <div class="step-number">四</div>
+                    <div class="step-content">
+                        <h3 class="step-title">监测Agent · 持续追踪</h3>
+                        <p class="step-desc">"时间维排名后30%，空间维单平台，关系维孤立"</p>
+                    </div>
+                    <span class="agent-badge">监测Agent</span>
+                </div>
+                <div class="step-detail">
+                    <div class="detail-content">
+                        <div class="detail-title">追踪 · 三维诊断</div>
+                        <p class="detail-text">监测Agent持续扫描作品在势场中的表现。当前作品处于成长初期：时间维度排名靠后，空间维度局限于单一平台，关系维度缺乏引用连接。需要等待跃迁时机。</p>
+                        <div class="detail-meta">
+                            <span class="meta-item"><strong>时间维：</strong>排名后30%</span>
+                            <span class="meta-item"><strong>空间维：</strong>单平台</span>
+                            <span class="meta-item"><strong>关系维：</strong>孤立</span>
+                            <span class="meta-item"><strong>阶段：</strong>初九·潜伏期</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 步骤5 -->
+            <div class="step agent-step" onclick="toggleStep(this)">
+                <div class="step-header">
+                    <div class="step-number">五</div>
+                    <div class="step-content">
+                        <h3 class="step-title">跃迁Agent · 时机提醒</h3>
+                        <p class="step-desc">"检测到即将进入九二，建议尝试跨平台传播"</p>
+                    </div>
+                    <span class="agent-badge">跃迁Agent</span>
+                </div>
+                <div class="step-detail">
+                    <div class="detail-content">
+                        <div class="detail-title">跃迁 · 见龙在田</div>
+                        <p class="detail-text">跃迁Agent识别到作品势能积累达到临界点，即将从初九跃迁至九二。此时是突破平台边界、扩大影响范围的黄金时机。建议启动跨平台传播策略，拓展空间维度。</p>
+                        <div class="detail-meta">
+                            <span class="meta-item"><strong>跃迁：</strong>初九 → 九二</span>
+                            <span class="meta-item"><strong>时机：</strong>临界点</span>
+                            <span class="meta-item"><strong>建议：</strong>跨平台传播</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 步骤6 -->
+            <div class="step" onclick="toggleStep(this)">
+                <div class="step-header">
+                    <div class="step-number">六</div>
+                    <div class="step-content">
+                        <h3 class="step-title">被引用3次，衍生2个作品</h3>
+                        <p class="step-desc">收益自动回流 <span class="echo-gain">+45 ECHO</span></p>
+                    </div>
+                </div>
+                <div class="step-detail">
+                    <div class="detail-content">
+                        <div class="detail-title">收获 · 价值涌现</div>
+                        <p class="detail-text">跨平台传播策略生效，《墨竹》被其他创作者引用3次，激发衍生创作2件。根据ECHO协议四维权利配置，引用与衍生收益自动回流至原作者钱包。</p>
+                        <div class="detail-meta">
+                            <span class="meta-item"><strong>引用：</strong>3次</span>
+                            <span class="meta-item"><strong>衍生：</strong>2件作品</span>
+                            <span class="meta-item"><strong>回流收益：</strong>+45 ECHO</span>
+                            <span class="meta-item"><strong>关系维：</strong>活跃</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 步骤7 -->
+            <div class="step agent-step" onclick="toggleStep(this)">
+                <div class="step-header">
+                    <div class="step-number">七</div>
+                    <div class="step-content">
+                        <h3 class="step-title">转化Agent · 周期建议</h3>
+                        <p class="step-desc">"《墨竹》已进入上九·转化期，建议创作续作承接势能"</p>
+                    </div>
+                    <span class="agent-badge">转化Agent</span>
+                </div>
+                <div class="step-detail">
+                    <div class="detail-content">
+                        <div class="detail-title">转化 · 亢龙有悔</div>
+                        <p class="detail-text">转化Agent识别作品进入生命周期末端——上九·转化期。此时作品势能已充分释放，是创作续作、承接势能的最佳时机。建议启动新作孵化，形成创作闭环。</p>
+                        <div class="detail-meta">
+                            <span class="meta-item"><strong>阶段：</strong>上九·转化期</span>
+                            <span class="meta-item"><strong>状态：</strong>势能饱和</span>
+                            <span class="meta-item"><strong>建议：</strong>创作续作</span>
+                            <span class="meta-item"><strong>周期：</strong>完成闭环</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 总结 -->
+        <div class="summary">
+            <h3 class="summary-title">生态闭环</h3>
+            <p class="summary-text">
+                想法 <span class="flow-arrow">→</span> 导航 <span class="flow-arrow">→</span> 创作 <span class="flow-arrow">→</span> 监测 <span class="flow-arrow">→</span> 跃迁 <span class="flow-arrow">→</span> 收益 <span class="flow-arrow">→</span> 转化 <span class="flow-arrow">→</span> 新想法
+            </p>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer class="footer">
+            <div class="gua-row">☰ ☷ ☳ ☴ ☵ ☶ ☲ ☱</div>
+            <p class="footer-text">ECHO 协议 · 四维确权 · 势场生长</p>
+        </footer>
+    </div>
+    
+    <script>
+        // 切换步骤展开/收起
+        function toggleStep(element) {
+            // 如果已经展开，则收起
+            if (element.classList.contains('active')) {
+                element.classList.remove('active');
+            } else {
+                // 收起所有其他步骤
+                document.querySelectorAll('.step').forEach(step => {
+                    step.classList.remove('active');
+                });
+                // 展开当前步骤
+                element.classList.add('active');
+            }
+        }
+        
+        // 页面加载时默认展开第一个Agent步骤，展示交互效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 可选：页面加载时自动展开第二步
+            // setTimeout(() => {
+            //     document.querySelector('.agent-step').classList.add('active');
+            // }, 500);
+        });
+    </script>
+</body>
+</html>
