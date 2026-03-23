@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHO — 数字资产生态</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;400;600;700&family=Noto+Sans+SC:wght@300;400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --ink-heavy: #0a0a0a;
+            --ink-medium: #404040;
+            --ink-light: #737373;
+            --ink-faint: #a3a3a3;
+            --paper: #faf8f5;
+            --paper-warm: #f5f0e8;
+            --cinnabar: #c93756;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--paper);
+            color: var(--ink-heavy);
+            line-height: 1.8;
+            letter-spacing: 0.02em;
+        }
+        
+        .font-serif { font-family: 'Noto Serif SC', serif; }
+        
+        /* 宣纸纹理 */
+        .paper-texture {
+            background-color: var(--paper);
+            background-image: 
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+        }
+        
+        /* 墨色层次 */
+        .ink-heavy { color: var(--ink-heavy); }
+        .ink-medium { color: var(--ink-medium); }
+        .ink-light { color: var(--ink-light); }
+        .ink-faint { color: var(--ink-faint); }
+        
+        /* 竖排文字 */
+        .vertical-text {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+        
+        /* 印章效果 */
+        .seal {
+            border: 2px solid var(--cinnabar);
+            color: var(--cinnabar);
+            padding: 4px 8px;
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 700;
+            display: inline-block;
+        }
+        
+        /* 极简单行文本 */
+        .mono-label {
+            font-family: 'SF Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--ink-faint);
+        }
+        
+        /* 分隔线 */
+        .divider {
+            width: 40px;
+            height: 1px;
+            background: var(--ink-faint);
+            opacity: 0.3;
+        }
+        
+        /* 悬停效果 */
+        .hover-ink {
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .hover-ink:hover {
+            color: var(--cinnabar);
+        }
+        
+        /* 渐入动画 */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-up {
+            animation: fadeUp 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .delay-1 { animation-delay: 0.2s; opacity: 0; }
+        .delay-2 { animation-delay: 0.4s; opacity: 0; }
+        .delay-3 { animation-delay: 0.6s; opacity: 0; }
+        
+        /* 模块卡片悬停 */
+        .module-card {
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .module-card:hover {
+            background: var(--paper-warm);
+        }
+        
+        .module-card:hover .module-title {
+            color: var(--cinnabar);
+        }
+    </style>
+</head>
+<body class="paper-texture">
+    
+    <!-- 导航 -->
+    <nav class="fixed top-0 left-0 right-0 z-50 px-8 lg:px-20 py-8 flex justify-between items-start">
+        <div class="flex items-baseline space-x-6">
+            <span class="font-serif text-2xl font-bold ink-heavy">ECHO</span>
+            <span class="mono-label hidden lg:inline">Digital Asset Ecology</span>
+        </div>
+        
+        <div class="flex items-center space-x-12">
+            <a href="#modules" class="mono-label hover-ink cursor-pointer">Modules</a>
+            <a href="#about" class="mono-label hover-ink cursor-pointer">About</a>
+            <button class="seal text-sm cursor-pointer hover:bg-[#c93756] hover:text-white transition-all duration-500">
+                开启
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="min-h-screen flex items-center px-8 lg:px-20">
+        <div class="max-w-6xl w-full">
+            <!-- 左侧：大字竖排 -->
+            <div class="flex items-start">
+                <div class="vertical-text mr-20 lg:mr-32 fade-up">
+                    <h1 class="font-serif text-6xl lg:text-8xl font-bold ink-heavy leading-none">
+                        回
+                    </h1>
+                    <h1 class="font-serif text-6xl lg:text-8xl font-bold ink-heavy leading-none mt-8">
+                        声
+                    </h1>
+                </div>
+                
+                <div class="flex-1 pt-4">
+                    <div class="fade-up delay-1">
+                        <p class="mono-label mb-8">The Resonance of Creation</p>
+                        
+                        <div class="divider mb-12"></div>
+                        
+                        <p class="font-serif text-xl lg:text-2xl ink-medium leading-loose max-w-md">
+                            创作的每一次回响，
+                            <br>
+                            都在数字世界中留下永恒的印记。
+                        </p>
+                    </div>
+                    
+                    <div class="mt-20 fade-up delay-2">
+                        <p class="ink-light text-sm leading-loose max-w-sm">
+                            ECHO 是一个基于区块链的数字资产生态平台，
+                            让音乐、绘画、文字在链上交织共鸣。
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 底部滚动提示 -->
+            <div class="absolute bottom-12 left-1/2 transform -translate-x-1/2 fade-up delay-3">
+                <div class="flex flex-col items-center">
+                    <span class="mono-label mb-4">Scroll</span>
+                    <div class="w-px h-12 bg-gradient-to-b from-[#a3a3a3] to-transparent"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 三模块 Section -->
+    <section id="modules" class="min-h-screen py-32 px-8 lg:px-20">
+        <div class="max-w-6xl mx-auto">
+            <!-- Section Header -->
+            <div class="mb-32">
+                <span class="mono-label">Three Modules</span>
+                
+                <h2 class="font-serif text-4xl lg:text-5xl font-bold ink-heavy mt-6">
+                    三艺相生
+                </h2>
+                
+                <p class="ink-light mt-6 max-w-md leading-loose">
+                    音、画、文，三种创作形态在 ECHO 中独立又交织，
+                    每一种都有其独特的表达语言与数字生命。
+                </p>
+            </div>
+            
+            <!-- 模块列表 -->
+            <div class="space-y-1">
+                <!-- 音 -->
+                <a href="echo-yin-v2.html" class="module-card block py-16 px-8 -mx-8 rounded-lg group">
+                    <div class="flex items-baseline justify-between">
+                        <div class="flex items-baseline space-x-8">
+                            <span class="font-serif text-6xl lg:text-8xl font-light module-title transition-colors duration-500">音</span>
+                            
+                            <span class="mono-label opacity-0 group-hover:opacity-100 transition-opacity duration-500">Music</span>
+                        </div>
+                        
+                        <div class="hidden lg:block max-w-xs">
+                            <p class="ink-light text-sm leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                五声调式音律系统，每一次振动都是创作者心迹的回响
+                            </p>
+                        </div>
+                        
+                        <span class="font-serif text-2xl ink-faint group-hover:ink-heavy transition-colors duration-500">→</span>
+                    </div>
+                </a>
+                
+                <!-- 分隔 -->
+                <div class="h-px bg-[#a3a3a3] opacity-20"></div>
+                
+                <!-- 画 -->
+                <a href="echo-hua-v2.html" class="module-card block py-16 px-8 -mx-8 rounded-lg group">
+                    <div class="flex items-baseline justify-between">
+                        <div class="flex items-baseline space-x-8">
+                            <span class="font-serif text-6xl lg:text-8xl font-light module-title transition-colors duration-500">画</span>
+                            
+                            <span class="mono-label opacity-0 group-hover:opacity-100 transition-opacity duration-500">Art</span>
+                        </div>
+                        
+                        <div class="hidden lg:block max-w-xs">
+                            <p class="ink-light text-sm leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                水墨数字画布，留白处自有天地，笔墨间尽显气韵
+                            </p>
+                        </div>
+                        
+                        <span class="font-serif text-2xl ink-faint group-hover:ink-heavy transition-colors duration-500">→</span>
+                    </div>
+                </a>
+                
+                <!-- 分隔 -->
+                <div class="h-px bg-[#a3a3a3] opacity-20"></div>
+                
+                <!-- 文 -->
+                <a href="echo-wen-v2.html" class="module-card block py-16 px-8 -mx-8 rounded-lg group">
+                    <div class="flex items-baseline justify-between">
+                        <div class="flex items-baseline space-x-8">
+                            <span class="font-serif text-6xl lg:text-8xl font-light module-title transition-colors duration-500">文</span>
+                            
+                            <span class="mono-label opacity-0 group-hover:opacity-100 transition-opacity duration-500">Text</span>
+                        </div>
+                        
+                        <div class="hidden lg:block max-w-xs">
+                            <p class="ink-light text-sm leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                版本树状演化，文字的血脉在分支与合并中延续
+                            </p>
+                        </div>
+                        
+                        <span class="font-serif text-2xl ink-faint group-hover:ink-heavy transition-colors duration-500">→</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 关于 Section -->
+    <section id="about" class="min-h-screen py-32 px-8 lg:px-20 border-t border-[#a3a3a3] border-opacity-20">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid lg:grid-cols-2 gap-20 lg:gap-32">
+                <div>
+                    <span class="mono-label">Philosophy</span>
+                    
+                    <h2 class="font-serif text-3xl lg:text-4xl font-bold ink-heavy mt-6 leading-relaxed">
+                        势、位、场
+                    </h2>
+                    
+                    <p class="font-serif text-lg ink-medium mt-8 leading-loose">
+                        每一个数字资产都有其独特的「势」——
+                        时间、空间、关系三维交织的坐标。
+                        在这个坐标系中，资产不再是静态的文件，
+                        而是具有生命、会呼吸的存在。
+                    </p>
+                </div>
+                
+                <div class="lg:pt-20">
+                    <span class="mono-label">Technology</span>
+                    
+                    <h2 class="font-serif text-3xl lg:text-4xl font-bold ink-heavy mt-6 leading-relaxed">
+                        四权分立
+                    </h2>
+                    
+                    <p class="font-serif text-lg ink-medium mt-8 leading-loose">
+                        用权、扩权、衍权、益权——
+                        四种权利可独立交易，
+                        同一份资产，不同人可拥有不同权利。
+                        这是对传统版权的重新定义。
+                    </p>
+                </div>
+            </div>
+            
+            <!-- 底部 CTA -->
+            <div class="mt-32 text-center">
+                <div class="divider mx-auto mb-12"></div>
+                
+                <p class="font-serif text-2xl lg:text-3xl ink-medium mb-8">
+                    开始你的创作之旅
+                </p>
+                
+                <button class="seal text-lg px-8 py-3 cursor-pointer hover:bg-[#c93756] hover:text-white transition-all duration-500">
+                    进入 ECHO
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-8 lg:px-20 border-t border-[#a3a3a3] border-opacity-20">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <span class="mono-label">© 2026 ECHO</span>
+            
+            <div class="flex space-x-8">
+                <a href="#" class="mono-label hover-ink">GitHub</a>
+                <a href="#" class="mono-label hover-ink">Docs</a>
+                <a href="#" class="mono-label hover-ink">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
