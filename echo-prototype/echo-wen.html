@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>「文」- ECHO文字模块</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=ZCOOL+XiaoWei&display=swap');
+        
+        :root {
+            --ink: #1a1a1a;
+            --cinnabar: #c93756;
+            --paper: #f5f0e8;
+            --vermilion: #c93756;
+            --indigo: #3f51b5;
+            --sepia: #704214;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--paper);
+        }
+        
+        .font-serif { font-family: 'Noto Serif SC', serif; }
+        .font-xiaowei { font-family: 'ZCOOL XiaoWei', serif; }
+        
+        .editor-container {
+            background: repeating-linear-gradient(
+                transparent,
+                transparent 31px,
+                rgba(26,26,26,0.06) 31px,
+                rgba(26,26,26,0.06) 32px
+            );
+            line-height: 32px;
+        }
+        
+        .version-card {
+            transition: all 0.3s ease;
+        }
+        
+        .version-card:hover {
+            background: rgba(201, 55, 86, 0.05);
+        }
+        
+        .literature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .literature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(26,26,26,0.1);
+        }
+        
+        .branch-line {
+            position: relative;
+        }
+        
+        .branch-line::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #c93756, #3f51b5);
+        }
+        
+        .node-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #c93756;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px #c93756;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 w-full bg-[#f5f0e8]/95 backdrop-blur-sm border-b border-[#1a1a1a]/10 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 border-2 border-[#c93756] text-[#c93756] rounded flex items-center justify-center text-lg font-serif font-bold">文</div>
+                    <span class="font-serif text-2xl font-bold">ECHO「文」</span>
+                </div>
+                
+                <div class="flex items-center space-x-6">
+                    <a href="echo-home.html" class="text-[#4a5568] hover:text-[#1a1a1a] transition">首页</a>
+                    <a href="echo-yin.html" class="text-[#4a5568] hover:text-[#1a1a1a] transition">音</a>
+                    <a href="echo-hua.html" class="text-[#4a5568] hover:text-[#1a1a1a] transition">画</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button class="px-4 py-2 bg-[#c93756] text-white rounded-lg hover:bg-[#c93756]/90 transition">
+                        开始写作
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-16">
+        <!-- 「著」编辑器 -->
+        <section class="py-8 max-w-7xl mx-auto px-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-[#1a1a1a]/5 overflow-hidden">
+                <!-- 编辑器工具栏 -->
+                <div class="border-b border-[#1a1a1a]/10 p-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <span class="font-serif text-lg font-bold">「著」编辑器</span>
+                        <span class="text-sm text-[#4a5568]">未命名文稿</span>
+                        <span class="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">已自动保存</span>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <button class="px-3 py-1.5 text-sm bg-[#1a1a1a]/5 rounded hover:bg-[#1a1a1a]/10 transition">历史版本</button>
+                        <button class="px-3 py-1.5 text-sm bg-[#1a1a1a]/5 rounded hover:bg-[#1a1a1a]/10 transition">导出</button>
+                        <span class="text-[#1a1a1a]/20">|</span>
+                        <button class="px-3 py-1.5 text-sm bg-[#c93756] text-white rounded hover:bg-[#c93756]/90 transition">保存</button>
+                        <button class="px-3 py-1.5 text-sm bg-[#3f51b5] text-white rounded hover:bg-[#3f51b5]/90 transition">发布</button>
+                    </div>
+                </div>
+                
+                
+                <div class="flex">
+                    <!-- 左侧版本树 -->
+                    <div class="w-72 border-r border-[#1a1a1a]/10 p-4">
+                        <h4 class="text-sm font-medium mb-4 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
+                            </svg>
+                            版本分支
+                        </h4>
+                        
+                        <div class="space-y-4">
+                            <!-- 主分支 -->
+                            <div class="version-card p-3 rounded-lg border border-[#c93756]/30 bg-[#c93756]/5">
+                                <div class="flex items-center mb-2">
+                                    <div class="node-dot mr-3"></div>
+                                    <span class="text-sm font-medium">初稿</span>
+                                    <span class="ml-auto text-xs text-[#4a5568]">刚刚</span>
+                                </div>
+                                
+                                <p class="text-xs text-[#4a5568]">字数: 2,847 · 新增章节</p>
+                            </div>
+                            
+                            <!-- 衍生分支 -->
+                            <div class="version-card p-3 rounded-lg border border-[#1a1a1a]/10">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-3 h-3 rounded-full bg-[#3f51b5] border-2 border-white shadow mr-3"></div>
+                                    <span class="text-sm">「抒情版」</span>
+                                    <span class="ml-auto text-xs text-[#4a5568]">2h前</span>
+                                </div>
+                                
+                                <p class="text-xs text-[#4a5568]">由 诗人A 衍生</p>
+                            </div>
+                            
+                            <div class="version-card p-3 rounded-lg border border-[#1a1a1a]/10">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-3 h-3 rounded-full bg-[#4a7c59] border-2 border-white shadow mr-3"></div>
+                                    <span class="text-sm">「散文版」</span>
+                                    <span class="ml-auto text-xs text-[#4a5568]">5h前</span>
+                                </div>
+                                
+                                <p class="text-xs text-[#4a5568]">由 墨客B 衍生</p>
+                            </div>
+                            
+                            <!-- 历史版本 -->
+                            <div class="pt-4 border-t border-[#1a1a1a]/10">
+                                <h5 class="text-xs text-[#4a5568] mb-3">历史版本</h5>
+                                
+                                <div class="space-y-2">
+                                    <div class="flex items-center text-sm">
+                                        <span class="text-[#4a5568]">大纲草稿</span>
+                                        <span class="ml-auto text-xs text-[#4a5568]">昨天</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center text-sm">
+                                        <span class="text-[#4a5568]">灵感笔记</span>
+                                        <span class="ml-auto text-xs text-[#4a5568]">3天前</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <div class="mt-6 p-3 bg-[#f5f0e8] rounded-lg">
+                            <h5 class="text-xs font-medium mb-2">智能分析</h5>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between">
+                                    <span class="text-[#4a5568]">原创度</span>
+                                    <span class="font-medium">87%</span>
+                                </div>
+                                
+                                <div class="w-full bg-white rounded-full h-1.5">
+                                    <div class="bg-[#c93756] h-1.5 rounded-full" style="width: 87%"></div>
+                                </div>
+                                
+                                <div class="flex justify-between mt-2">
+                                    <span class="text-[#4a5568]">引用来源</span>
+                                    <span class="font-medium">3处</span>
+                                </div>
+                                
+                                <div class="flex justify-between">
+                                    <span class="text-[#4a5568]">衍生作品</span>
+                                    <span class="font-medium">2个</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                    <!-- 主编辑区 -->
+                    <div class="flex-1">
+                        <!-- 格式工具栏 -->
+                        <div class="border-b border-[#1a1a1a]/10 p-2 flex items-center space-x-2">
+                            <select class="px-2 py-1 text-sm border border-[#1a1a1a]/20 rounded bg-white">
+                                <option>正文</option>
+                                <option>标题1</option>
+                                <option>标题2</option>
+                                <option>引用</option>
+                            </select>
+                            
+                            <span class="text-[#1a1a1a]/20">|</span>
+                            
+                            <button class="p-1.5 rounded hover:bg-[#1a1a1a]/5"><b>B</b></button>
+                            
+                            <button class="p-1.5 rounded hover:bg-[#1a1a1a]/5"><i>I</i></button>
+                            
+                            <button class="p-1.5 rounded hover:bg-[#1a1a1a]/5"><u>U</u></button>
+                            
+                            <span class="text-[#1a1a1a]/20">|</span>
+                            
+                            <button class="p-1.5 rounded hover:bg-[#1a1a1a]/5">🔗</button>
+                            
+                            <button class="p-1.5 rounded hover:bg-[#1a1a1a]/5">📎</button>
+                            
+                            <button class="p-1.5 rounded hover:bg-[#1a1a1a]/5">🖼</button>
+                            
+                            <span class="flex-1"></span>
+                            
+                            <span class="text-xs text-[#4a5568]">2,847 字</span>
+                        </div>
+                        
+                        
+                        <!-- 编辑区域 -->
+                        <div class="p-8 editor-container min-h-[500px]">
+                            <input 
+                                type="text" 
+                                placeholder="请输入标题..."
+                                class="w-full text-3xl font-serif font-bold bg-transparent border-none outline-none placeholder-gray-400 mb-6"
+                                value="春江花月夜"
+                            >
+                            
+                            <div class="font-serif text-lg leading-8 text-gray-800">
+                                <p class="mb-4">
+                                    春江潮水连海平，海上明月共潮生。
+                                </p>
+                                
+                                <p class="mb-4">
+                                    滟滟随波千万里，何处春江无月明！
+                                </p>
+                                
+                                <p class="mb-4">
+                                    江流宛转绕芳甸，月照花林皆似霰；
+                                </p>
+                                
+                                <p class="mb-4">
+                                    空里流霜不觉飞，汀上白沙看不见。
+                                </p>
+                                
+                                <p class="mb-4">
+                                    江天一色无纤尘，皎皎空中孤月轮。
+                                </p>
+                                
+                                <p class="mb-4">
+                                    江畔何人初见月？江月何年初照人？
+                                </p>
+                                
+                                <p class="mb-4">
+                                    人生代代无穷已，江月年年望相似。
+                                </p>
+                                
+                                <p class="mb-4">
+                                    不知江月待何人，但见长江送流水。
+                                </p>
+                                
+                                <p class="mt-8 text-gray-400">
+                                    [继续创作...]
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                    <!-- 右侧面板 -->
+                    <div class="w-64 border-l border-[#1a1a1a]/10 p-4">
+                        <h4 class="text-sm font-medium mb-4">写作助手</h4>
+                        
+                        <div class="space-y-4">
+                            <!-- AI建议 -->
+                            <div class="p-3 bg-blue-50 rounded-lg">
+                                <div class="flex items-center mb-2">
+                                    <span class="text-lg mr-2">💡</span>
+                                    <span class="text-sm font-medium">AI建议</span>
+                                </div>
+                                
+                                <p class="text-xs text-[#4a5568]">
+                                    此处可以加入对月色的更多感官描写，增强画面感。
+                                </p>
+                            </div>
+                            
+                            <!-- 引用建议 -->
+                            <div class="p-3 bg-amber-50 rounded-lg">
+                                <div class="flex items-center mb-2">
+                                    <span class="text-lg mr-2">📚</span>
+                                    <span class="text-sm font-medium">可引用</span>
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <div class="text-xs p-2 bg-white rounded border border-amber-200">
+                                        <p class="text-[#4a5568] italic">"举头望明月，低头思故乡。"</p>
+                                        
+                                        <p class="text-[#4a5568]/70 mt-1">— 李白《静夜思》</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 标签管理 -->
+                            <div>
+                                <h5 class="text-sm font-medium mb-2">标签</h5>
+                                
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="px-2 py-1 text-xs bg-[#c93756]/10 text-[#c93756] rounded">诗歌</span>
+                                    
+                                    <span class="px-2 py-1 text-xs bg-[#3f51b5]/10 text-[#3f51b5] rounded">唐诗</span>
+                                    
+                                    <span class="px-2 py-1 text-xs bg-[#4a7c59]/10 text-[#4a7c59] rounded">抒情</span>
+                                    
+                                    <button class="px-2 py-1 text-xs border border-dashed border-[#1a1a1a]/30 rounded text-[#4a5568]">+ 添加</button>
+                                </div>
+                            </div>
+                            
+                            <!-- 设置 -->
+                            <div>
+                                <h5 class="text-sm font-medium mb-2">发布设置</h5>
+                                
+                                <div class="space-y-2">
+                                    <label class="flex items-center space-x-2">
+                                        <input type="checkbox" checked class="rounded">
+                                        <span class="text-sm">允许衍生</span>
+                                    </label>
+                                    
+                                    <label class="flex items-center space-x-2">
+                                        <input type="checkbox" checked class="rounded">
+                                        <span class="text-sm">允许引用</span>
+                                    </label>
+                                    
+                                    <label class="flex items-center space-x-2">
+                                        <input type="checkbox" class="rounded">
+                                        <span class="text-sm">付费阅读</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 文学作品展示 -->
+        <section class="py-8 max-w-7xl mx-auto px-6">
+            <h3 class="font-serif text-xl font-bold mb-6">热门文章</h3>
+            
+            <div class="grid grid-cols-3 gap-6">
+                <!-- 文学卡片 1 -->
+                <div class="literature-card bg-white rounded-xl overflow-hidden shadow-sm border border-[#1a1a1a]/5">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 rounded-full bg-[#c93756]/10 flex items-center justify-center mr-3">
+                                <span class="text-lg">✍️</span>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-medium">《静夜思》现代版</h4>
+                                <p class="text-sm text-[#4a5568]">墨客C · 2小时前</p>
+                            </div>
+                        </div>
+                        
+                        <p class="text-[#4a5568] text-sm line-clamp-3">
+                            床前明月光，疑是地上霜。举头望明月，低头思故乡。这首诗在千百年后依然打动人心...
+                        </p>
+                        
+                        <div class="mt-4 flex items-center justify-between">
+                            <div class="flex space-x-2">
+                                <span class="px-2 py-1 text-xs bg-[#c93756]/10 text-[#c93756] rounded">诗歌</span>
+                                
+                                <span class="px-2 py-1 text-xs bg-[#3f51b5]/10 text-[#3f51b5] rounded">衍生</span>
+                            </div>
+                            
+                            <span class="text-sm text-[#4a5568]">☯ 0.79</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 文学卡片 2 -->
+                <div class="literature-card bg-white rounded-xl overflow-hidden shadow-sm border border-[#1a1a1a]/5">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 rounded-full bg-[#4a7c59]/10 flex items-center justify-center mr-3">
+                                <span class="text-lg">📖</span>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-medium">《山水笔记》</h4>
+                                <p class="text-sm text-[#4a5568]">游者 · 昨天</p>
+                            </div>
+                        </div>
+                        
+                        <p class="text-[#4a5568] text-sm line-clamp-3">
+                            漫步于山间小道，听溪水潺潺，看云卷云舒。这一刻，时间仿佛静止，心灵得到洗涤...
+                        </p>
+                        
+                        <div class="mt-4 flex items-center justify-between">
+                            <div class="flex space-x-2">
+                                <span class="px-2 py-1 text-xs bg-[#4a7c59]/10 text-[#4a7c59] rounded">散文</span>
+                                
+                                <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">原创</span>
+                            </div>
+                            
+                            <span class="text-sm text-[#4a5568]">☯ 0.85</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 文学卡片 3 -->
+                <div class="literature-card bg-white rounded-xl overflow-hidden shadow-sm border border-[#1a1a1a]/5">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 rounded-full bg-[#3f51b5]/10 flex items-center justify-center mr-3">
+                                <span class="text-lg">📝</span>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-medium">《都市夜语》</h4>
+                                <p class="text-sm text-[#4a5568]">夜行者 · 3天前</p>
+                            </div>
+                        </div>
+                        
+                        <p class="text-[#4a5568] text-sm line-clamp-3">
+                            霓虹灯下的城市，每个人都带着自己的故事。有人在等待，有人在寻找...
+                        </p>
+                        
+                        <div class="mt-4 flex items-center justify-between">
+                            <div class="flex space-x-2">
+                                <span class="px-2 py-1 text-xs bg-[#3f51b5]/10 text-[#3f51b5] rounded">小说</span>
+                                
+                                <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">原创</span>
+                            </div>
+                            
+                            <span class="text-sm text-[#4a5568]">☯ 0.71</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

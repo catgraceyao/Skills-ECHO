@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHO - 铸造资产</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'ink': '#1a1a1a',
+                        'cinnabar': '#c93756',
+                        'paper': '#f5f0e8',
+                        'paper-dark': '#e8e0d0',
+                        'gold': '#c9a227',
+                        'wood': '#8b4513',
+                        'water': '#2c5f7c',
+                        'fire': '#d4574a',
+                        'earth': '#8b7355'
+                    },
+                    fontFamily: {
+                        'serif': ['Noto Serif SC', 'STSong', 'SimSun', 'serif'],
+                        'sans': ['Noto Sans SC', 'Microsoft YaHei', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        
+        .ink-wash {
+            background: linear-gradient(135deg, #f5f0e8 0%, #e8e0d0 50%, #f5f0e8 100%);
+        }
+        .scroll-container {
+            background: linear-gradient(to right, #d4c4b0 0%, #f5f0e8 3%, #f5f0e8 97%, #d4c4b0 100%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .step-active {
+            background: linear-gradient(135deg, #c93756 0%, #a82a44 100%);
+        }
+        .step-completed {
+            background: #8b4513;
+        }
+        .slider-track {
+            background: linear-gradient(to right, #e8e0d0 0%, #c93756 100%);
+        }
+        .glow-effect {
+            box-shadow: 0 0 20px rgba(201,55,86,0.4);
+        }
+        .hexagram-line {
+            transition: all 0.3s ease;
+        }
+        .hexagram-line.yang {
+            width: 100%;
+            height: 4px;
+            background: #1a1a1a;
+        }
+        .hexagram-line.yin {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .hexagram-line.yin span {
+            width: 45%;
+            height: 4px;
+            background: #1a1a1a;
+        }
+        .drag-active {
+            border-color: #c93756 !important;
+            background: rgba(201,55,86,0.05) !important;
+        }
+        .modal-enter {
+            animation: modalEnter 0.3s ease-out;
+        }
+        @keyframes modalEnter {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-paper text-ink font-sans min-h-screen">
+    <!-- 顶部导航 -->
+    <nav class="fixed top-0 w-full bg-paper/90 backdrop-blur-md border-b border-ink/10 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="echo-home.html" class="flex items-center space-x-2">
+                    <div class="w-10 h-10 bg-ink rounded-full flex items-center justify-center">
+                        <span class="text-paper font-serif font-bold text-xl">易</span>
+                    </div>
+                    <span class="font-serif font-bold text-2xl tracking-wider">ECHO</span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    <span class="text-ink/60 text-sm">铸造流程</span>
+                    <div class="w-8 h-8 bg-cinnabar rounded-full flex items-center justify-center">
+                        <span class="text-white text-xs font-bold">5步</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-12 px-4">
+        <div class="max-w-6xl mx-auto">
+            <!-- 进度指示器 -->
+            <div class="mb-12">
+                <div class="flex justify-between items-center relative">
+                    <div class="absolute top-1/2 left-0 right-0 h-1 bg-ink/10 -z-10"></div>
+                    <div class="absolute top-1/2 left-0 h-1 bg-cinnabar transition-all duration-500" id="progressBar" style="width: 0%"></div>
+                    
+                    <button class="step-indicator w-12 h-12 rounded-full bg-cinnabar text-white flex items-center justify-center font-serif font-bold transition-all" data-step="1">1</button>
+                    <button class="step-indicator w-12 h-12 rounded-full bg-ink/20 text-ink/50 flex items-center justify-center font-serif font-bold transition-all" data-step="2">2</button>
+                    <button class="step-indicator w-12 h-12 rounded-full bg-ink/20 text-ink/50 flex items-center justify-center font-serif font-bold transition-all" data-step="3">3</button>
+                    <button class="step-indicator w-12 h-12 rounded-full bg-ink/20 text-ink/50 flex items-center justify-center font-serif font-bold transition-all" data-step="4">4</button>
+                    <button class="step-indicator w-12 h-12 rounded-full bg-ink/20 text-ink/50 flex items-center justify-center font-serif font-bold transition-all" data-step="5">5</button>
+                </div>
+                <div class="flex justify-between mt-2 text-xs text-ink/60">
+                    <span>上传</span>
+                    <span>配置</span>
+                    <span>卦象</span>
+                    <span>权力</span>
+                    <span>确认</span>
+                </div>
+            </div>
+
+            <!-- 步骤内容 -->
+            <div class="scroll-container rounded-2xl p-8 md:p-12">
+                <!-- Step 1: 文件上传 -->
+                <div id="step1" class="step-content">
+                    <h2 class="font-serif text-3xl font-bold mb-2">上传资产</h2>
+                    <p class="text-ink/60 mb-8">支持音频、图片、文档等多种格式</p>
+                    
+                    <div class="border-2 border-dashed border-ink/20 rounded-xl p-12 text-center hover:border-cinnabar/50 transition-colors cursor-pointer" id="dropZone">
+                        <div class="w-20 h-20 mx-auto mb-4 bg-ink/5 rounded-full flex items-center justify-center">
+                            <svg class="w-10 h-10 text-ink/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                        </div>
+                        <p class="text-lg font-medium mb-2">拖拽文件到此处</p>
+                        <p class="text-sm text-ink/50 mb-4">或点击选择文件</p>
+                        <input type="file" class="hidden" id="fileInput" multiple>
+                        <button class="px-6 py-2 bg-ink text-paper rounded-lg hover:bg-ink/90 transition-colors" onclick="document.getElementById('fileInput').click()">
+                            选择文件
+                        </button>
+                        <p class="mt-4 text-xs text-ink/40">支持 MP3, WAV, PNG, JPG, PDF, MD 等格式</p>
+                    </div>
+
+                    <!-- 文件预览区 -->
+                    <div id="filePreview" class="hidden mt-6">
+                        <div class="flex items-center space-x-4 p-4 bg-white rounded-lg border border-ink/10">
+                            <div class="w-12 h-12 bg-cinnabar/10 rounded-lg flex items-center justify-center">
+                                <span class="text-2xl">🎵</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium">mountain_stream.mp3</p>
+                                <p class="text-sm text-ink/50">4.2 MB · 音频文件</p>
+                            </div>
+                            <button class="p-2 hover:bg-ink/5 rounded-full" onclick="removeFile()">
+                                <svg class="w-5 h-5 text-ink/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: 基础配置 -->
+                <div id="step2" class="step-content hidden">
+                    <h2 class="font-serif text-3xl font-bold mb-2">基础配置</h2>
+                    <p class="text-ink/60 mb-8">设定资产的基本信息与属性</p>
+
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2 font-serif">资产名称</label>
+                            <input type="text" class="w-full px-4 py-3 bg-white border border-ink/20 rounded-lg focus:border-cinnabar focus:ring-1 focus:ring-cinnabar outline-none" placeholder="给你的资产起个名字">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2 font-serif">资产描述</label>
+                            <textarea class="w-full px-4 py-3 bg-white border border-ink/20 rounded-lg focus:border-cinnabar focus:ring-1 focus:ring-cinnabar outline-none h-24 resize-none" placeholder="描述你的创作..."></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2 font-serif">资产类别</label>
+                                <select class="w-full px-4 py-3 bg-white border border-ink/20 rounded-lg focus:border-cinnabar outline-none">
+                                    <option value="">请选择</option>
+                                    <option value="music">音 · Music</option>
+                                    <option value="art">画 · Art</option>
+                                    <option value="text">文 · Text</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2 font-serif">创作者署名</label>
+                                <input type="text" class="w-full px-4 py-3 bg-white border border-ink/20 rounded-lg focus:border-cinnabar outline-none" placeholder="你的名字">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: 卦象生成 -->
+                <div id="step3" class="step-content hidden">
+                    <h2 class="font-serif text-3xl font-bold mb-2">卦象生成</h2>
+                    <p class="text-ink/60 mb-8">基于时间与空间爻生成独特卦象</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2 font-serif">时间爻 (0-3)</label>
+                                <input type="range" min="0" max="3" value="2" class="w-full h-2 bg-ink/20 rounded-lg appearance-none cursor-pointer accent-cinnabar" id="timeYao">
+                                <div class="flex justify-between text-xs text-ink/50 mt-1">
+                                    <span>0</span><span>1</span><span>2</span><span>3</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2 font-serif">空间爻 (0-3)</label>
+                                <input type="range" min="0" max="3" value="1" class="w-full h-2 bg-ink/20 rounded-lg appearance-none cursor-pointer accent-cinnabar" id="spaceYao">
+                                <div class="flex justify-between text-xs text-ink/50 mt-1">
+                                    <span>0</span><span>1</span><span>2</span><span>3</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2 font-serif">关系爻 (0-3)</label>
+                                <input type="range" min="0" max="3" value="0" class="w-full h-2 bg-ink/20 rounded-lg appearance-none cursor-pointer accent-cinnabar" id="relationYao">
+                                <div class="flex justify-between text-xs text-ink/50 mt-1">
+                                    <span>0</span><span>1</span><span>2</span><span>3</span>
+                                </div>
+                            </div>
+                            <button class="w-full py-3 bg-cinnabar text-white rounded-lg hover:bg-cinnabar/90 transition-colors font-serif" onclick="generateHexagram()">
+                                生成卦象
+                            </button>
+                        </div>
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="bg-white p-8 rounded-xl border border-ink/10">
+                                <div id="hexagramDisplay" class="w-32 space-y-2">
+                                    <div class="hexagram-line yang"></div>
+                                    <div class="hexagram-line yang"></div>
+                                    <div class="hexagram-line yin"><span></span><span></span></div>
+                                    <div class="hexagram-line yin"><span></span><span></span></div>
+                                    <div class="hexagram-line yang"></div>
+                                    <div class="hexagram-line yin"><span></span><span></span></div>
+                                </div>
+                                <p class="text-center mt-4 font-serif font-bold text-xl" id="hexagramName">水雷屯</p>
+                                <p class="text-center text-sm text-ink/60" id="hexagramDesc">始生维艰，宜守静待时</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: 四权力配置 -->
+                <div id="step4" class="step-content hidden">
+                    <h2 class="font-serif text-3xl font-bold mb-2">四权力配置</h2>
+                    <p class="text-ink/60 mb-8">设定资产的使用权、衍生权、扩展权、收益权</p>
+
+                    <div class="space-y-8">
+                        <!-- 使用权 -->
+                        <div class="bg-white rounded-xl p-6 border border-ink/10">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-earth/10 rounded-full flex items-center justify-center">
+                                        <span class="text-earth">土</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-serif font-bold">使用权</h3>
+                                        <p class="text-xs text-ink/50">土壤，一切的基础</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-ink/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cinnabar"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="text-sm text-ink/60">建议价格:</span>
+                                <input type="number" class="w-24 px-3 py-2 border border-ink/20 rounded-lg text-center" value="100">
+                                <span class="text-sm text-ink/60">QMEER</span>
+                                <span class="text-xs text-cinnabar ml-4">基于当前势位建议: 120 QMEER</span>
+                            </div>
+                        </div>
+
+                        <!-- 衍生权 -->
+                        <div class="bg-white rounded-xl p-6 border border-ink/10">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-fire/10 rounded-full flex items-center justify-center">
+                                        <span class="text-fire">阳</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-serif font-bold">衍生权</h3>
+                                        <p class="text-xs text-ink/50">阳光，生长与改编</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-ink/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cinnabar"></div>
+                                </label>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-sm text-ink/60 block mb-2">授权价格 (QMEER)</label>
+                                    <input type="number" class="w-full px-3 py-2 border border-ink/20 rounded-lg" value="50">
+                                </div>
+                                <div>
+                                    <label class="text-sm text-ink/60 block mb-2">分润比例</label>
+                                    <input type="range" min="0" max="100" value="20" class="w-full accent-cinnabar">
+                                    <div class="text-center text-sm text-cinnabar">20%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 扩展权 -->
+                        <div class="bg-white rounded-xl p-6 border border-ink/10">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-water/10 rounded-full flex items-center justify-center">
+                                        <span class="text-water">水</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-serif font-bold">扩展权</h3>
+                                        <p class="text-xs text-ink/50">水分，流向新场景</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-ink/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cinnabar"></div>
+                                </label>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between p-3 bg-ink/5 rounded-lg">
+                                    <span class="text-sm">个人创作</span>
+                                    <span class="text-sm text-ink/60">×1.0</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-ink/5 rounded-lg">
+                                    <span class="text-sm">游戏配乐</span>
+                                    <span class="text-sm text-cinnabar">×1.5</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-ink/5 rounded-lg">
+                                    <span class="text-sm">AI训练</span>
+                                    <span class="text-sm text-cinnabar">×2.0</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-ink/5 rounded-lg">
+                                    <span class="text-sm">商业广告</span>
+                                    <span class="text-sm text-cinnabar">×3.0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 收益权 -->
+                        <div class="bg-white rounded-xl p-6 border border-ink/10">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-gold/10 rounded-full flex items-center justify-center">
+                                        <span class="text-gold">气</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-serif font-bold">收益权</h3>
+                                        <p class="text-xs text-ink/50">空气，循环与代谢</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="text-sm text-ink/60">当前收益分配:</span>
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="flex-1 bg-ink/10 rounded-full h-2">
+                                            <div class="bg-cinnabar h-2 rounded-full" style="width: 100%"></div>
+                                        </div>
+                                        <span class="text-sm font-medium">创作者 100%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: 确认铸造 -->
+                <div id="step5" class="step-content hidden">
+                    <h2 class="font-serif text-3xl font-bold mb-2">确认铸造</h2>
+                    <p class="text-ink/60 mb-8">请确认以下信息无误后提交</p>
+
+                    <div class="bg-white rounded-xl p-8 border border-ink/10 mb-8">
+                        <div class="grid grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <p class="text-sm text-ink/50 mb-1">资产名称</p>
+                                <p class="font-medium">《山间清流》</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-ink/50 mb-1">资产类别</p>
+                                <p class="font-medium">音 · Music</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-ink/50 mb-1">卦象</p>
+                                <p class="font-medium font-serif">水雷屯</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-ink/50 mb-1">创作者</p>
+                                <p class="font-medium">墨韵山人</p>
+                            </div>
+                        </div>
+                        <div class="border-t border-ink/10 pt-6">
+                            <p class="text-sm text-ink/50 mb-2">Gas 费用预估</p>
+                            <p class="text-2xl font-bold text-cinnabar">0.05 QMEER</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" id="agreeTerms" class="w-4 h-4 accent-cinnabar">
+                            <label for="agreeTerms" class="text-sm text-ink/60">我已阅读并同意 <a href="#" class="text-cinnabar">铸造协议</a></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 导航按钮 -->
+            <div class="flex justify-between mt-8">
+                <button id="prevBtn" class="px-8 py-3 border border-ink/20 rounded-lg hover:bg-ink/5 transition-colors font-serif hidden" onclick="changeStep(-1)">
+                    上一步
+                </button>
+                <div class="flex-1"></div>
+                <button id="nextBtn" class="px-8 py-3 bg-cinnabar text-white rounded-lg hover:bg-cinnabar/90 transition-colors font-serif glow-effect" onclick="changeStep(1)">
+                    下一步
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Agent建议弹窗 -->
+    <div id="agentModal" class="fixed inset-0 bg-ink/50 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="bg-paper rounded-2xl p-8 max-w-md w-full mx-4 modal-enter">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="w-12 h-12 bg-cinnabar rounded-full flex items-center justify-center">
+                    <span class="text-white text-xl">🤖</span>
+                </div>
+                <div>
+                    <h3 class="font-serif font-bold text-xl">Agent 建议</h3>
+                    <p class="text-sm text-ink/50">智能铸造助手</p>
+                </div>
+            </div>
+            <div class="space-y-4 mb-6">
+                <div class="p-4 bg-white rounded-lg border-l-4 border-cinnabar">
+                    <p class="text-sm">基于当前市场趋势，建议将使用权定价调整为 <span class="text-cinnabar font-bold">120 QMEER</span>，可获得更好的流动性。</p>
+                </div>
+                <div class="p-4 bg-white rounded-lg border-l-4 border-wood">
+                    <p class="text-sm">您选择的「水雷屯」卦象代表始生维艰，建议增加更详细的创作背景说明，有助于提升资产的叙事价值。</p>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <button class="flex-1 py-3 border border-ink/20 rounded-lg hover:bg-ink/5 transition-colors" onclick="closeModal()">
+                    忽略
+                </button>
+                <button class="flex-1 py-3 bg-cinnabar text-white rounded-lg hover:bg-cinnabar/90 transition-colors" onclick="applySuggestion()">
+                    应用建议
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+
+        function updateStepUI() {
+            // 更新进度条
+            document.getElementById('progressBar').style.width = ((currentStep - 1) / (totalSteps - 1) * 100) + '%';
+            
+            // 更新步骤指示器
+            document.querySelectorAll('.step-indicator').forEach((btn, index) => {
+                const step = index + 1;
+                if (step < currentStep) {
+                    btn.className = 'step-indicator w-12 h-12 rounded-full bg-wood text-white flex items-center justify-center font-serif font-bold transition-all';
+                    btn.innerHTML = '✓';
+                } else if (step === currentStep) {
+                    btn.className = 'step-indicator w-12 h-12 rounded-full bg-cinnabar text-white flex items-center justify-center font-serif font-bold transition-all scale-110';
+                    btn.innerHTML = step;
+                } else {
+                    btn.className = 'step-indicator w-12 h-12 rounded-full bg-ink/20 text-ink/50 flex items-center justify-center font-serif font-bold transition-all';
+                    btn.innerHTML = step;
+                }
+            });
+
+            // 显示/隐藏内容
+            document.querySelectorAll('.step-content').forEach((content, index) => {
+                content.classList.toggle('hidden', index + 1 !== currentStep);
+            });
+
+            // 更新按钮
+            document.getElementById('prevBtn').classList.toggle('hidden', currentStep === 1);
+            document.getElementById('nextBtn').textContent = currentStep === totalSteps ? '确认铸造' : '下一步';
+
+            // 在第4步显示Agent建议
+            if (currentStep === 4) {
+                setTimeout(() => showModal(), 500);
+            }
+        }
+
+        function changeStep(direction) {
+            if (direction > 0 && currentStep < totalSteps) {
+                currentStep++;
+            } else if (direction < 0 && currentStep > 1) {
+                currentStep--;
+            }
+            updateStepUI();
+        }
+
+        // 文件上传处理
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-active');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-active');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-active');
+            showFilePreview();
+        });
+
+        fileInput.addEventListener('change', showFilePreview);
+
+        function showFilePreview() {
+            document.getElementById('filePreview').classList.remove('hidden');
+        }
+
+        function removeFile() {
+            document.getElementById('filePreview').classList.add('hidden');
+            fileInput.value = '';
+        }
+
+        // 卦象生成
+        const hexagrams = [
+            { name: '乾为天', desc: '元亨利贞，天行健' },
+            { name: '坤为地', desc: '厚德载物，地势坤' },
+            { name: '水雷屯', desc: '始生维艰，宜守静待时' },
+            { name: '山水蒙', desc: '启蒙教育，尊师重道' },
+            { name: '水天需', desc: '待机而动，饮食宴乐' },
+            { name: '天水讼', desc: '慎争戒讼，终吉' },
+            { name: '地水师', desc: '行险而顺，贞吉' },
+            { name: '水地比', desc: '亲比和谐，原筮元永贞' }
+        ];
+
+        function generateHexagram() {
+            const timeYao = parseInt(document.getElementById('timeYao').value);
+            const spaceYao = parseInt(document.getElementById('spaceYao').value);
+            const relationYao = parseInt(document.getElementById('relationYao').value);
+            
+            const index = (timeYao + spaceYao + relationYao) % hexagrams.length;
+            const hexagram = hexagrams[index];
+            
+            document.getElementById('hexagramName').textContent = hexagram.name;
+            document.getElementById('hexagramDesc').textContent = hexagram.desc;
+            
+            // 更新卦象显示动画
+            const display = document.getElementById('hexagramDisplay');
+            display.style.opacity = '0';
+            setTimeout(() => {
+                display.style.opacity = '1';
+            }, 200);
+        }
+
+        // 弹窗控制
+        function showModal() {
+            document.getElementById('agentModal').classList.remove('hidden');
+            document.getElementById('agentModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('agentModal').classList.add('hidden');
+            document.getElementById('agentModal').classList.remove('flex');
+        }
+
+        function applySuggestion() {
+            closeModal();
+            // 可以在这里添加实际的应用逻辑
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('agentModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeModal();
+        });
+    </script>
+</body>
+</html>

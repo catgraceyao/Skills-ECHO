@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>「音」- ECHO音乐模块</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        
+        :root {
+            --ink: #1a1a1a;
+            --cinnabar: #c93756;
+            --paper: #f5f0e8;
+            --gong: #D4A574;
+            --shang: #C0C0C0;
+            --jue: #7CB342;
+            --zhi: #E53935;
+            --yu: #1E88E5;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--paper);
+        }
+        
+        .font-serif { font-family: 'Noto Serif SC', serif; }
+        
+        .wuyin-gong { --color: var(--gong); }
+        .wuyin-shang { --color: var(--shang); }
+        .wuyin-jue { --color: var(--jue); }
+        .wuyin-zhi { --color: var(--zhi); }
+        .wuyin-yu { --color: var(--yu); }
+        
+        .wuyin-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .wuyin-btn:hover, .wuyin-btn.active {
+            background: var(--color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--color);
+        }
+        
+        .waveform-bar {
+            transition: height 0.1s ease;
+        }
+        
+        .track-lane {
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 49px,
+                rgba(26,26,26,0.05) 49px,
+                rgba(26,26,26,0.05) 50px
+            );
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 w-full bg-[#f5f0e8]/95 backdrop-blur-sm border-b border-[#1a1a1a]/10 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 border-2 border-[#D4A574] text-[#D4A574] rounded flex items-center justify-center text-lg font-serif font-bold">音</div>
+                    <span class="font-serif text-2xl font-bold">ECHO「音」</span>
+                </div>
+                
+                <div class="flex items-center space-x-6">
+                    <a href="echo-home.html" class="text-[#4a5568] hover:text-[#1a1a1a] transition">首页</a>
+                    <a href="echo-hua.html" class="text-[#4a5568] hover:text-[#1a1a1a] transition">画</a>
+                    <a href="echo-wen.html" class="text-[#4a5568] hover:text-[#1a1a1a] transition">文</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button class="px-4 py-2 bg-[#D4A574] text-white rounded-lg hover:bg-[#D4A574]/90 transition">
+                        上传音乐
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-16">
+        <!-- 五声调式导航 -->
+        <section class="bg-white border-b border-[#1a1a1a]/10 py-6">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-serif text-lg font-medium">宫商角徵羽 · 五声音阶</h2>
+                    <span class="text-sm text-[#4a5568]">点击选择调式分类</span>
+                </div>
+                
+                <div class="flex gap-4">
+                    <button class="wuyin-btn wuyin-gong flex-1 py-4 rounded-xl border-2 border-[#D4A574] text-[#D4A574] font-serif text-xl font-bold">
+                        <div>宫</div>
+                        <div class="text-xs mt-1 opacity-70">土 · 稳重</div>
+                    </button>
+                    
+                    <button class="wuyin-btn wuyin-shang flex-1 py-4 rounded-xl border-2 border-[#C0C0C0] text-[#718096] font-serif text-xl font-bold">
+                        <div>商</div>
+                        <div class="text-xs mt-1 opacity-70">金 · 清肃</div>
+                    </button>
+                    
+                    <button class="wuyin-btn wuyin-jue flex-1 py-4 rounded-xl border-2 border-[#7CB342] text-[#7CB342] font-serif text-xl font-bold">
+                        <div>角</div>
+                        <div class="text-xs mt-1 opacity-70">木 · 舒展</div>
+                    </button>
+                    
+                    <button class="wuyin-btn wuyin-zhi flex-1 py-4 rounded-xl border-2 border-[#E53935] text-[#E53935] font-serif text-xl font-bold">
+                        <div>徵</div>
+                        <div class="text-xs mt-1 opacity-70">火 · 热烈</div>
+                    </button>
+                    
+                    <button class="wuyin-btn wuyin-yu flex-1 py-4 rounded-xl border-2 border-[#1E88E5] text-[#1E88E5] font-serif text-xl font-bold">
+                        <div>羽</div>
+                        <div class="text-xs mt-1 opacity-70">水 · 柔润</div>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 「谱」编辑器 -->
+        <section class="py-8 max-w-7xl mx-auto px-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-[#1a1a1a]/5 overflow-hidden">
+                <!-- 编辑器工具栏 -->
+                <div class="border-b border-[#1a1a1a]/10 p-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <span class="font-serif text-lg font-bold">「谱」编辑器</span>
+                        <span class="text-sm text-[#4a5568]">未命名作品</span>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <button class="px-3 py-1.5 text-sm bg-[#1a1a1a]/5 rounded hover:bg-[#1a1a1a]/10 transition">撤销</button>
+                        <button class="px-3 py-1.5 text-sm bg-[#1a1a1a]/5 rounded hover:bg-[#1a1a1a]/10 transition">重做</button>
+                        <span class="text-[#1a1a1a]/20">|</span>
+                        <button class="px-3 py-1.5 text-sm bg-[#D4A574] text-white rounded hover:bg-[#D4A574]/90 transition">保存</button>
+                        <button class="px-3 py-1.5 text-sm bg-[#c93756] text-white rounded hover:bg-[#c93756]/90 transition">铸造</button>
+                    </div>
+                </div>
+                
+                <div class="flex">
+                    <!-- 左侧工具面板 -->
+                    <div class="w-64 border-r border-[#1a1a1a]/10 p-4">
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium mb-3">五声调式</h4>
+                            <select class="w-full p-2 border border-[#1a1a1a]/20 rounded-lg bg-white">
+                                <option>宫调式</option>
+                                <option>商调式</option>
+                                <option>角调式</option>
+                                <option>徵调式</option>
+                                <option>羽调式</option>
+                            </select>
+                            
+                            <div class="mt-3 p-3 bg-[#f5f0e8] rounded-lg text-xs text-[#4a5568]">
+                                <p><strong>宫调式</strong>：雄健有力，适合庄严肃穆的作品</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium mb-3">音色库</h4>
+                            <div class="space-y-2">
+                                <div class="p-2 bg-[#1a1a1a]/5 rounded cursor-pointer hover:bg-[#1a1a1a]/10 transition">🎹 古琴</div>
+                                <div class="p-2 bg-[#1a1a1a]/5 rounded cursor-pointer hover:bg-[#1a1a1a]/10 transition">🎸 琵琶</div>
+                                <div class="p-2 bg-[#1a1a1a]/5 rounded cursor-pointer hover:bg-[#1a1a1a]/10 transition">🎺 笛子</div>
+                                <div class="p-2 bg-[#1a1a1a]/5 rounded cursor-pointer hover:bg-[#1a1a1a]/10 transition">🥁 鼓</div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-sm font-medium mb-3">效果器</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm">混响</span>
+                                    <input type="range" class="w-20" min="0" max="100" value="30">
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm">均衡</span>
+                                    <input type="range" class="w-20" min="0" max="100" value="50">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                    <!-- 主编辑区 -->
+                    <div class="flex-1 p-4">
+                        <!-- 时间轴标尺 -->
+                        <div class="flex text-xs text-[#4a5568] mb-2 px-16">
+                            <span class="w-16">0:00</span>
+                            <span class="w-16">0:05</span>
+                            <span class="w-16">0:10</span>
+                            <span class="w-16">0:15</span>
+                            <span class="w-16">0:20</span>
+                            <span class="w-16">0:25</span>
+                            <span class="w-16">0:30</span>
+                        </div>
+                        
+                        <!-- 轨道区域 -->
+                        <div class="space-y-2">
+                            <!-- 主旋律轨道 -->
+                            <div class="flex items-center">
+                                <div class="w-16 text-sm font-medium">主旋律</div>
+                                <div class="flex-1 h-12 track-lane rounded-lg bg-[#f5f0e8] relative overflow-hidden">
+                                    <div class="absolute h-8 top-2 left-8 w-24 bg-[#D4A574] rounded opacity-80"></div>
+                                    <div class="absolute h-8 top-2 left-40 w-32 bg-[#D4A574] rounded opacity-80"></div>
+                                    <div class="absolute h-8 top-2 left-96 w-20 bg-[#D4A574] rounded opacity-60"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- 和弦轨道 -->
+                            <div class="flex items-center">
+                                <div class="w-16 text-sm font-medium">和弦</div>
+                                <div class="flex-1 h-12 track-lane rounded-lg bg-[#f5f0e8] relative overflow-hidden">
+                                    <div class="absolute h-8 top-2 left-8 w-48 bg-[#7CB342] rounded opacity-60"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- 打击乐轨道 -->
+                            <div class="flex items-center">
+                                <div class="w-16 text-sm font-medium">打击乐</div>
+                                <div class="flex-1 h-12 track-lane rounded-lg bg-[#f5f0e8] relative overflow-hidden">
+                                    <div class="absolute h-6 top-3 left-8 w-3 bg-[#1a1a1a] rounded"></div>
+                                    <div class="absolute h-6 top-3 left-16 w-3 bg-[#1a1a1a] rounded"></div>
+                                    <div class="absolute h-6 top-3 left-24 w-3 bg-[#1a1a1a] rounded"></div>
+                                    <div class="absolute h-6 top-3 left-32 w-3 bg-[#1a1a1a] rounded"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- 效果音轨道 -->
+                            <div class="flex items-center">
+                                <div class="w-16 text-sm font-medium">效果音</div>
+                                <div class="flex-1 h-12 track-lane rounded-lg bg-[#f5f0e8] relative overflow-hidden">
+                                    <div class="absolute h-8 top-2 left-56 w-16 bg-[#1E88E5] rounded opacity-50"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <!-- 播放控制 -->
+                        <div class="mt-6 flex items-center justify-center space-x-4">
+                            <button class="w-12 h-12 rounded-full bg-[#1a1a1a]/5 flex items-center justify-center hover:bg-[#1a1a1a]/10 transition">⏮</button>
+                            <button class="w-16 h-16 rounded-full bg-[#c93756] text-white flex items-center justify-center text-2xl hover:bg-[#c93756]/90 transition">▶</button>
+                            <button class="w-12 h-12 rounded-full bg-[#1a1a1a]/5 flex items-center justify-center hover:bg-[#1a1a1a]/10 transition">⏭</button>
+                        </div>
+                    </div>
+                    
+                    
+                    <!-- 右侧面板 -->
+                    <div class="w-64 border-l border-[#1a1a1a]/10 p-4">
+                        <h4 class="text-sm font-medium mb-3">波形可视化</h4>
+                        
+                        <div class="h-32 bg-[#1a1a1a] rounded-lg overflow-hidden relative">
+                            <!-- 频谱着色示意 -->
+                            <div class="absolute bottom-0 left-0 w-1/5 h-full bg-[#D4A574] opacity-30"></div>
+                            <div class="absolute bottom-0 left-1/5 w-1/5 h-full bg-[#C0C0C0] opacity-30"></div>
+                            <div class="absolute bottom-0 left-2/5 w-1/5 h-full bg-[#7CB342] opacity-30"></div>
+                            <div class="absolute bottom-0 left-3/5 w-1/5 h-full bg-[#E53935] opacity-30"></div>
+                            <div class="absolute bottom-0 left-4/5 w-1/5 h-full bg-[#1E88E5] opacity-30"></div>
+                            
+                            <!-- 波形条 -->
+                            <div class="absolute bottom-0 w-full flex items-end justify-center space-x-1 px-4 pb-4">
+                                <script>
+                                    for(let i=0; i<30; i++) {
+                                        let h = Math.random() * 60 + 20;
+                                        let color = i < 6 ? '#D4A574' : i < 12 ? '#C0C0C0' : i < 18 ? '#7CB342' : i < 24 ? '#E53935' : '#1E88E5';
+                                        document.write(`<div class="waveform-bar w-1 rounded-t" style="height:${h}%;background:${color}"></div>`);
+                                    }
+                                </script>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 space-y-2 text-xs">
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full bg-[#D4A574] mr-2"></span>
+                                <span>宫 · 低频</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full bg-[#C0C0C0] mr-2"></span>
+                                <span>商 · 中低频</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full bg-[#7CB342] mr-2"></span>
+                                <span>角 · 中频</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full bg-[#E53935] mr-2"></span>
+                                <span>徵 · 中高频</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full bg-[#1E88E5] mr-2"></span>
+                                <span>羽 · 高频</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 音乐卡片展示 -->
+        <section class="py-8 max-w-7xl mx-auto px-6">
+            <h3 class="font-serif text-xl font-bold mb-6">热门音乐</h3>
+            
+            <div class="grid grid-cols-4 gap-6">
+                <!-- 音乐卡片 1 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition border border-[#1a1a1a]/5">
+                    <div class="h-32 bg-gradient-to-br from-[#D4A574]/20 to-[#D4A574]/5 flex items-center justify-center">
+                        <span class="text-4xl">🎵</span>
+                    </div>
+                    
+                    <div class="p-4">
+                        <h4 class="font-medium mb-1">春江花月夜</h4>
+                        <p class="text-sm text-[#4a5568] mb-3">古琴大师</p>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="px-2 py-1 text-xs bg-[#D4A574]/10 text-[#D4A574] rounded">宫</span>
+                            <span class="text-sm text-[#4a5568]">☯ 0.78</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 音乐卡片 2 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition border border-[#1a1a1a]/5">
+                    <div class="h-32 bg-gradient-to-br from-[#E53935]/20 to-[#E53935]/5 flex items-center justify-center">
+                        <span class="text-4xl">🎸</span>
+                    </div>
+                    
+                    <div class="p-4">
+                        <h4 class="font-medium mb-1">十面埋伏</h4>
+                        <p class="text-sm text-[#4a5568] mb-3">琵琶精</p>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="px-2 py-1 text-xs bg-[#E53935]/10 text-[#E53935] rounded">徵</span>
+                            <span class="text-sm text-[#4a5568]">☯ 0.85</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 音乐卡片 3 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition border border-[#1a1a1a]/5">
+                    <div class="h-32 bg-gradient-to-br from-[#1E88E5]/20 to-[#1E88E5]/5 flex items-center justify-center">
+                        <span class="text-4xl">🎹</span>
+                    </div>
+                    
+                    <div class="p-4">
+                        <h4 class="font-medium mb-1">高山流水</h4>
+                        <p class="text-sm text-[#4a5568] mb-3">钢琴诗人</p>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="px-2 py-1 text-xs bg-[#1E88E5]/10 text-[#1E88E5] rounded">羽</span>
+                            <span class="text-sm text-[#4a5568]">☯ 0.72</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 音乐卡片 4 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition border border-[#1a1a1a]/5">
+                    <div class="h-32 bg-gradient-to-br from-[#7CB342]/20 to-[#7CB342]/5 flex items-center justify-center">
+                        <span class="text-4xl">🎺</span>
+                    </div>
+                    
+                    <div class="p-4">
+                        <h4 class="font-medium mb-1">梅花三弄</h4>
+                        <p class="text-sm text-[#4a5568] mb-3">笛韵</p>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="px-2 py-1 text-xs bg-[#7CB342]/10 text-[#7CB342] rounded">角</span>
+                            <span class="text-sm text-[#4a5568]">☯ 0.68</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
