@@ -13,7 +13,7 @@ Skills-ECHO 是 ECHO 协议的**第一层（Layer 1）**创作者工具矩阵的
 | 工具 | 文档 | 职责 | 预估工作量 |
 |------|------|------|-----------|
 | **Blueprint Studio** | [layer1-blueprint-studio.md](layer1-blueprint-studio.md) | 可视化四权配置编辑器 | ~50 人天 |
-| **ShiGraph Dashboard** | [layer1-shigraph-dashboard.md](layer1-shigraph-dashboard.md) | 资产生命状态看板（三维势位） | 待补充 |
+| **ShiGraph Dashboard** | [layer1-shigraph-dashboard.md](layer1-shigraph-dashboard.md) | 资产生命状态看板（三维势位） | ~340 人天 |
 | **ZKP Generator** | [layer1-zkp-generator.md](layer1-zkp-generator.md) | 零知识证明生成工具 | ~312 人天 |
 | **Derivative Builder** | [layer1-derivative-builder.md](layer1-derivative-builder.md) | 衍生作品构建器（Skill 组合） | ~338 人天 |
 | **Revenue Simulator** | [layer1-revenue-simulator.md](layer1-revenue-simulator.md) | 收益模拟器 | ~600 人天 |
@@ -65,6 +65,7 @@ Skills-ECHO 是 ECHO 协议的**第一层（Layer 1）**创作者工具矩阵的
 - **"势"的计算**: 时间维度 × 空间维度 × 关系维度
 - **输入**: 链上数据
 - **输出**: 三维势位分析
+- **势位等级**: 原质 → 萌芽 → 成长 → 成熟 → 巅峰
 
 ### 3. ZKP Generator（零知识证明生成器）
 - **定位**: 隐私保护证明工具
@@ -112,6 +113,7 @@ Skills-ECHO 是 ECHO 协议的**第一层（Layer 1）**创作者工具矩阵的
 | layer1-derivative-builder.md | ~2,500 行 | 98 KB |
 | layer1-revenue-simulator.md | ~1,900 行 | 93 KB |
 | layer1-zkp-generator.md | ~3,200 行 | 132 KB |
+| layer1-shigraph-dashboard.md | ~1,700 行 | 127 KB |
 | layer1-creator-tools-matrix-integrated.md | ~530 行 | 25 KB |
 
 ## 贡献
