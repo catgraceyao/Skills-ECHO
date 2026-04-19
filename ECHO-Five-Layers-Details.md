@@ -338,7 +338,7 @@ event DerivativeCreated(uint256 indexed parentId, uint256 indexed childId, addre
 - **进度跟踪**: 部署状态实时显示
 - **失败回滚**: 错误处理和重试
 
-### 1.3 Echo Graph (链上资产浏览器)
+### 1.3 ShiGraph (链上资产浏览器)
 
 #### 1.3.1 数据采集层
 
@@ -1096,7 +1096,7 @@ N(t): 网络效应收益
 ### 第一层
 - [ ] Skill Forge 开发
 - [ ] Blueprint Studio 开发
-- [ ] Echo Graph 开发
+- [ ] ShiGraph 开发
 - [ ] Revenue Oracle 开发
 - [ ] Privacy Guard 开发
 

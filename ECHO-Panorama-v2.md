@@ -175,7 +175,7 @@
 - 输入: 资产内容（Skill 包、文件、代码）
 - 输出: 权利配置蓝图（链上可执行的配置）
 
-#### Echo Graph (链上资产浏览器)
+#### ShiGraph (链上资产浏览器)
 
 **一句话定位**: *"ECHO 世界的 Etherscan + Dune Analytics"*
 
@@ -279,7 +279,7 @@
 |-------|------|----------|
 | **Creator Agent** | 辅助创作 | "帮我制作一段 30 秒的 lo-fi 音乐" → 自动调用 Audio Skills |
 | **Curator Agent** | 策展推荐 | "为我的展览策划一个数字艺术合集" → 搜索、筛选、授权 |
-| **Investor Agent** | 投资决策 | "分析这个资产的潜在收益" → 调用 Revenue Oracle、Echo Graph |
+| **Investor Agent** | 投资决策 | "分析这个资产的潜在收益" → 调用 Revenue Oracle、ShiGraph |
 | **Personal Agent** | 个人助理 | "管理我的数字资产组合" → 监控、告警、自动再授权 |
 
 **核心能力**:
@@ -445,7 +445,7 @@
 
 - Skill Forge MVP（基础编辑器 + 调试）
 - Blueprint Studio MVP（四权配置 + 部署）
-- Echo Graph MVP（资产浏览 + 基础分析）
+- ShiGraph MVP（资产浏览 + 基础分析）
 - WASM 沙箱（Layer 2 基础版）
 
 **团队**: 6-8 人（前端、后端、合约、设计）
@@ -499,7 +499,7 @@
 |------|------|
 | **Skill** | 可确权的可执行功能单元 |
 | **Blueprint** | 资产的四维权利配置 |
-| **Echo Graph** | 链上资产的关系图谱 |
+| **ShiGraph** | 链上资产的关系图谱 |
 | **Shi (势)** | 资产在网络中的影响力量化指标 |
 | **Agent** | 理解用户意图并调用 Skills 的 AI |
 | **Sandbox** | 安全执行环境，保护资产 |

@@ -21,7 +21,7 @@ Skills-ECHO 是 **ECHO 原生分布式价值网络** 的配套应用全景规划
 |------|------|------|-----------|
 | **Skill Forge** | [layer1-derivative-builder.md](layer1-derivative-builder.md) | Skill 开发工作台（代码编辑、调试、发布） | ~338 人天 |
 | **Blueprint Studio** | [layer1-blueprint-studio.md](layer1-blueprint-studio.md) | 可视化四权配置编辑器 | ~50 人天 |
-| **Echo Graph** | [layer1-shigraph-dashboard.md](layer1-shigraph-dashboard.md) | 链上资产浏览器（关系图谱、势位分析） | ~340 人天 |
+| **ShiGraph** | [layer1-shigraph-dashboard.md](layer1-shigraph-dashboard.md) | 链上资产浏览器（关系图谱、势位分析） | ~340 人天 |
 | **Revenue Oracle** | [layer1-revenue-simulator.md](layer1-revenue-simulator.md) | 收益预测引擎（蒙特卡洛模拟、AI推荐） | ~600 人天 |
 | **Privacy Guard** | [layer1-zkp-generator.md](layer1-zkp-generator.md) | 隐私证明中心（零知识证明生成） | ~312 人天 |
 
@@ -44,7 +44,7 @@ Skills-ECHO 是 **ECHO 原生分布式价值网络** 的配套应用全景规划
 │  WASM Runtime | gVisor | Kata Containers | TEE Enclave                 │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  第一层：创作者工具矩阵  ← 本仓库重点                                     │
-│  Skill Forge | Blueprint Studio | Echo Graph | Revenue Oracle | Privacy Guard │
+│  Skill Forge | Blueprint Studio | ShiGraph | Revenue Oracle | Privacy Guard │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  第零层：协议层                                                           │
 │  EchoCore | Rights Registry | Revenue Splitter | Cross-Chain Bridge    │
@@ -67,7 +67,7 @@ Skills-ECHO 是 **ECHO 原生分布式价值网络** 的配套应用全景规划
 - **输入**: 资产内容
 - **输出**: 权利配置蓝图
 
-### 3. Echo Graph（链上资产浏览器）
+### 3. ShiGraph（链上资产浏览器）
 - **定位**: "ECHO 世界的 Etherscan + Dune Analytics"
 - **核心功能**: 资产搜索、关系图谱、势位分析、收益追踪
 - **技术栈**: Dgraph + The Graph + Three.js
@@ -114,7 +114,7 @@ Skills-ECHO 是 **ECHO 原生分布式价值网络** 的配套应用全景规划
 |------|------|--------|
 | Skill Forge | ~338 人天 | P1 |
 | Blueprint Studio | ~50 人天 | P0 (MVP) |
-| Echo Graph | ~340 人天 | P1 |
+| ShiGraph | ~340 人天 | P1 |
 | Revenue Oracle | ~600 人天 | P2 |
 | Privacy Guard | ~312 人天 | P2 |
 | **总计** | **~1640 人天** | - |
@@ -129,7 +129,7 @@ Skills-ECHO 是 **ECHO 原生分布式价值网络** 的配套应用全景规划
 | layer1-derivative-builder.md | ~2,500 行 | Skill Forge 详细设计 |
 | layer1-revenue-simulator.md | ~1,900 行 | Revenue Oracle 详细设计 |
 | layer1-zkp-generator.md | ~3,200 行 | Privacy Guard 详细设计 |
-| layer1-shigraph-dashboard.md | ~1,700 行 | Echo Graph 详细设计 |
+| layer1-shigraph-dashboard.md | ~1,700 行 | ShiGraph 详细设计 |
 | layer1-creator-tools-matrix-integrated.md | ~530 行 | Layer 1 整合规划 |
 | **总计** | **~12,000 行** | **约 600 KB** |
 
