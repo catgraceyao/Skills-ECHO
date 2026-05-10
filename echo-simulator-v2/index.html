@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ECHO — 使用权生命周期网络</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <style>
-    /* ===== ECHO GLOBAL ===== */
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECHO — 使用权生命周期网络</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
 /* ==================== ECHO 东方美学基础样式 ==================== */
 /* 文件名: base.css */
 /* 版本: v2.0 */
@@ -1141,13 +1140,12 @@ p { color: var(--snow-dim); }
 }
 
 
-    /* ===== SPA框架 ===== */
-    .page-section { display: none; width: 100%; min-height: 100vh; overflow-y: auto; }
-    .page-section.active { display: block; }
-    #home.page-section { position: relative; min-height: 100vh; }
-    .nav-item.active { background: rgba(74,144,164,0.15) !important; border-left: 2px solid var(--stone-blue) !important; color: var(--snow) !important; }
+/* ===== SPA FRAMEWORK ===== */
+.page-section { display: none; width: 100%; min-height: 100vh; overflow-y: auto; }
+.page-section.active { display: block; }
+.nav-item.active { background: rgba(74,144,164,0.15) !important; border-left: 2px solid #4a90a4 !important; color: #f0f0e8 !important; }
 
-    /* === HOME SCOPED STYLES === */
+/* === HOME SCOPED === */
 .home-page {
       position: relative;
       width: 100%;
@@ -1205,7 +1203,7 @@ p { color: var(--snow-dim); }
       margin-right: auto;
       animation: fade-in-up 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.9s both;
     }
-.home-quote::after {
+.home-quote::before, .home-quote::after {
       content: '「 』';
       color: var(--ink-mist);
       opacity: 0.5;
@@ -1359,7 +1357,7 @@ p { color: var(--snow-dim); }
       }
     }
 
-    /* === RIGHTS SCOPED STYLES === */
+/* === RIGHTS SCOPED === */
 #rights :root {
   --ink-black: #0c0c0e;
   --ink-deep: #1a1a1e;
@@ -1596,7 +1594,7 @@ p { color: var(--snow-dim); }
   position:absolute; inset:0; pointer-events:none; z-index:0; opacity:0.15;
 }
 
-    /* === GRAPH SCOPED STYLES === */
+/* === GRAPH SCOPED === */
 .graph-page { display: flex; width: 100%; height: 100vh; }
 .graph-header {
     height: var(--header-height);
@@ -1674,7 +1672,7 @@ p { color: var(--snow-dim); }
     opacity: 0;
     transition: opacity 0.3s;
   }
-#graph .link-label:hover { opacity: 1; }
+#graph .link-line:hover + .link-label, #graph .link-label:hover { opacity: 1; }
 #graph .node-group.highlighted .node-rect {
     filter: drop-shadow(0 0 12px var(--azurite));
     stroke: var(--azurite);
@@ -1800,7 +1798,7 @@ p { color: var(--snow-dim); }
   }
 #graph .expand-indicator:hover { opacity: 1; }
 
-    /* === SHI SCOPED STYLES === */
+/* === SHI SCOPED === */
 #shi :root {
       --ink-black: #0c0c0e; --ink-deep: #1a1a1e; --ink-mid: #2a2a30;
       --ink-light: #8a8a90; --ink-rice: #f0f0e8;
@@ -2003,7 +2001,7 @@ p { color: var(--snow-dim); }
       font-size: 0.7rem; color: var(--ink-light); line-height: 1.6;
     }
 
-    /* === MARKET SCOPED STYLES === */
+/* === MARKET SCOPED === */
 #market :root {
       --ink-black: #0c0c0e; --ink-deep: #1a1a1e; --ink-mid: #2a2a30;
       --ink-light: #8a8a90; --ink-rice: #f0f0e8;
@@ -2222,7 +2220,7 @@ p { color: var(--snow-dim); }
     }
 #market .apply-btn:hover { background: var(--stone-blue); }
 
-    /* === SIMULATE SCOPED STYLES === */
+/* === SIMULATE SCOPED === */
 #simulate :root {
       --ink-black: #0c0c0e; --ink-deep: #1a1a1e; --ink-mid: #2a2a30;
       --ink-light: #8a8a90; --ink-rice: #f0f0e8;
@@ -2469,35 +2467,35 @@ p { color: var(--snow-dim); }
       transition: all 0.3s;
     }
 #simulate .link-line:hover { stroke-opacity: 0.8; stroke-width: 2; }
-  </style>
+</style>
 </head>
-<body style="margin:0;padding:0;background:var(--ink-black);color:var(--ink-rice);font-family:var(--font-body);width:100vw;height:100vh;overflow:hidden;display:flex;">
+<body style="margin:0;padding:0;background:#0c0c0e;color:#f0f0e8;font-family:'Noto Sans SC',sans-serif;width:100vw;height:100vh;overflow:hidden;display:flex;">
 
-  <nav class="nav-sidebar" id="navSidebar" style="width:220px;height:100vh;background:linear-gradient(180deg,var(--ink-deep) 0%,var(--ink-black) 100%);border-right:1px solid var(--ink-mid);display:flex;flex-direction:column;flex-shrink:0;z-index:100;position:relative;overflow-y:auto;">
-    <div class="nav-logo" style="padding:24px;border-bottom:1px solid var(--ink-mid);text-align:center;">
-      <h1 style="font-size:2rem;font-weight:700;letter-spacing:0.3em;color:var(--ink-rice);text-shadow:0 0 20px rgba(74,144,164,0.3);margin:0;">ECHO</h1>
-      <p style="font-size:0.7rem;color:var(--ink-light);margin-top:4px;letter-spacing:0.15em;">使用权生命周期网络</p>
-    </div>
-    <div class="nav-items" style="flex:1;display:flex;flex-direction:column;gap:2px;padding:16px 0;">
-      <a class="nav-item active" href="#home" data-page="home" onclick="return navTo('home')" style="display:flex;align-items:center;gap:12px;padding:12px 24px;color:var(--ink-light);text-decoration:none;transition:all 0.3s;font-size:0.9rem;letter-spacing:0.05em;border-radius:0 8px 8px 0;"><span>☯</span><span>首页</span></a>
-      <div style="padding:8px 24px;font-size:0.65rem;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.1em;">核心概念</div>
-      <a class="nav-item" href="#rights" data-page="rights" onclick="return navTo('rights')" style="display:flex;align-items:center;gap:12px;padding:12px 24px;color:var(--ink-light);text-decoration:none;transition:all 0.3s;font-size:0.9rem;letter-spacing:0.05em;border-radius:0 8px 8px 0;"><span>◉</span><span>四权六档</span></a>
-      <a class="nav-item" href="#graph" data-page="graph" onclick="return navTo('graph')" style="display:flex;align-items:center;gap:12px;padding:12px 24px;color:var(--ink-light);text-decoration:none;transition:all 0.3s;font-size:0.9rem;letter-spacing:0.05em;border-radius:0 8px 8px 0;"><span>◈</span><span>验证图</span></a>
-      <a class="nav-item" href="#shi" data-page="shi" onclick="return navTo('shi')" style="display:flex;align-items:center;gap:12px;padding:12px 24px;color:var(--ink-light);text-decoration:none;transition:all 0.3s;font-size:0.9rem;letter-spacing:0.05em;border-radius:0 8px 8px 0;"><span>◉</span><span>势体系</span></a>
-      <a class="nav-item" href="#market" data-page="market" onclick="return navTo('market')" style="display:flex;align-items:center;gap:12px;padding:12px 24px;color:var(--ink-light);text-decoration:none;transition:all 0.3s;font-size:0.9rem;letter-spacing:0.05em;border-radius:0 8px 8px 0;"><span>◇</span><span>规则市场</span></a>
-      <div style="padding:8px 24px;font-size:0.65rem;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.1em;">模拟演示</div>
-      <a class="nav-item" href="#simulate" data-page="simulate" onclick="return navTo('simulate')" style="display:flex;align-items:center;gap:12px;padding:12px 24px;color:var(--ink-light);text-decoration:none;transition:all 0.3s;font-size:0.9rem;letter-spacing:0.05em;border-radius:0 8px 8px 0;"><span>▶</span><span>场景模拟</span></a>
-    </div>
-    <div style="padding:16px 24px;border-top:1px solid var(--ink-mid);text-align:center;font-size:0.75rem;color:var(--ink-light);opacity:0.6;">
-      <div>ECHO v2.0</div>
-      <div style="font-size:0.6rem;opacity:0.6;">万物有灵，皆可生长</div>
-    </div>
-  </nav>
+<nav style="width:220px;height:100vh;background:linear-gradient(180deg,#1a1a1e 0%,#0c0c0e 100%);border-right:1px solid #2a2a30;display:flex;flex-direction:column;flex-shrink:0;z-index:100;overflow-y:auto;">
+  <div style="padding:24px;border-bottom:1px solid #2a2a30;text-align:center;">
+    <h1 style="font-size:2rem;font-weight:700;letter-spacing:0.3em;color:#f0f0e8;text-shadow:0 0 20px rgba(74,144,164,0.3);margin:0;">ECHO</h1>
+    <p style="font-size:0.7rem;color:#8a8a90;margin-top:4px;letter-spacing:0.15em;">使用权生命周期网络</p>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:2px;padding:16px 0;">
+    <a class="nav-item active" href="#home" data-page="home" onclick="return navTo('home')" style="display:flex;align-items:center;gap:12px;padding:12px 24px;color:#8a8a90;text-decoration:none;transition:all 0.3s;font-size:0.9rem;border-radius:0 8px 8px 0;"><span>☯</span><span>首页</span></a>
+    <div style="padding:8px 24px;font-size:0.65rem;color:#8a8a90;text-transform:uppercase;letter-spacing:0.1em;">核心概念</div>
+    <a class="nav-item" href="#rights" data-page="rights" onclick="return navTo('rights')" style="display:flex;align-items:center;gap:12px;padding:12px 24px;color:#8a8a90;text-decoration:none;transition:all 0.3s;font-size:0.9rem;border-radius:0 8px 8px 0;"><span>◉</span><span>四权六档</span></a>
+    <a class="nav-item" href="#graph" data-page="graph" onclick="return navTo('graph')" style="display:flex;align-items:center;gap:12px;padding:12px 24px;color:#8a8a90;text-decoration:none;transition:all 0.3s;font-size:0.9rem;border-radius:0 8px 8px 0;"><span>◈</span><span>验证图</span></a>
+    <a class="nav-item" href="#shi" data-page="shi" onclick="return navTo('shi')" style="display:flex;align-items:center;gap:12px;padding:12px 24px;color:#8a8a90;text-decoration:none;transition:all 0.3s;font-size:0.9rem;border-radius:0 8px 8px 0;"><span>◉</span><span>势体系</span></a>
+    <a class="nav-item" href="#market" data-page="market" onclick="return navTo('market')" style="display:flex;align-items:center;gap:12px;padding:12px 24px;color:#8a8a90;text-decoration:none;transition:all 0.3s;font-size:0.9rem;border-radius:0 8px 8px 0;"><span>◇</span><span>规则市场</span></a>
+    <div style="padding:8px 24px;font-size:0.65rem;color:#8a8a90;text-transform:uppercase;letter-spacing:0.1em;">模拟演示</div>
+    <a class="nav-item" href="#simulate" data-page="simulate" onclick="return navTo('simulate')" style="display:flex;align-items:center;gap:12px;padding:12px 24px;color:#8a8a90;text-decoration:none;transition:all 0.3s;font-size:0.9rem;border-radius:0 8px 8px 0;"><span>▶</span><span>场景模拟</span></a>
+  </div>
+  <div style="padding:16px 24px;border-top:1px solid #2a2a30;text-align:center;font-size:0.75rem;color:#8a8a90;opacity:0.6;">
+    <div>ECHO v2.0</div>
+    <div style="font-size:0.6rem;">万物有灵，皆可生长</div>
+  </div>
+</nav>
 
-  <main style="flex:1;height:100vh;overflow:hidden;position:relative;" id="mainArea">
+<main style="flex:1;height:100vh;overflow:hidden;position:relative;">
 
-    <!-- ===== HOME PAGE ===== -->
-    <div class="page-section" id="home">
+<!-- HOME -->
+<div class="page-section" id="home">
 <!-- 粒子Canvas背景 -->
   <canvas id="particle-canvas"></canvas>
 
@@ -2550,10 +2548,10 @@ p { color: var(--snow-dim); }
       <span class="wuxing-desc">规则市场</span>
     </a>
   </nav>
-    </div>
+</div>
 
-    <!-- ===== RIGHTS PAGE ===== -->
-    <div class="page-section" id="rights">
+<!-- RIGHTS -->
+<div class="page-section" id="rights">
 <!-- 导航 -->
 <nav class="nav-sidebar">
   <a href="#home">首页</a>
@@ -2652,10 +2650,10 @@ p { color: var(--snow-dim); }
 <div class="error-toast" id="errorToast"></div>
 <!-- Tooltip -->
 <div class="tooltip" id="tooltip"></div>
-    </div>
+</div>
 
-    <!-- ===== GRAPH PAGE ===== -->
-    <div class="page-section" id="graph">
+<!-- GRAPH -->
+<div class="page-section" id="graph">
 <div class="graph-page">
   <!-- 竹简导航 -->
   <nav class="bamboo-nav">
@@ -2752,10 +2750,10 @@ p { color: var(--snow-dim); }
     </div>
   </div>
 </div>
-    </div>
+</div>
 
-    <!-- ===== SHI PAGE ===== -->
-    <div class="page-section" id="shi">
+<!-- SHI -->
+<div class="page-section" id="shi">
 <div class="shi-page">
     <!-- 左侧势位仪表盘 -->
     <aside class="dashboard">
@@ -2886,10 +2884,10 @@ p { color: var(--snow-dim); }
       </div>
     </div>
   </div>
-    </div>
+</div>
 
-    <!-- ===== MARKET PAGE ===== -->
-    <div class="page-section" id="market">
+<!-- MARKET -->
+<div class="page-section" id="market">
 <div class="market-page">
     <!-- 顶部横幅 -->
     <div class="market-banner">
@@ -2978,10 +2976,10 @@ p { color: var(--snow-dim); }
       </div>
     </div>
   </div>
-    </div>
+</div>
 
-    <!-- ===== SIMULATE PAGE ===== -->
-    <div class="page-section" id="simulate">
+<!-- SIMULATE -->
+<div class="page-section" id="simulate">
 <div class="simulate-page">
     <!-- 顶部统计栏 -->
     <div class="stats-bar">
@@ -3092,11 +3090,10 @@ p { color: var(--snow-dim); }
       <div class="step-counter" id="stepCounter">0 / 0</div>
     </div>
   </div>
-    </div>
-  </main>
+</div>
+</main>
 
-  <script>
-/* ===== ENGINE ===== */
+<script>
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined'
     ? module.exports = factory()
@@ -4474,7 +4471,6 @@ p { color: var(--snow-dim); }
   };
 });
 
-/* ===== DATA ===== */
 /**
  * ECHO 模拟器 — 共享数据层
  * 包含用户、资产、验证事件、规则模板的模拟数据
@@ -4882,7 +4878,7 @@ const DataUtils = {
 })(typeof globalThis !== 'undefined' ? globalThis : window);
 
 
-/* ===== HOME SCRIPTS ===== */
+/* HOME SCRIPTS */
 
     /**
      * ECHO首页 — 墨色粒子星云系统
@@ -5121,7 +5117,7 @@ const DataUtils = {
     })();
   
 
-/* ===== RIGHTS SCRIPTS ===== */
+/* RIGHTS SCRIPTS */
 
 // ===== 常量与数据 =====
 const RINGS = [
@@ -5535,7 +5531,7 @@ function init() {
 init();
 
 
-/* ===== GRAPH SCRIPTS ===== */
+/* GRAPH SCRIPTS */
 
 
 // ==================== 模拟数据 ====================
@@ -6117,7 +6113,7 @@ window.addEventListener('resize', () => {
 });
 
 
-/* ===== SHI SCRIPTS ===== */
+/* SHI SCRIPTS */
 
     // ========================
     // 模拟数据
@@ -6392,7 +6388,7 @@ window.addEventListener('resize', () => {
     updateDashboard('song_spring');
   
 
-/* ===== MARKET SCRIPTS ===== */
+/* MARKET SCRIPTS */
 
     // ========================
     // 模拟数据
@@ -6697,7 +6693,7 @@ window.addEventListener('resize', () => {
     renderGrid();
   
 
-/* ===== SIMULATE SCRIPTS ===== */
+/* SIMULATE SCRIPTS */
 
 
     // ========================
@@ -7268,15 +7264,14 @@ window.addEventListener('resize', () => {
     init();
   
 
-/* ===== APP ROUTER ===== */
-const pageMap = { home:1, rights:1, graph:1, shi:1, market:1, simulate:1 };
+/* ROUTER */
+const pageMap = {home:1, rights:1, graph:1, shi:1, market:1, simulate:1};
 let currentPage = 'home';
-
 function navTo(page) {
   if (page === currentPage) return false;
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-  const target = document.getElementById(page);
-  if (target) target.classList.add('active');
+  const t = document.getElementById(page);
+  if (t) t.classList.add('active');
   document.querySelectorAll('.nav-item').forEach(item => {
     item.classList.toggle('active', item.dataset.page === page);
   });
@@ -7285,31 +7280,22 @@ function navTo(page) {
   window.dispatchEvent(new Event('resize'));
   return false;
 }
-
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
   const hash = window.location.hash.slice(1) || 'home';
-  const target = document.getElementById(hash);
-  if (target && pageMap[hash]) {
-    target.classList.add('active');
-    currentPage = hash;
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.classList.toggle('active', item.dataset.page === hash);
-    });
-  } else {
-    document.getElementById('home').classList.add('active');
-  }
+  const t = document.getElementById(hash);
+  if (t && pageMap[hash]) { t.classList.add('active'); currentPage = hash; }
+  else { document.getElementById('home').classList.add('active'); }
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.page === currentPage);
+  });
 });
-
 document.addEventListener('keydown', (e) => {
   const pages = ['home','rights','graph','shi','market','simulate'];
   const idx = pages.indexOf(currentPage);
-  if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-    navTo(pages[(idx + 1) % pages.length]);
-  } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-    navTo(pages[(idx - 1 + pages.length) % pages.length]);
-  }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowRight') navTo(pages[(idx+1)%pages.length]);
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') navTo(pages[(idx-1+pages.length)%pages.length]);
 });
-  </script>
+</script>
 </body>
 </html>
