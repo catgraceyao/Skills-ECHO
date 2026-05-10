@@ -1,0 +1,385 @@
+/* ==================== ECHO 东方美学基础样式 ==================== */
+/* 文件名: base.css */
+/* 版本: v2.0 */
+
+/* ===== 字体 ===== */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+:root {
+  /* ===== 墨色系列 ===== */
+  --ink-black: #0c0c0e;
+  --ink-dark: #1a1a1e;
+  --ink-mid: #2a2a30;
+  --ink-light: #4a4a52;
+  --ink-faint: #6a6a72;
+  --ink-ghost: #8a8a90;
+  --snow: #f0f0e8;
+  --snow-dim: #d0d0c8;
+
+  /* ===== 矿物点缀色 ===== */
+  --cinnabar: #c45c48;
+  --azurite: #4a90a4;
+  --malachite: #5a9a6e;
+  --orpiment: #c8a84c;
+  --ochre: #8b6914;
+  --indigo: #2c3e50;
+
+  /* ===== 生命阶段 ===== */
+  --stage-hidden: #0c0c0e;
+  --stage-emerge: #4a90a4;
+  --stage-grow: #5a9a6e;
+  --stage-great: #c8a84c;
+  --stage-transform: #c45c48;
+
+  /* ===== 尺寸 ===== */
+  --nav-width: 64px;
+  --panel-width: 360px;
+  --header-height: 56px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+
+  /* ===== 阴影 ===== */
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  --glow-azurite: 0 0 20px rgba(74,144,164,0.3);
+  --glow-malachite: 0 0 20px rgba(90,154,110,0.3);
+  --glow-orpiment: 0 0 20px rgba(200,168,76,0.3);
+
+  /* ===== 过渡 ===== */
+  --ease-ink: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-brush: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-unroll: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ===== 全局重置 ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--snow);
+  background: var(--ink-black);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== 宣纸纹理背景 ===== */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* ===== 排版 ===== */
+h1, h2, h3, h4 {
+  font-family: 'Noto Serif SC', 'STKaiti', 'KaiTi', serif;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+h1 { font-size: 28px; }
+h2 { font-size: 22px; }
+h3 { font-size: 18px; }
+h4 { font-size: 16px; }
+
+p { color: var(--snow-dim); }
+
+/* ===== 滚动条 ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--ink-dark); }
+::-webkit-scrollbar-thumb { background: var(--ink-mid); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-light); }
+
+/* ===== 页面布局 ===== */
+.page-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  z-index: 1;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ===== 面板 ===== */
+.panel {
+  background: var(--ink-dark);
+  border: 1px solid var(--ink-mid);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(8px);
+}
+
+.panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--ink-mid);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+}
+
+/* ===== 印章风格标签 ===== */
+.seal-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border: 2px solid;
+  border-radius: var(--radius-sm);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.seal-tag.hidden { border-color: var(--stage-hidden); color: var(--ink-ghost); }
+.seal-tag.emerge { border-color: var(--stage-emerge); color: var(--stage-emerge); }
+.seal-tag.grow { border-color: var(--stage-grow); color: var(--stage-grow); }
+.seal-tag.great { border-color: var(--stage-great); color: var(--stage-great); }
+.seal-tag.transform { border-color: var(--stage-transform); color: var(--stage-transform); }
+
+/* ===== 按钮 ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--ink-mid);
+  border-radius: var(--radius-sm);
+  background: var(--ink-dark);
+  color: var(--snow);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-ink);
+}
+
+.btn:hover {
+  border-color: var(--azurite);
+  box-shadow: var(--glow-azurite);
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--azurite);
+  border-color: var(--azurite);
+  color: var(--ink-black);
+}
+
+.btn-primary:hover {
+  background: #5aa0b4;
+  box-shadow: 0 0 16px rgba(74,144,164,0.4);
+}
+
+/* ===== 表单 ===== */
+.select, .input {
+  padding: 8px 12px;
+  border: 1px solid var(--ink-mid);
+  border-radius: var(--radius-sm);
+  background: var(--ink-black);
+  color: var(--snow);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.select:focus, .input:focus {
+  border-color: var(--azurite);
+}
+
+/* ===== 工具提示 ===== */
+.tooltip {
+  position: absolute;
+  padding: 8px 14px;
+  background: var(--ink-dark);
+  border: 1px solid var(--ink-mid);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--snow);
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: var(--shadow-md);
+}
+
+/* ===== 进度条 ===== */
+.ink-progress {
+  width: 100%;
+  height: 8px;
+  background: var(--ink-mid);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.ink-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s var(--ease-brush);
+  position: relative;
+}
+
+.ink-progress-fill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.1));
+}
+
+/* ===== 分润记录项 ===== */
+.revenue-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(42,42,48,0.5);
+}
+
+.revenue-item:last-child { border-bottom: none; }
+
+.revenue-amount {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--orpiment);
+}
+
+/* ===== 事件类型标签 ===== */
+.event-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.event-badge.reference { background: rgba(138,138,144,0.2); color: var(--ink-ghost); }
+.event-badge.remix { background: rgba(90,154,110,0.2); color: var(--malachite); }
+.event-badge.integrate { background: rgba(200,168,76,0.2); color: var(--orpiment); }
+.event-badge.fork { background: rgba(196,92,72,0.2); color: var(--cinnabar); }
+
+/* ===== 四权档位显示 ===== */
+.rights-display {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 16px;
+  align-items: center;
+}
+
+.rights-label {
+  font-size: 13px;
+  color: var(--ink-ghost);
+  font-weight: 500;
+}
+
+.rights-value {
+  display: flex;
+  gap: 4px;
+}
+
+.rights-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  border: 2px solid;
+}
+
+.rights-dot.active {
+  background: var(--azurite);
+  border-color: var(--azurite);
+  color: var(--ink-black);
+}
+
+.rights-dot.inactive {
+  border-color: var(--ink-mid);
+  color: var(--ink-faint);
+}
+
+/* ===== 时间轴 ===== */
+.timeline-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--ink-mid);
+  border-radius: 2px;
+  outline: none;
+}
+
+.timeline-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--azurite);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(74,144,164,0.5);
+  border: 2px solid var(--snow);
+}
+
+/* ===== 筛选器 ===== */
+.filter-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  padding: 4px 12px;
+  border: 1px solid var(--ink-mid);
+  border-radius: 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  color: var(--ink-ghost);
+}
+
+.filter-chip:hover { border-color: var(--ink-light); color: var(--snow); }
+
+.filter-chip.active {
+  border-color: var(--azurite);
+  background: rgba(74,144,164,0.15);
+  color: var(--azurite);
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+  :root { --panel-width: 280px; }
+  .panel-header { padding: 12px 16px; }
+  .panel-body { padding: 12px 16px; }
+}

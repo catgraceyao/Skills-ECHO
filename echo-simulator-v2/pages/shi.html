@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECHO — 势体系</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink-black: #0c0c0e; --ink-deep: #1a1a1e; --ink-mid: #2a2a30;
+      --ink-light: #8a8a90; --ink-rice: #f0f0e8;
+      --cinnabar: #c45c48; --stone-blue: #4a90a4; --stone-green: #5a9a6e;
+      --vine-yellow: #c8a84c; --ochre: #8b6914; --indigo: #2c3e50;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: var(--ink-black); color: var(--ink-rice);
+      width: 100%; height: 100vh; overflow: hidden;
+    }
+    
+    .shi-page {
+      display: flex; height: 100vh; width: 100%;
+    }
+    
+    /* 左侧势位仪表盘 */
+    .dashboard {
+      width: 280px; flex-shrink: 0;
+      background: linear-gradient(180deg, var(--ink-deep), var(--ink-black));
+      border-right: 1px solid var(--ink-mid);
+      padding: 20px;
+      display: flex; flex-direction: column;
+      gap: 16px; overflow-y: auto;
+    }
+    
+    .dash-title {
+      font-size: 1.1rem; font-weight: 700;
+      letter-spacing: 0.2em; color: var(--stone-blue);
+      padding-bottom: 12px; border-bottom: 1px solid var(--ink-mid);
+    }
+    
+    .asset-selector {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .asset-selector label {
+      font-size: 0.75rem; color: var(--ink-light); letter-spacing: 0.1em;
+    }
+    .asset-selector select {
+      background: var(--ink-deep); border: 1px solid var(--ink-mid);
+      color: var(--ink-rice); padding: 8px 12px;
+      border-radius: 6px; font-size: 0.85rem; cursor: pointer;
+    }
+    .asset-selector select:focus {
+      outline: none; border-color: var(--stone-blue);
+    }
+    
+    /* 势位分数 */
+    .position-score {
+      background: rgba(42,42,48,0.5); border-radius: 12px;
+      padding: 16px; text-align: center;
+    }
+    .score-value {
+      font-size: 3rem; font-weight: 700;
+      background: linear-gradient(135deg, var(--stone-blue), var(--stone-green));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      line-height: 1;
+    }
+    .score-label {
+      font-size: 0.7rem; color: var(--ink-light); margin-top: 4px;
+      letter-spacing: 0.15em;
+    }
+    
+    /* 生命阶段 */
+    .life-stage {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px; border-radius: 8px;
+      background: rgba(42,42,48,0.3); border: 1px solid var(--ink-mid);
+    }
+    .stage-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .stage-name {
+      font-size: 0.9rem; font-weight: 500;
+    }
+    .stage-desc {
+      font-size: 0.7rem; color: var(--ink-light);
+    }
+    
+    /* 三维指标 */
+    .dimensions {
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .dim-row {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .dim-label {
+      width: 60px; font-size: 0.75rem; color: var(--ink-light);
+      text-align: right;
+    }
+    .dim-bar-bg {
+      flex: 1; height: 8px; background: var(--ink-mid);
+      border-radius: 4px; overflow: hidden;
+    }
+    .dim-bar-fill {
+      height: 100%; border-radius: 4px;
+      transition: width 0.6s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .dim-value {
+      width: 30px; font-size: 0.75rem; color: var(--ink-light);
+      text-align: right;
+    }
+    
+    /* 势图接管面板 */
+    .takeover-panel {
+      background: rgba(42,42,48,0.3); border-radius: 8px;
+      padding: 12px; border: 1px solid var(--ink-mid);
+    }
+    .takeover-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px;
+    }
+    .takeover-title {
+      font-size: 0.85rem; font-weight: 500; color: var(--vine-yellow);
+    }
+    .takeover-toggle {
+      position: relative; width: 40px; height: 20px;
+      background: var(--ink-mid); border-radius: 10px; cursor: pointer;
+      transition: background 0.3s;
+    }
+    .takeover-toggle.on { background: var(--stone-green); }
+    .takeover-toggle::after {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--ink-rice); top: 2px; left: 2px;
+      transition: transform 0.3s;
+    }
+    .takeover-toggle.on::after { transform: translateX(20px); }
+    
+    .takeover-rule {
+      font-size: 0.75rem; color: var(--ink-light); line-height: 1.6;
+      padding: 8px; background: rgba(196,92,72,0.1);
+      border-radius: 6px; border-left: 3px solid var(--cinnabar);
+    }
+    .takeover-rule strong { color: var(--cinnabar); }
+    
+    /* 中央山水长卷 */
+    .scroll-view {
+      flex: 1; position: relative; overflow: hidden;
+    }
+    #landscapeCanvas {
+      position: absolute; inset: 0;
+    }
+    
+    /* 浮层信息 */
+    .float-info {
+      position: absolute; top: 20px; right: 20px;
+      background: rgba(12,12,14,0.9); backdrop-filter: blur(8px);
+      border: 1px solid var(--ink-mid); border-radius: 12px;
+      padding: 16px; width: 220px;
+      opacity: 0; transform: translateY(-10px);
+      transition: all 0.3s; pointer-events: none;
+    }
+    .float-info.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .float-info h3 {
+      font-size: 0.9rem; color: var(--stone-blue); margin-bottom: 8px;
+    }
+    .float-info .info-row {
+      display: flex; justify-content: space-between;
+      font-size: 0.75rem; padding: 4px 0;
+      border-bottom: 1px solid rgba(42,42,48,0.5);
+    }
+    .float-info .info-label { color: var(--ink-light); }
+    .float-info .info-value { color: var(--ink-rice); }
+    
+    /* 底部事件流 */
+    .event-stream {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 120px; background: linear-gradient(0deg, var(--ink-black), transparent);
+      padding: 12px 20px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .event-stream-title {
+      font-size: 0.75rem; color: var(--ink-light); letter-spacing: 0.15em;
+    }
+    .event-list {
+      display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px;
+    }
+    .event-item {
+      flex-shrink: 0; padding: 8px 12px;
+      background: rgba(42,42,48,0.5); border-radius: 8px;
+      border: 1px solid var(--ink-mid); min-width: 160px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .event-item:hover {
+      border-color: var(--stone-blue); background: rgba(74,144,164,0.1);
+    }
+    .event-item .evt-time {
+      font-size: 0.65rem; color: var(--ink-light);
+    }
+    .event-item .evt-type {
+      font-size: 0.8rem; color: var(--stone-blue); margin-top: 2px;
+    }
+    .event-item .evt-note {
+      font-size: 0.7rem; color: var(--ink-light); margin-top: 2px;
+    }
+    
+    /* 图例 */
+    .legend {
+      position: absolute; top: 20px; left: 20px;
+      background: rgba(12,12,14,0.8); backdrop-filter: blur(8px);
+      border: 1px solid var(--ink-mid); border-radius: 8px;
+      padding: 12px;
+    }
+    .legend-title {
+      font-size: 0.75rem; color: var(--ink-light); margin-bottom: 8px;
+      letter-spacing: 0.1em;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.75rem; padding: 3px 0;
+    }
+    .legend-color {
+      width: 12px; height: 12px; border-radius: 3px;
+    }
+    
+    /* 元规则提示 */
+    .meta-tip {
+      position: absolute; bottom: 140px; left: 20px;
+      background: rgba(12,12,14,0.8); backdrop-filter: blur(8px);
+      border: 1px solid var(--ink-mid); border-radius: 8px;
+      padding: 12px; max-width: 200px;
+    }
+    .meta-tip-title {
+      font-size: 0.75rem; color: var(--vine-yellow); margin-bottom: 4px;
+    }
+    .meta-tip-text {
+      font-size: 0.7rem; color: var(--ink-light); line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="shi-page">
+    <!-- 左侧势位仪表盘 -->
+    <aside class="dashboard">
+      <div class="dash-title">势位仪表盘</div>
+      
+      <div class="asset-selector">
+        <label>选择资产</label>
+        <select id="assetSelect">
+          <option value="song_spring">春日序曲 — Alice</option>
+          <option value="video_tech">量子计算科普 — Bob</option>
+          <option value="code_audio">EchoAudio工具库 — Charlie</option>
+          <option value="photo_night">城市夜景 — Diana</option>
+          <option value="remix_spring">春日序曲·Remix — Diana</option>
+          <option value="app_podcast">播客制作套件 — Bob</option>
+          <option value="ai_model">氛围音乐生成模型 — Mallory</option>
+        </select>
+      </div>
+      
+      <div class="position-score">
+        <div class="score-value" id="scoreValue">45</div>
+        <div class="score-label">势位分数 (0-100)</div>
+      </div>
+      
+      <div class="life-stage" id="lifeStage">
+        <div class="stage-dot" style="background: var(--stone-blue);"></div>
+        <div>
+          <div class="stage-name" style="color: var(--stone-blue);">显现</div>
+          <div class="stage-desc">开始被引用，建议开放</div>
+        </div>
+      </div>
+      
+      <div class="dimensions">
+        <div class="dim-row">
+          <div class="dim-label">时间密度</div>
+          <div class="dim-bar-bg">
+            <div class="dim-bar-fill" id="dimTime" style="width: 30%; background: var(--stone-blue);"></div>
+          </div>
+          <div class="dim-value" id="dimTimeVal">30</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">中心性</div>
+          <div class="dim-bar-bg">
+            <div class="dim-bar-fill" id="dimCenter" style="width: 50%; background: var(--stone-green);"></div>
+          </div>
+          <div class="dim-value" id="dimCenterVal">50</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">语义跨越</div>
+          <div class="dim-bar-bg">
+            <div class="dim-bar-fill" id="dimSemantic" style="width: 20%; background: var(--vine-yellow);"></div>
+          </div>
+          <div class="dim-value" id="dimSemanticVal">20</div>
+        </div>
+      </div>
+      
+      <div class="takeover-panel">
+        <div class="takeover-header">
+          <div class="takeover-title">势图接管</div>
+          <div class="takeover-toggle on" id="takeoverToggle" onclick="toggleTakeover()"></div>
+        </div>
+        <div class="takeover-rule">
+          <strong>只开放，不收紧</strong><br>
+          新配置 = 旧配置 ∪ 建议配置<br>
+          一旦开放的权力不会被自动收回
+        </div>
+      </div>
+      
+      <div style="font-size: 0.7rem; color: var(--ink-light); line-height: 1.6; margin-top: auto;">
+        <div style="color: var(--vine-yellow); margin-bottom: 4px;">元规则</div>
+        <div>势位即边界 — 承诺如何适应变化</div>
+        <div style="margin-top: 8px; font-size: 0.65rem; opacity: 0.7;">
+          P = 0.4×T + 0.4×S + 0.2×C
+        </div>
+      </div>
+    </aside>
+    
+    <!-- 中央山水长卷 -->
+    <div class="scroll-view">
+      <canvas id="landscapeCanvas"></canvas>
+      
+      <!-- 图例 -->
+      <div class="legend">
+        <div class="legend-title">生命阶段</div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #2a2a30;"></div>
+          <span>潜藏</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--stone-blue);"></div>
+          <span>显现</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--stone-green);"></div>
+          <span>生长</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--vine-yellow);"></div>
+          <span>大成</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--cinnabar);"></div>
+          <span>转化</span>
+        </div>
+      </div>
+      
+      <!-- 元规则提示 -->
+      <div class="meta-tip">
+        <div class="meta-tip-title">生态免疫系统</div>
+        <div class="meta-tip-text">
+          势体系是ECHO的免疫系统，让生长有方向，让开放有边界。
+          它不是限制创作者，而是防止公地悲剧。
+        </div>
+      </div>
+      
+      <!-- 浮层信息 -->
+      <div class="float-info" id="floatInfo">
+        <h3 id="floatName">春日序曲</h3>
+        <div class="info-row"><span class="info-label">创作者</span><span class="info-value" id="floatCreator">Alice</span></div>
+        <div class="info-row"><span class="info-label">势位</span><span class="info-value" id="floatScore">45</span></div>
+        <div class="info-row"><span class="info-label">阶段</span><span class="info-value" id="floatStage">显现</span></div>
+        <div class="info-row"><span class="info-label">用权</span><span class="info-value" id="floatUse">己·亲·约</span></div>
+      </div>
+      
+      <!-- 底部事件流 -->
+      <div class="event-stream">
+        <div class="event-stream-title">验证事件流</div>
+        <div class="event-list" id="eventList"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // ========================
+    // 模拟数据
+    // ========================
+    const assetData = {
+      song_spring: { name: '春日序曲', creator: 'Alice', score: 68, stage: 2, stageName: '生长', color: '#5a9a6e', dims: { time: 60, center: 70, semantic: 40 }, events: ['登记', 'Bob观看', 'Bob购买', '引用视频', 'Diana观看', 'Diana Remix', '势图接管', 'AI申请法档'], use: '己·亲·约·法' },
+      video_tech: { name: '量子计算科普', creator: 'Bob', score: 35, stage: 1, stageName: '显现', color: '#4a90a4', dims: { time: 40, center: 30, semantic: 20 }, events: ['登记', '观看x56', '下载x23'], use: '公' },
+      code_audio: { name: 'EchoAudio工具库', creator: 'Charlie', score: 72, stage: 2, stageName: '生长', color: '#5a9a6e', dims: { time: 80, center: 65, semantic: 55 }, events: ['登记', '下载x312', 'Fork播客工具', '势图接管'], use: '公' },
+      photo_night: { name: '城市夜景', creator: 'Diana', score: 25, stage: 1, stageName: '显现', color: '#4a90a4', dims: { time: 25, center: 20, semantic: 30 }, events: ['登记', '购买x12', 'Remix x3'], use: '约' },
+      remix_spring: { name: '春日序曲·Remix', creator: 'Diana', score: 42, stage: 1, stageName: '显现', color: '#4a90a4', dims: { time: 45, center: 35, semantic: 50 }, events: ['Remix', '购买x67', '引用'], use: '己·亲·约' },
+      app_podcast: { name: '播客制作套件', creator: 'Bob', score: 55, stage: 2, stageName: '生长', color: '#5a9a6e', dims: { time: 55, center: 50, semantic: 60 }, events: ['Fork', '购买x23', '改进x2'], use: '公·法' },
+      ai_model: { name: '氛围音乐生成模型', creator: 'Mallory', score: 88, stage: 3, stageName: '大成', color: '#c8a84c', dims: { time: 90, center: 85, semantic: 80 }, events: ['法档授权', '发布', '购买x156', '广泛使用'], use: '公' }
+    };
+    
+    const stageColors = ['#2a2a30', '#4a90a4', '#5a9a6e', '#c8a84c', '#c45c48'];
+    const stageNames = ['潜藏', '显现', '生长', '大成', '转化'];
+    const stageDescs = ['无验证事件，独立存在', '开始被引用，建议开放', '中度连接，自动开放', '高度连接，锁定最低档', '周期尾声，建议完全开放'];
+    
+    // ========================
+    // Canvas 山水长卷
+    // ========================
+    const canvas = document.getElementById('landscapeCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+    let time = 0;
+    
+    function resize() {
+      width = canvas.width = canvas.parentElement.clientWidth;
+      height = canvas.height = canvas.parentElement.clientHeight;
+      initParticles();
+    }
+    
+    function initParticles() {
+      particles = [];
+      for (let i = 0; i < 80; i++) {
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size: Math.random() * 3 + 1,
+          speed: Math.random() * 0.3 + 0.1,
+          opacity: Math.random() * 0.5 + 0.2,
+          phase: Math.random() * Math.PI * 2
+        });
+      }
+    }
+    
+    // 绘制简化的水墨山水轮廓
+    function drawLandscape() {
+      ctx.fillStyle = '#0c0c0e';
+      ctx.fillRect(0, 0, width, height);
+      
+      // 背景渐变层 — 从下到上=潜藏→转化
+      const grad = ctx.createLinearGradient(0, height, 0, 0);
+      grad.addColorStop(0, 'rgba(42,42,48,0.3)');   // 底部=潜藏
+      grad.addColorStop(0.25, 'rgba(74,144,164,0.15)'); // 显现
+      grad.addColorStop(0.5, 'rgba(90,154,110,0.15)');   // 生长
+      grad.addColorStop(0.75, 'rgba(200,168,76,0.15)');  // 大成
+      grad.addColorStop(1, 'rgba(196,92,72,0.1)');       // 转化
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+      
+      // 山水轮廓 — 多层贝塞尔曲线模拟山脉
+      const layers = [
+        { y: height * 0.85, color: 'rgba(42,42,48,0.4)', amp: 60, freq: 0.003 },
+        { y: height * 0.7, color: 'rgba(74,144,164,0.2)', amp: 50, freq: 0.004 },
+        { y: height * 0.55, color: 'rgba(90,154,110,0.2)', amp: 40, freq: 0.005 },
+        { y: height * 0.4, color: 'rgba(200,168,76,0.15)', amp: 30, freq: 0.006 },
+        { y: height * 0.25, color: 'rgba(196,92,72,0.1)', amp: 20, freq: 0.007 }
+      ];
+      
+      layers.forEach((layer, idx) => {
+        ctx.beginPath();
+        ctx.moveTo(0, height);
+        for (let x = 0; x <= width; x += 5) {
+          const y = layer.y - Math.abs(Math.sin(x * layer.freq + time * 0.001 + idx) * layer.amp);
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(width, height);
+        ctx.closePath();
+        ctx.fillStyle = layer.color;
+        ctx.fill();
+      });
+      
+      // 粒子效果 — 墨点飘散
+      particles.forEach(p => {
+        p.y -= p.speed;
+        p.x += Math.sin(time * 0.01 + p.phase) * 0.3;
+        if (p.y < 0) { p.y = height; p.x = Math.random() * width; }
+        
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(240,240,232,${p.opacity * 0.3})`;
+        ctx.fill();
+      });
+      
+      // 绘制资产节点 — 如花朵/叶子分布在山水长卷中
+      const assetIds = Object.keys(assetData);
+      assetIds.forEach((id, idx) => {
+        const data = assetData[id];
+        const yPos = height - (data.score / 100) * height * 0.8 - height * 0.1;
+        const xPos = (width / assetIds.length) * idx + (width / assetIds.length) / 2;
+        
+        // 节点光晕
+        const glow = ctx.createRadialGradient(xPos, yPos, 0, xPos, yPos, 30);
+        glow.addColorStop(0, data.color + '44');
+        glow.addColorStop(1, 'transparent');
+        ctx.fillStyle = glow;
+        ctx.fillRect(xPos - 30, yPos - 30, 60, 60);
+        
+        // 节点本体 — 简化印章样式
+        ctx.beginPath();
+        ctx.arc(xPos, yPos, 12, 0, Math.PI * 2);
+        ctx.fillStyle = data.color;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(240,240,232,0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // 名称标签
+        ctx.fillStyle = 'rgba(240,240,232,0.8)';
+        ctx.font = '11px "Noto Sans SC", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(data.name, xPos, yPos + 28);
+        
+        // 分数标签
+        ctx.fillStyle = data.color;
+        ctx.font = '10px "Noto Sans SC", sans-serif';
+        ctx.fillText(data.score, xPos, yPos - 20);
+        
+        // 连接线 — 如果有父资产
+        if (data.parentId && assetData[data.parentId]) {
+          const parent = assetData[data.parentId];
+          const parentIdx = assetIds.indexOf(data.parentId);
+          const parentX = (width / assetIds.length) * parentIdx + (width / assetIds.length) / 2;
+          const parentY = height - (parent.score / 100) * height * 0.8 - height * 0.1;
+          
+          ctx.beginPath();
+          ctx.moveTo(parentX, parentY);
+          ctx.quadraticCurveTo(
+            (parentX + xPos) / 2, (parentY + yPos) / 2 - 30,
+            xPos, yPos
+          );
+          ctx.strokeStyle = data.color + '33';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      });
+      
+      // 阶段分界线
+      for (let i = 1; i < 5; i++) {
+        const y = height - (i * 20 / 100) * height * 0.8 - height * 0.1;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.strokeStyle = stageColors[i] + '22';
+        ctx.setLineDash([8, 8]);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // 阶段标签
+        ctx.fillStyle = stageColors[i] + '66';
+        ctx.font = '12px "Noto Sans SC", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(stageNames[i], 10, y - 5);
+      }
+      
+      time++;
+      requestAnimationFrame(drawLandscape);
+    }
+    
+    // ========================
+    // 交互逻辑
+    // ========================
+    const assetSelect = document.getElementById('assetSelect');
+    const scoreValue = document.getElementById('scoreValue');
+    const lifeStage = document.getElementById('lifeStage');
+    const dimTime = document.getElementById('dimTime');
+    const dimTimeVal = document.getElementById('dimTimeVal');
+    const dimCenter = document.getElementById('dimCenter');
+    const dimCenterVal = document.getElementById('dimCenterVal');
+    const dimSemantic = document.getElementById('dimSemantic');
+    const dimSemanticVal = document.getElementById('dimSemanticVal');
+    const eventList = document.getElementById('eventList');
+    const floatInfo = document.getElementById('floatInfo');
+    
+    function updateDashboard(assetId) {
+      const data = assetData[assetId];
+      if (!data) return;
+      
+      scoreValue.textContent = data.score;
+      scoreValue.style.background = `linear-gradient(135deg, ${data.color}, var(--stone-green))`;
+      scoreValue.style.webkitBackgroundClip = 'text';
+      scoreValue.style.webkitTextFillColor = 'transparent';
+      
+      lifeStage.innerHTML = `
+        <div class="stage-dot" style="background: ${data.color};"></div>
+        <div>
+          <div class="stage-name" style="color: ${data.color};">${data.stageName}</div>
+          <div class="stage-desc">${stageDescs[data.stage]}</div>
+        </div>
+      `;
+      
+      dimTime.style.width = data.dims.time + '%';
+      dimTimeVal.textContent = data.dims.time;
+      dimCenter.style.width = data.dims.center + '%';
+      dimCenterVal.textContent = data.dims.center;
+      dimSemantic.style.width = data.dims.semantic + '%';
+      dimSemanticVal.textContent = data.dims.semantic;
+      
+      // 更新事件流
+      eventList.innerHTML = data.events.map((evt, i) => `
+        <div class="event-item" onclick="highlightEvent(${i})">
+          <div class="evt-time">T+${i}</div>
+          <div class="evt-type">${evt}</div>
+          <div class="evt-note">${data.name}</div>
+        </div>
+      `).join('');
+    }
+    
+    assetSelect.addEventListener('change', (e) => {
+      updateDashboard(e.target.value);
+    });
+    
+    function toggleTakeover() {
+      const toggle = document.getElementById('takeoverToggle');
+      toggle.classList.toggle('on');
+    }
+    
+    function highlightEvent(idx) {
+      // 事件高亮效果
+    }
+    
+    // Canvas点击检测
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const assetIds = Object.keys(assetData);
+      for (let idx = 0; idx < assetIds.length; idx++) {
+        const id = assetIds[idx];
+        const data = assetData[id];
+        const yPos = height - (data.score / 100) * height * 0.8 - height * 0.1;
+        const xPos = (width / assetIds.length) * idx + (width / assetIds.length) / 2;
+        
+        const dist = Math.sqrt((x - xPos) ** 2 + (y - yPos) ** 2);
+        if (dist < 30) {
+          assetSelect.value = id;
+          updateDashboard(id);
+          showFloatInfo(data);
+          break;
+        }
+      }
+    });
+    
+    function showFloatInfo(data) {
+      document.getElementById('floatName').textContent = data.name;
+      document.getElementById('floatCreator').textContent = data.creator;
+      document.getElementById('floatScore').textContent = data.score;
+      document.getElementById('floatStage').textContent = data.stageName;
+      document.getElementById('floatUse').textContent = data.use;
+      floatInfo.classList.add('show');
+      setTimeout(() => floatInfo.classList.remove('show'), 4000);
+    }
+    
+    // 初始化
+    window.addEventListener('resize', resize);
+    resize();
+    drawLandscape();
+    updateDashboard('song_spring');
+  </script>
+</body>
+</html>

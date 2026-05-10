@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>四权六档 · 罗盘配置器 | ECHO东方美学模拟器</title>
+<style>
+/* ===== 基础重置与CSS变量 ===== */
+:root {
+  --ink-black: #0c0c0e;
+  --ink-deep: #1a1a1e;
+  --ink-mid: #2a2a30;
+  --ink-light: #8a8a90;
+  --paper: #f0f0e8;
+  --cinnabar: #c45c48;
+  --stone-blue: #4a90a4;
+  --stone-green: #5a9a6e;
+  --rattan: #c8a84c;
+  --ochre: #8b6914;
+  --indigo: #2c3e50;
+  --shadow-paper: rgba(12,12,14,0.6);
+}
+* { box-sizing: border-box; margin:0; padding:0; }
+body {
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--ink-black);
+  color: var(--paper);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ===== 宣纸纹理背景 ===== */
+body::before {
+  content:"";
+  position:fixed; inset:0;
+  background: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:0;
+}
+
+/* ===== 导航 ===== */
+.nav-sidebar {
+  position:fixed; left:0; top:0; width:60px; height:100vh;
+  background: var(--ink-deep);
+  border-right:1px solid var(--ink-mid);
+  display:flex; flex-direction:column; align-items:center; padding-top:24px; z-index:100;
+}
+.nav-sidebar a {
+  writing-mode:vertical-rl; text-decoration:none; color:var(--ink-light);
+  font-size:15px; letter-spacing:4px; padding:16px 0; transition:color 0.3s;
+  font-family: "STXingkai", "KaiTi", serif;
+}
+.nav-sidebar a:hover, .nav-sidebar a.active { color:var(--paper); }
+.nav-sidebar a.active { text-shadow:0 0 12px rgba(240,240,232,0.3); }
+
+/* ===== 主布局 ===== */
+.main-wrap { margin-left:60px; min-height:100vh; position:relative; z-index:1; }
+.page-header {
+  padding:24px 32px 8px; border-bottom:1px solid var(--ink-mid);
+}
+.page-title {
+  font-family: "STXingkai", "KaiTi", serif; font-size:32px; color:var(--paper);
+  letter-spacing:6px; margin-bottom:4px;
+}
+.page-subtitle { font-size:13px; color:var(--ink-light); letter-spacing:2px; }
+
+/* ===== 主体三栏布局 ===== */
+.content-grid {
+  display:grid;
+  grid-template-columns: 1fr 360px;
+  grid-template-rows: 1fr auto;
+  grid-template-areas:
+    "compass market"
+    "preview meta";
+  gap:20px; padding:20px 32px 32px;
+  min-height: calc(100vh - 100px);
+}
+@media (max-width:1200px) {
+  .content-grid { grid-template-columns:1fr; grid-template-areas:"compass" "market" "preview" "meta"; }
+}
+
+/* ===== 罗盘区域 ===== */
+.compass-area { grid-area:compass; }
+.compass-container {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background: var(--ink-deep);
+  border:1px solid var(--ink-mid);
+  border-radius:8px; padding:24px; position:relative;
+  box-shadow: inset 0 0 60px rgba(0,0,0,0.4);
+}
+.compass-svg-wrap { position:relative; width:520px; height:520px; }
+#compassSvg { width:100%; height:100%; }
+.compass-ring-label {
+  position:absolute; font-family:"STXingkai","KaiTi",serif; font-size:18px;
+  color:var(--paper); pointer-events:none; text-shadow:0 0 8px rgba(0,0,0,0.8);
+}
+
+/* ===== 档位tooltip ===== */
+.tooltip {
+  position:absolute; background:var(--ink-deep); border:1px solid var(--ink-mid);
+  border-radius:4px; padding:8px 12px; font-size:13px; color:var(--paper);
+  pointer-events:none; opacity:0; transition:opacity 0.2s; z-index:50; white-space:nowrap;
+  box-shadow:0 4px 16px var(--shadow-paper);
+}
+.tooltip.show { opacity:1; }
+
+/* ===== 配置JSON显示 ===== */
+.config-json {
+  grid-area: json; /* not used in grid, placed inside compass-area */
+  margin-top:16px; background:var(--ink-black);
+  border:1px solid var(--ink-mid); border-radius:6px;
+  padding:12px 16px; font-family:"JetBrains Mono",monospace; font-size:12px;
+  color:var(--stone-blue); max-height:120px; overflow:auto; line-height:1.6;
+}
+.config-json .json-key { color:var(--rattan); }
+.config-json .json-str { color:var(--stone-green); }
+.config-json .json-num { color:var(--cinnabar); }
+
+/* ===== 规则市场面板 ===== */
+.market-panel { grid-area:market; }
+.market-scroll {
+  background: var(--ink-deep); border:1px solid var(--ink-mid); border-radius:8px;
+  padding:20px; max-height: calc(100vh - 140px); overflow-y:auto;
+}
+.market-title {
+  font-family:"STXingkai","KaiTi",serif; font-size:22px; color:var(--rattan);
+  margin-bottom:16px; letter-spacing:3px; text-align:center;
+}
+.template-card {
+  background: var(--ink-black); border:1px solid var(--ink-mid); border-radius:6px;
+  padding:14px 16px; margin-bottom:12px; cursor:pointer;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  position:relative; overflow:hidden;
+}
+.template-card::before {
+  content:""; position:absolute; left:0; top:0; width:3px; height:100%;
+  background:var(--rattan); opacity:0; transition:opacity 0.3s;
+}
+.template-card:hover { border-color:var(--rattan); transform:translateX(4px); }
+.template-card:hover::before { opacity:1; }
+.template-card.active { border-color:var(--rattan); background:rgba(200,168,76,0.06); }
+.template-name { font-family:"STXingkai","KaiTi",serif; font-size:17px; color:var(--paper); margin-bottom:4px; }
+.template-desc { font-size:12px; color:var(--ink-light); line-height:1.5; }
+.template-badges { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.badge {
+  font-size:11px; padding:2px 8px; border-radius:3px; border:1px solid;
+  font-family:"JetBrains Mono",monospace;
+}
+.badge-use { color:var(--stone-blue); border-color:var(--stone-blue); }
+.badge-expand { color:var(--rattan); border-color:var(--rattan); }
+.badge-derive { color:var(--stone-green); border-color:var(--stone-green); }
+.badge-benefit { color:var(--cinnabar); border-color:var(--cinnabar); }
+
+/* ===== 预览区 ===== */
+.preview-area { grid-area:preview; }
+.preview-box {
+  background: var(--ink-deep); border:1px solid var(--ink-mid); border-radius:8px;
+  padding:20px;
+}
+.preview-title {
+  font-family:"STXingkai","KaiTi",serif; font-size:18px; color:var(--paper);
+  margin-bottom:16px; letter-spacing:3px;
+}
+.preview-scenarios {
+  display:grid; grid-template-columns: repeat(3, 1fr); gap:16px;
+}
+@media (max-width:900px) { .preview-scenarios { grid-template-columns:1fr; } }
+.scenario-card {
+  background:var(--ink-black); border:1px solid var(--ink-mid); border-radius:6px; padding:16px;
+  transition: border-color 0.3s;
+}
+.scenario-card:hover { border-color:var(--stone-blue); }
+.scenario-avatar {
+  width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-family:"STXingkai","KaiTi",serif; font-size:18px; color:var(--paper); margin-bottom:10px;
+  border:2px solid var(--ink-mid);
+}
+.scenario-name { font-size:14px; font-weight:500; color:var(--paper); margin-bottom:4px; }
+.scenario-action { font-size:12px; color:var(--ink-light); margin-bottom:8px; }
+.scenario-result {
+  font-size:12px; padding:6px 10px; border-radius:4px; font-family:"JetBrains Mono",monospace;
+  line-height:1.5;
+}
+.result-allow { background:rgba(90,154,110,0.12); color:var(--stone-green); border:1px solid var(--stone-green); }
+.result-deny { background:rgba(196,92,72,0.12); color:var(--cinnabar); border:1px solid var(--cinnabar); }
+.result-conditional { background:rgba(74,144,164,0.12); color:var(--stone-blue); border:1px solid var(--stone-blue); }
+
+/* ===== 元规则提示 ===== */
+.meta-rules { grid-area:meta; }
+.meta-box {
+  background: var(--ink-deep); border:1px solid var(--ink-mid); border-radius:8px;
+  padding:20px;
+}
+.meta-title {
+  font-family:"STXingkai","KaiTi",serif; font-size:18px; color:var(--paper);
+  margin-bottom:14px; letter-spacing:3px;
+}
+.meta-item {
+  display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; font-size:12px; line-height:1.6;
+  color:var(--ink-light); padding:8px; border-radius:4px; transition:background 0.2s;
+}
+.meta-item:hover { background:rgba(240,240,232,0.03); }
+.meta-num {
+  font-family:"JetBrains Mono",monospace; color:var(--rattan); font-size:13px;
+  min-width:20px; text-align:center; flex-shrink:0;
+}
+.meta-text { color:var(--paper); }
+
+/* ===== 水墨晕染动画 ===== */
+@keyframes inkSpread {
+  0% { transform:scale(0); opacity:0.8; }
+  50% { transform:scale(1.2); opacity:0.4; }
+  100% { transform:scale(1.5); opacity:0; }
+}
+.ink-ripple {
+  animation: inkSpread 0.6s ease-out forwards;
+}
+@keyframes inkError {
+  0% { opacity:0; }
+  25% { opacity:0.6; }
+  50% { opacity:0.3; }
+  75% { opacity:0.5; }
+  100% { opacity:0; }
+}
+.ink-error {
+  animation: inkError 1.2s ease-in-out;
+}
+
+/* ===== 错误提示 ===== */
+.error-toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  background:var(--cinnabar); color:var(--paper); padding:10px 24px; border-radius:4px;
+  font-size:13px; opacity:0; transition:opacity 0.3s; z-index:200; pointer-events:none;
+  box-shadow:0 4px 20px rgba(196,92,72,0.4);
+}
+.error-toast.show { opacity:1; }
+
+/* ===== 卷轴装饰 ===== */
+.scroll-ends {
+  position:relative;
+}
+.scroll-ends::before, .scroll-ends::after {
+  content:""; position:absolute; left:0; width:100%; height:4px;
+  background: linear-gradient(90deg, transparent, var(--ochre), transparent);
+  opacity:0.5;
+}
+.scroll-ends::before { top:0; }
+.scroll-ends::after { bottom:0; }
+
+/* ===== SVG 罗盘样式 ===== */
+.compass-sector { cursor:pointer; transition: opacity 0.3s; }
+.compass-sector:hover { opacity:0.85; }
+.compass-sector.selected { filter: brightness(1.3) saturate(1.2); }
+.compass-sector.error { filter: hue-rotate(-30deg) saturate(2); }
+.compass-label {
+  font-family:"STXingkai","KaiTi",serif; font-size:14px; fill:var(--paper);
+  pointer-events:none; text-anchor:middle; dominant-baseline:middle;
+  text-shadow:0 0 6px rgba(0,0,0,0.8);
+}
+.compass-ring-name {
+  font-family:"STXingkai","KaiTi",serif; font-size:16px; fill:var(--paper);
+  pointer-events:none; text-anchor:middle; dominant-baseline:middle;
+  opacity:0.6;
+}
+.compass-center-text {
+  font-family:"STXingkai","KaiTi",serif; font-size:24px; fill:var(--paper);
+  text-anchor:middle; dominant-baseline:middle; opacity:0.3;
+}
+
+/* ===== 档位legend ===== */
+.legend-bar {
+  display:flex; justify-content:center; gap:24px; margin-top:16px; flex-wrap:wrap;
+}
+.legend-item { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-light); }
+.legend-dot { width:10px; height:10px; border-radius:2px; }
+
+/* ===== 复选掩码显示 ===== */
+.mask-display {
+  margin-top:12px; text-align:center; font-family:"JetBrains Mono",monospace; font-size:13px;
+  color:var(--ink-light);
+}
+.mask-display .mask-value { color:var(--rattan); font-size:15px; }
+
+/* ===== 动画背景云雾 ===== */
+@keyframes floatCloud {
+  0%,100% { transform:translateX(0) translateY(0); }
+  33% { transform:translateX(20px) translateY(-10px); }
+  66% { transform:translateX(-10px) translateY(5px); }
+}
+.cloud-bg {
+  position:absolute; inset:0; pointer-events:none; z-index:0; opacity:0.15;
+}
+</style>
+</head>
+<body>
+
+<!-- 导航 -->
+<nav class="nav-sidebar">
+  <a href="home.html">首页</a>
+  <a href="rights.html" class="active">罗盘</a>
+  <a href="graph.html">验证图</a>
+  <a href="shi.html">势体系</a>
+  <a href="simulate.html">模拟</a>
+  <a href="market.html">市集</a>
+</nav>
+
+<!-- 主体 -->
+<div class="main-wrap">
+  <header class="page-header">
+    <h1 class="page-title">四权六档 · 罗盘配置器</h1>
+    <p class="page-subtitle">使用权生命周期网络 · 创作者语义表达系统</p>
+  </header>
+
+  <div class="content-grid">
+    <!-- 罗盘区域 -->
+    <div class="compass-area">
+      <div class="compass-container">
+        <div class="compass-svg-wrap" id="compassWrap">
+          <svg id="compassSvg" viewBox="0 0 520 520" xmlns="http://www.w3.org/2000/svg">
+            <!-- 背景云雾 -->
+            <defs>
+              <radialGradient id="gradBg" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(26,26,30,0)"/>
+                <stop offset="100%" stop-color="rgba(12,12,14,0.6)"/>
+              </radialGradient>
+              <filter id="inkGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="paperGrain">
+                <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" result="noise"/>
+                <feBlend in="SourceGraphic" in2="noise" mode="multiply" result="blend"/>
+                <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+              </filter>
+            </defs>
+            <circle cx="260" cy="260" r="250" fill="url(#gradBg)" />
+            <!-- 罗盘扇区将由JS生成 -->
+            <g id="sectorsGroup"></g>
+            <!-- 标签层 -->
+            <g id="labelsGroup"></g>
+            <!-- 中心 -->
+            <circle cx="260" cy="260" r="35" fill="var(--ink-black)" stroke="var(--ink-mid)" stroke-width="1"/>
+            <text x="260" y="260" class="compass-center-text">ECHO</text>
+          </svg>
+        </div>
+
+        <!-- legend -->
+        <div class="legend-bar">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--stone-blue)"></div>用 · 接触</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--rattan)"></div>扩 · 传播</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--stone-green)"></div>衍 · 改造</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--cinnabar)"></div>益 · 收益</div>
+        </div>
+        <div class="mask-display">
+          当前掩码：用=<span class="mask-value" id="maskUse">0</span>
+          扩=<span class="mask-value" id="maskExpand">0</span>
+          衍=<span class="mask-value" id="maskDerive">0</span>
+          益=<span class="mask-value" id="maskBenefit">0</span>
+          压缩=<span class="mask-value" id="maskCompressed">0x0000</span>
+        </div>
+      </div>
+      <div class="config-json" id="configJson">点击罗盘配置权限...</div>
+    </div>
+
+    <!-- 规则市场面板 -->
+    <div class="market-panel">
+      <div class="market-scroll scroll-ends">
+        <div class="market-title">规则模板库</div>
+        <div id="templateList"></div>
+      </div>
+    </div>
+
+    <!-- 预览区 -->
+    <div class="preview-area">
+      <div class="preview-box">
+        <div class="preview-title">效果预览 · 如果某用户做某操作</div>
+        <div class="preview-scenarios" id="previewScenarios"></div>
+      </div>
+    </div>
+
+    <!-- 元规则提示 -->
+    <div class="meta-rules">
+      <div class="meta-box scroll-ends">
+        <div class="meta-title">六条元规则</div>
+        <div id="metaRules"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 错误提示 -->
+<div class="error-toast" id="errorToast"></div>
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ===== 常量与数据 =====
+const RINGS = [
+  { name: '用', key: 'use', color: '#4a90a4', idx: 0, outerR: 250, innerR: 195 },
+  { name: '扩', key: 'expand', color: '#c8a84c', idx: 1, outerR: 190, innerR: 140 },
+  { name: '衍', key: 'derive', color: '#5a9a6e', idx: 2, outerR: 135, innerR: 85 },
+  { name: '益', key: 'benefit', color: '#c45c48', idx: 3, outerR: 80, innerR: 40 },
+];
+const LEVELS = [
+  { name: '禁', val: 0, desc: '完全禁止，无人可及' },
+  { name: '己', val: 1, desc: '仅创作者自己可用' },
+  { name: '亲', val: 2, desc: '亲友圈，礼物经济' },
+  { name: '约', val: 3, desc: '契约边界，市场交易' },
+  { name: '法', val: 4, desc: '社区自治，共同决策' },
+  { name: '公', val: 5, desc: '公共品，完全开放' },
+];
+const TEMPLATES = [
+  {
+    id: 'tpl_music_standard',
+    name: '独立音乐人标准合约',
+    desc: '允许个人收听与分享，禁止商业改编，收益归创作者',
+    config: { use: 0b0011110, expand: 0b0001110, derive: 0b0000010, benefit: 0b0000010 },
+    tags: ['音乐', '保守'],
+  },
+  {
+    id: 'tpl_gpl',
+    name: 'GPL风格开源',
+    desc: '自由使用、传播与改编，衍生作品须保持相同开放度',
+    config: { use: 0b1111111, expand: 0b1111111, derive: 0b1111111, benefit: 0b0000001 },
+    tags: ['代码', '开放'],
+  },
+  {
+    id: 'tpl_ai_data',
+    name: 'AI训练数据开放',
+    desc: '允许AI训练使用与衍生模型，要求保留数据来源声明',
+    config: { use: 0b1111111, expand: 0b0011110, derive: 0b1111111, benefit: 0b0001110 },
+    tags: ['AI', '平衡'],
+  },
+  {
+    id: 'tpl_cc_by_nc',
+    name: 'CC-BY-NC 知识共享',
+    desc: '署名-非商业性使用，允许传播与改编，禁止商业收益',
+    config: { use: 0b0111111, expand: 0b0111111, derive: 0b0111111, benefit: 0b0000010 },
+    tags: ['文字', '平衡'],
+  },
+  {
+    id: 'tpl_video_collab',
+    name: '视频协作共创',
+    desc: '开放给协作成员使用与改编，平台级传播需协商',
+    config: { use: 0b0001110, expand: 0b0000110, derive: 0b0001110, benefit: 0b0001110 },
+    tags: ['视频', '平衡'],
+  },
+  {
+    id: 'tpl_public_domain',
+    name: '完全公共领域',
+    desc: '无任何限制，任何人可做任何事',
+    config: { use: 0b1111111, expand: 0b1111111, derive: 0b1111111, benefit: 0b1111111 },
+    tags: ['通用', '开放'],
+  },
+  {
+    id: 'tpl_all_rights',
+    name: '全保留版权',
+    desc: '传统版权模式，禁止任何外部使用',
+    config: { use: 0b0000010, expand: 0b0000010, derive: 0b0000010, benefit: 0b0000010 },
+    tags: ['通用', '保守'],
+  },
+];
+const META_RULES = [
+  { num: '一', title: '初始配置不可篡改', desc: '谁有权利设定初始规则，这一点永久固化在链上。' },
+  { num: '二', title: '配置即承诺', desc: '你选择的档位不是标签，是对世界的承诺。承诺一旦发出，便在验证图中留下痕迹。' },
+  { num: '三', title: '流动即执行', desc: '不需要法院，不需要平台仲裁。当使用权在图中流动时，规则自动执行。' },
+  { num: '四', title: '衍生即继承', desc: '任何衍生作品都继承上游的配置约束。你不能比上游更封闭，但可以更开放。' },
+  { num: '五', title: '版本即历史', desc: '每一次配置变更都是历史的一部分。旧版本不会被删除，它们构成生长的年轮。' },
+  { num: '六', title: '势位即边界', desc: '势图接管时，生态的态势会为你建议边界。只开放，不收紧——这是生态的免疫原则。' },
+];
+const USERS = [
+  { id:'alice', name:'Alice', role:'creator', relation:'self' },
+  { id:'bob', name:'Bob', role:'friend', relation:'trust' },
+  { id:'charlie', name:'Charlie', role:'stranger', relation:'none' },
+];
+
+// ===== 状态 =====
+let state = {
+  use: 0b0000010,      // 默认仅己
+  expand: 0b0000010,
+  derive: 0b0000010,
+  benefit: 0b0000010,
+};
+let activeTemplate = null;
+
+// ===== 禁止组合检测 =====
+function isForbidden(ring, mask) {
+  const has = (bit) => (mask & (1 << bit)) !== 0;
+  // 0(禁) 与任何其他档位同时存在
+  if (has(0) && mask !== (1<<0)) return '禁(0)不可与其他档位共存';
+  // 5(公) 与 1(己) 或 2(亲)
+  if (has(5) && (has(1) || has(2))) return '公(5)与己(1)/亲(2)逻辑冲突';
+  // 0(禁) 与 3(约) 或 4(法)
+  if (has(0) && (has(3) || has(4))) return '禁(0)与约(3)/法(4)逻辑冲突';
+  return null;
+}
+
+// ===== 绘制罗盘 =====
+function drawCompass() {
+  const svg = document.getElementById('compassSvg');
+  const sectorsG = document.getElementById('sectorsGroup');
+  const labelsG = document.getElementById('labelsGroup');
+  sectorsG.innerHTML = '';
+  labelsG.innerHTML = '';
+  const cx = 260, cy = 260;
+
+  RINGS.forEach(ring => {
+    const ringMask = state[ring.key];
+    const anglePer = 360 / 6;
+    const startOffset = -90; // 从顶部开始
+
+    // 绘制每档扇区
+    LEVELS.forEach((level, li) => {
+      const startAngle = startOffset + li * anglePer;
+      const endAngle = startOffset + (li + 1) * anglePer;
+      const isSelected = (ringMask & (1 << level.val)) !== 0;
+      const forbidden = isSelected ? isForbidden(ring.key, ringMask) : null;
+
+      // 计算扇形路径
+      const p1 = polar(cx, cy, ring.outerR, startAngle);
+      const p2 = polar(cx, cy, ring.outerR, endAngle);
+      const p3 = polar(cx, cy, ring.innerR, endAngle);
+      const p4 = polar(cx, cy, ring.innerR, startAngle);
+      const largeArc = anglePer > 180 ? 1 : 0;
+      const d = `M ${p1.x} ${p1.y} A ${ring.outerR} ${ring.outerR} 0 ${largeArc} 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${ring.innerR} ${ring.innerR} 0 ${largeArc} 0 ${p4.x} ${p4.y} Z`;
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('class', `compass-sector ${isSelected ? 'selected' : ''} ${forbidden ? 'error' : ''}`);
+      path.setAttribute('data-ring', ring.key);
+      path.setAttribute('data-level', level.val);
+      path.setAttribute('fill', isSelected ? ring.color : 'transparent');
+      path.setAttribute('stroke', ring.color);
+      path.setAttribute('stroke-width', isSelected ? '2' : '0.8');
+      path.setAttribute('stroke-opacity', isSelected ? '1' : '0.3');
+      path.setAttribute('fill-opacity', isSelected ? (forbidden ? '0.5' : '0.35') : '0.05');
+      if (forbidden) {
+        path.setAttribute('filter', 'url(#inkGlow)');
+      }
+      // 事件
+      path.addEventListener('mouseenter', e => showTooltip(e, `${ring.name}·${level.name} — ${level.desc}`));
+      path.addEventListener('mouseleave', hideTooltip);
+      path.addEventListener('click', e => toggleSector(ring.key, level.val, path));
+      sectorsG.appendChild(path);
+
+      // 档位文字
+      const midAngle = startAngle + anglePer / 2;
+      const textR = (ring.outerR + ring.innerR) / 2;
+      const tp = polar(cx, cy, textR, midAngle);
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', tp.x);
+      text.setAttribute('y', tp.y);
+      text.setAttribute('class', 'compass-label');
+      text.setAttribute('fill', isSelected ? '#f0f0e8' : ring.color);
+      text.setAttribute('font-size', ring.outerR > 180 ? '13' : '11');
+      text.setAttribute('opacity', isSelected ? '1' : '0.5');
+      text.textContent = level.name;
+      labelsG.appendChild(text);
+    });
+
+    // 环名（在外环外侧）
+    const ringLabelR = ring.outerR + 16;
+    const ringLabelAngle = startOffset - 15;
+    const rlp = polar(cx, cy, ringLabelR, ringLabelAngle);
+    const rtext = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    rtext.setAttribute('x', rlp.x);
+    rtext.setAttribute('y', rlp.y);
+    rtext.setAttribute('class', 'compass-ring-name');
+    rtext.setAttribute('fill', ring.color);
+    rtext.textContent = ring.name;
+    labelsG.appendChild(rtext);
+  });
+}
+
+function polar(cx, cy, r, angleDeg) {
+  const rad = angleDeg * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+// ===== 交互 =====
+function toggleSector(ringKey, levelVal, pathEl) {
+  const bit = 1 << levelVal;
+  const current = state[ringKey];
+  const next = current ^ bit; // toggle
+
+  // 如果这是第一次点击（当前为0），先清除其他位只保留这一个
+  // 实际上支持多选，所以直接toggle
+  state[ringKey] = next;
+
+  // 检测禁止组合
+  const err = isForbidden(ringKey, state[ringKey]);
+  if (err) {
+    showError(err);
+    // 添加红色水墨动画
+    addInkRipple(pathEl, true);
+  } else {
+    addInkRipple(pathEl, false);
+  }
+
+  updateAll();
+}
+
+function addInkRipple(el, isError) {
+  const svg = document.getElementById('compassSvg');
+  const rect = el.getBoundingClientRect();
+  const svgRect = svg.getBoundingClientRect();
+  // 获取扇形中心 roughly
+  const bbox = el.getBBox();
+  const cx = bbox.x + bbox.width/2;
+  const cy = bbox.y + bbox.height/2;
+
+  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circle.setAttribute('cx', cx);
+  circle.setAttribute('cy', cy);
+  circle.setAttribute('r', Math.max(bbox.width, bbox.height) * 0.3);
+  circle.setAttribute('fill', isError ? 'var(--cinnabar)' : 'var(--paper)');
+  circle.setAttribute('opacity', '0.6');
+  circle.setAttribute('class', isError ? 'ink-error' : 'ink-ripple');
+  circle.style.pointerEvents = 'none';
+  svg.appendChild(circle);
+  setTimeout(() => circle.remove(), isError ? 1200 : 700);
+}
+
+// ===== 模板列表 =====
+function renderTemplates() {
+  const list = document.getElementById('templateList');
+  list.innerHTML = '';
+  TEMPLATES.forEach((tpl, i) => {
+    const card = document.createElement('div');
+    card.className = 'template-card' + (activeTemplate === i ? ' active' : '');
+    card.innerHTML = `
+      <div class="template-name">${tpl.name}</div>
+      <div class="template-desc">${tpl.desc}</div>
+      <div class="template-badges">
+        <span class="badge badge-use">用:${maskToStr(tpl.config.use)}</span>
+        <span class="badge badge-expand">扩:${maskToStr(tpl.config.expand)}</span>
+        <span class="badge badge-derive">衍:${maskToStr(tpl.config.derive)}</span>
+        <span class="badge badge-benefit">益:${maskToStr(tpl.config.benefit)}</span>
+        ${tpl.tags.map(t => `<span class="badge" style="color:var(--ink-light);border-color:var(--ink-mid)">${t}</span>`).join('')}
+      </div>
+    `;
+    card.addEventListener('click', () => applyTemplate(i));
+    list.appendChild(card);
+  });
+}
+
+function maskToStr(mask) {
+  const parts = [];
+  LEVELS.forEach(l => { if (mask & (1<<l.val)) parts.push(l.name); });
+  return parts.join('/') || '禁';
+}
+
+function applyTemplate(idx) {
+  activeTemplate = idx;
+  const tpl = TEMPLATES[idx];
+  state = { ...tpl.config };
+  updateAll();
+  renderTemplates();
+}
+
+// ===== 预览区 =====
+function renderPreview() {
+  const container = document.getElementById('previewScenarios');
+  container.innerHTML = '';
+
+  const actions = [
+    { action:'view', label:'浏览内容', need:'use' },
+    { action:'share', label:'分享给朋友', need:'expand' },
+    { action:'remix', label:'改编创作', need:'derive' },
+    { action:'sell', label:'商业使用', need:'benefit' },
+  ];
+
+  USERS.forEach(user => {
+    const card = document.createElement('div');
+    card.className = 'scenario-card';
+    // 判断此用户在各权上的档位
+    const userLevel = getUserLevel(user);
+    let results = [];
+    actions.forEach(act => {
+      const allowed = checkPermission(act.need, userLevel);
+      results.push({ label: act.label, ...allowed });
+    });
+
+    const avatarColor = user.relation === 'self' ? 'var(--stone-blue)' :
+                        user.relation === 'trust' ? 'var(--stone-green)' : 'var(--ink-light)';
+
+    card.innerHTML = `
+      <div class="scenario-avatar" style="border-color:${avatarColor};background:rgba(0,0,0,0.3)">${user.name[0]}</div>
+      <div class="scenario-name">${user.name}</div>
+      <div class="scenario-action">关系：${user.relation === 'self' ? '创作者' : user.relation === 'trust' ? '信任网络' : '陌生人'}</div>
+      ${results.map(r => `
+        <div class="scenario-result ${r.result === 'allow' ? 'result-allow' : r.result === 'deny' ? 'result-deny' : 'result-conditional'}">
+          ${r.label}: ${r.result === 'allow' ? '✓ 允许' : r.result === 'deny' ? '✗ 禁止' : '? 需协商'}${r.detail ? ' — ' + r.detail : ''}
+        </div>
+      `).join('')}
+    `;
+    container.appendChild(card);
+  });
+}
+
+function getUserLevel(user) {
+  // 简化：self=己(1), trust=亲(2), none=陌生人用公(5)或约(3)
+  if (user.relation === 'self') return 1;
+  if (user.relation === 'trust') return 2;
+  return 5; // 陌生人默认按公档测试
+}
+
+function checkPermission(ringKey, userLevel) {
+  const mask = state[ringKey];
+  // 如果禁(0)被选中且是唯一档位
+  if (mask === 1) return { result: 'deny', detail: '完全禁止' };
+  // 检查用户档位是否在允许范围内
+  const hasLevel = (mask & (1 << userLevel)) !== 0;
+  if (hasLevel) return { result: 'allow', detail: `档位${LEVELS[userLevel].name}已开放` };
+  // 检查更低的档位是否开放（档位数字越小越私密）
+  for (let i = 0; i < userLevel; i++) {
+    if ((mask & (1 << i)) !== 0) return { result: 'conditional', detail: `需升至${LEVELS[userLevel].name}档` };
+  }
+  return { result: 'deny', detail: '无可用档位' };
+}
+
+// ===== 元规则 =====
+function renderMetaRules() {
+  const container = document.getElementById('metaRules');
+  container.innerHTML = META_RULES.map(m => `
+    <div class="meta-item">
+      <span class="meta-num">${m.num}</span>
+      <div><span class="meta-text">${m.title}</span> — ${m.desc}</div>
+    </div>
+  `).join('');
+}
+
+// ===== JSON显示 =====
+function updateJson() {
+  const el = document.getElementById('configJson');
+  const compressed = (state.benefit << 12) | (state.derive << 8) | (state.expand << 4) | state.use;
+  const json = {
+    permissions: {
+      use: { mask: state.use, levels: maskToArr(state.use) },
+      expand: { mask: state.expand, levels: maskToArr(state.expand) },
+      derive: { mask: state.derive, levels: maskToArr(state.derive) },
+      benefit: { mask: state.benefit, levels: maskToArr(state.benefit) },
+    },
+    compressedPermissions: '0x' + compressed.toString(16).padStart(4, '0'),
+  };
+
+  document.getElementById('maskUse').textContent = '0b' + state.use.toString(2).padStart(6, '0');
+  document.getElementById('maskExpand').textContent = '0b' + state.expand.toString(2).padStart(6, '0');
+  document.getElementById('maskDerive').textContent = '0b' + state.derive.toString(2).padStart(6, '0');
+  document.getElementById('maskBenefit').textContent = '0b' + state.benefit.toString(2).padStart(6, '0');
+  document.getElementById('maskCompressed').textContent = json.compressedPermissions;
+
+  const html = syntaxHighlight(JSON.stringify(json, null, 2));
+  el.innerHTML = html;
+}
+
+function maskToArr(mask) {
+  return LEVELS.filter(l => mask & (1<<l.val)).map(l => l.name);
+}
+
+function syntaxHighlight(json) {
+  return json.replace(/(".*?")(\s*:\s*)/g, '<span class="json-key">$1</span>$2')
+    .replace(/: "(.*?)"/g, ': <span class="json-str">"$1"</span>')
+    .replace(/: (0b[01]+|0x[0-9a-fA-F]+)/g, ': <span class="json-num">$1</span>');
+}
+
+// ===== Tooltip =====
+function showTooltip(e, text) {
+  const tt = document.getElementById('tooltip');
+  tt.textContent = text;
+  tt.classList.add('show');
+  const rect = e.target.getBoundingClientRect();
+  tt.style.left = (rect.left + rect.width/2 - tt.offsetWidth/2) + 'px';
+  tt.style.top = (rect.top - tt.offsetHeight - 8) + 'px';
+}
+function hideTooltip() {
+  document.getElementById('tooltip').classList.remove('show');
+}
+
+// ===== 错误提示 =====
+let errorTimer;
+function showError(msg) {
+  const el = document.getElementById('errorToast');
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('show');
+  clearTimeout(errorTimer);
+  errorTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ===== 全局更新 =====
+function updateAll() {
+  drawCompass();
+  updateJson();
+  renderPreview();
+}
+
+// ===== 初始化 =====
+function init() {
+  drawCompass();
+  renderTemplates();
+  renderMetaRules();
+  updateJson();
+  renderPreview();
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECHO — 规则市场</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink-black: #0c0c0e; --ink-deep: #1a1a1e; --ink-mid: #2a2a30;
+      --ink-light: #8a8a90; --ink-rice: #f0f0e8;
+      --cinnabar: #c45c48; --stone-blue: #4a90a4; --stone-green: #5a9a6e;
+      --vine-yellow: #c8a84c; --ochre: #8b6914; --indigo: #2c3e50;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: var(--ink-black); color: var(--ink-rice);
+      width: 100%; height: 100vh; overflow: hidden;
+    }
+    
+    .market-page {
+      display: flex; flex-direction: column;
+      height: 100vh;
+    }
+    
+    /* 顶部横幅 */
+    .market-banner {
+      padding: 20px 30px;
+      background: linear-gradient(90deg, var(--ink-deep), var(--ink-black));
+      border-bottom: 1px solid var(--ink-mid);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .banner-title {
+      font-size: 1.3rem; font-weight: 700;
+      color: var(--vine-yellow); letter-spacing: 0.2em;
+    }
+    .banner-subtitle {
+      font-size: 0.75rem; color: var(--ink-light); margin-top: 4px;
+    }
+    .create-btn {
+      padding: 10px 20px; border-radius: 8px;
+      background: var(--stone-green); border: none;
+      color: var(--ink-rice); font-size: 0.85rem;
+      cursor: pointer; font-family: inherit;
+      transition: all 0.3s;
+    }
+    .create-btn:hover {
+      background: var(--stone-blue); transform: translateY(-2px);
+    }
+    
+    /* 筛选栏 */
+    .filter-bar {
+      display: flex; gap: 16px; padding: 12px 30px;
+      background: var(--ink-deep);
+      border-bottom: 1px solid var(--ink-mid);
+      align-items: center;
+    }
+    .filter-group {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .filter-label {
+      font-size: 0.75rem; color: var(--ink-light);
+    }
+    .filter-select {
+      background: var(--ink-black); border: 1px solid var(--ink-mid);
+      color: var(--ink-rice); padding: 6px 12px;
+      border-radius: 6px; font-size: 0.8rem;
+      font-family: inherit; cursor: pointer;
+    }
+    .filter-select:focus { outline: none; border-color: var(--stone-blue); }
+    
+    /* 主内容 */
+    .market-grid {
+      flex: 1; overflow-y: auto;
+      padding: 20px 30px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    
+    /* 店铺卡片 */
+    .shop-card {
+      background: linear-gradient(135deg, var(--ink-deep), rgba(26,26,30,0.8));
+      border: 1px solid var(--ink-mid);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+      cursor: pointer;
+      position: relative;
+    }
+    .shop-card:hover {
+      border-color: var(--stone-blue);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(74,144,164,0.15);
+    }
+    
+    /* 招牌 */
+    .shop-sign {
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--ink-mid);
+      position: relative;
+    }
+    .shop-sign::after {
+      content: '';
+      position: absolute; bottom: -1px; left: 20px; right: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--stone-blue), transparent);
+    }
+    .shop-name {
+      font-size: 1rem; font-weight: 700; color: var(--ink-rice);
+      letter-spacing: 0.1em;
+    }
+    .shop-type {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 0.65rem; margin-top: 6px;
+      background: rgba(74,144,164,0.15); color: var(--stone-blue);
+    }
+    
+    /* 四权预览 */
+    .shop-rights {
+      padding: 12px 16px;
+      display: flex; gap: 12px;
+    }
+    .right-mini {
+      flex: 1; text-align: center;
+    }
+    .right-mini-label {
+      font-size: 0.6rem; color: var(--ink-light); margin-bottom: 4px;
+    }
+    .right-mini-bar {
+      height: 4px; background: var(--ink-mid); border-radius: 2px;
+      overflow: hidden;
+    }
+    .right-mini-fill {
+      height: 100%; border-radius: 2px;
+    }
+    
+    /* 底部信息 */
+    .shop-footer {
+      padding: 12px 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-top: 1px solid var(--ink-mid);
+      background: rgba(12,12,14,0.5);
+    }
+    .shop-price {
+      font-size: 0.9rem; font-weight: 700; color: var(--vine-yellow);
+    }
+    .shop-price.free { color: var(--stone-green); }
+    .shop-popularity {
+      font-size: 0.7rem; color: var(--ink-light);
+    }
+    .shop-rating {
+      color: var(--vine-yellow); font-size: 0.8rem;
+    }
+    
+    /* 详情弹窗 */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(12,12,14,0.8); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-scroll {
+      background: linear-gradient(180deg, var(--ink-deep), var(--ink-black));
+      border: 1px solid var(--ink-mid); border-radius: 16px;
+      width: 90%; max-width: 600px; max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .modal-scroll::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--stone-blue), var(--stone-green), var(--vine-yellow));
+      border-radius: 16px 16px 0 0;
+    }
+    .modal-header {
+      padding: 24px 24px 16px;
+      border-bottom: 1px solid var(--ink-mid);
+    }
+    .modal-title {
+      font-size: 1.2rem; font-weight: 700; color: var(--ink-rice);
+    }
+    .modal-meta {
+      display: flex; gap: 16px; margin-top: 8px;
+      font-size: 0.75rem; color: var(--ink-light);
+    }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none; color: var(--ink-light);
+      font-size: 1.5rem; cursor: pointer;
+    }
+    
+    .modal-body {
+      padding: 20px 24px;
+    }
+    .section-title {
+      font-size: 0.8rem; color: var(--stone-blue);
+      letter-spacing: 0.15em; margin-bottom: 12px;
+    }
+    
+    /* 雷达图容器 */
+    .radar-container {
+      display: flex; justify-content: center;
+      padding: 16px;
+    }
+    #radarCanvas {
+      border-radius: 8px;
+    }
+    
+    /* 分润规则表 */
+    .rule-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .rule-table th {
+      text-align: left; padding: 8px;
+      color: var(--ink-light); border-bottom: 1px solid var(--ink-mid);
+      font-weight: 500;
+    }
+    .rule-table td {
+      padding: 8px; border-bottom: 1px solid rgba(42,42,48,0.5);
+      color: var(--ink-rice);
+    }
+    .rule-table tr:last-child td { border-bottom: none; }
+    
+    /* 版本历史 */
+    .version-list {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .version-item {
+      display: flex; justify-content: space-between;
+      padding: 8px 12px; background: rgba(42,42,48,0.3);
+      border-radius: 6px; font-size: 0.75rem;
+    }
+    
+    /* 评价 */
+    .review-list {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .review-item {
+      padding: 10px 12px; background: rgba(42,42,48,0.3);
+      border-radius: 6px;
+    }
+    .review-header {
+      display: flex; justify-content: space-between; margin-bottom: 4px;
+    }
+    .review-author { font-size: 0.8rem; color: var(--stone-blue); }
+    .review-stars { color: var(--vine-yellow); font-size: 0.75rem; }
+    .review-text { font-size: 0.75rem; color: var(--ink-light); line-height: 1.5; }
+    
+    /* 应用按钮 */
+    .apply-btn {
+      width: 100%; padding: 12px;
+      background: var(--stone-green); border: none;
+      color: var(--ink-rice); font-size: 0.9rem;
+      border-radius: 8px; cursor: pointer;
+      font-family: inherit; margin-top: 16px;
+      transition: all 0.3s;
+    }
+    .apply-btn:hover { background: var(--stone-blue); }
+  </style>
+</head>
+<body>
+  <div class="market-page">
+    <!-- 顶部横幅 -->
+    <div class="market-banner">
+      <div>
+        <div class="banner-title">规则市集</div>
+        <div class="banner-subtitle">规则模板由用户创建、共享、交易</div>
+      </div>
+      <button class="create-btn" onclick="alert('创建模板功能开发中')">+ 开新店</button>
+    </div>
+    
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label">领域</span>
+        <select class="filter-select" id="filterType" onchange="filterTemplates()">
+          <option value="all">全部</option>
+          <option value="music">音乐</option>
+          <option value="code">代码</option>
+          <option value="image">图像</option>
+          <option value="text">文字</option>
+          <option value="data">数据</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">开放度</span>
+        <select class="filter-select" id="filterOpen" onchange="filterTemplates()">
+          <option value="all">全部</option>
+          <option value="conservative">保守</option>
+          <option value="balanced">平衡</option>
+          <option value="open">开放</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">价格</span>
+        <select class="filter-select" id="filterPrice" onchange="filterTemplates()">
+          <option value="all">全部</option>
+          <option value="free">免费</option>
+          <option value="paid">付费</option>
+        </select>
+      </div>
+    </div>
+    
+    <!-- 网格 -->
+    <div class="market-grid" id="marketGrid">
+      <!-- 由JS填充 -->
+    </div>
+  </div>
+  
+  <!-- 详情弹窗 -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal-scroll" id="modalContent" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">模板名称</div>
+        <div class="modal-meta">
+          <span id="modalType">音乐</span>
+          <span id="modalAuthor">作者</span>
+          <span id="modalDownloads">523 次使用</span>
+          <span class="shop-rating" id="modalRating">★★★★★</span>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="section-title">四权配置雷达图</div>
+        <div class="radar-container">
+          <canvas id="radarCanvas" width="280" height="220"></canvas>
+        </div>
+        
+        <div class="section-title">分润规则</div>
+        <table class="rule-table">
+          <thead>
+            <tr><th>事件类型</th><th>创作者分成</th><th>父资产分成</th><th>平台抽成</th></tr>
+          </thead>
+          <tbody id="ruleTableBody">
+          </tbody>
+        </table>
+        
+        <div class="section-title">版本历史</div>
+        <div class="version-list" id="versionList">
+        </div>
+        
+        <div class="section-title">用户评价</div>
+        <div class="review-list" id="reviewList">
+        </div>
+        
+        <button class="apply-btn" onclick="alert('模板已应用到当前资产')">应用此模板</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // ========================
+    // 模拟数据
+    // ========================
+    const templates = [
+      {
+        id: 'tpl_music_std', name: '独立音乐人标准合约', type: 'music',
+        description: '适合独立音乐人的标准授权模板',
+        permissions: { use: 0b001110, expand: 0b000110, derive: 0b000010, benefit: 0b000010 },
+        price: 0, downloads: 523, rating: 4.5,
+        author: 'Eve', authorId: 'eve', createdAt: '2024-01',
+        tags: ['音乐', '标准', '独立'],
+        rules: { purchaseRate: 0.7, remixRate: 0.5, parentShare: 0.1 },
+        versions: [
+          { version: 'v1.2', date: '2024-03', change: '增加法档选项' },
+          { version: 'v1.1', date: '2024-02', change: '调整分润比例' },
+          { version: 'v1.0', date: '2024-01', change: '初始版本' }
+        ],
+        reviews: [
+          { author: 'Alice', stars: 5, text: '很实用的模板，保护了我的权益' },
+          { author: 'Bob', stars: 4, text: '分润规则合理，推荐' }
+        ]
+      },
+      {
+        id: 'tpl_gpl', name: 'GPL风格开源', type: 'code',
+        description: '类似GPL的开源协议，全部公开',
+        permissions: { use: 0b100000, expand: 0b100000, derive: 0b100000, benefit: 0b100000 },
+        price: 0, downloads: 1024, rating: 4.8,
+        author: 'Charlie', authorId: 'charlie', createdAt: '2024-01',
+        tags: ['代码', '开源', 'GPL'],
+        rules: { purchaseRate: 0, remixRate: 0, parentShare: 0 },
+        versions: [
+          { version: 'v2.0', date: '2024-05', change: '增加商业使用说明' },
+          { version: 'v1.0', date: '2024-01', change: '初始版本' }
+        ],
+        reviews: [
+          { author: 'Charlie', stars: 5, text: '开源精神的完美体现' },
+          { author: 'Diana', stars: 5, text: '免费又好用' }
+        ]
+      },
+      {
+        id: 'tpl_ai_open', name: 'AI训练数据开放', type: 'data',
+        description: '允许AI公司合法使用数据训练模型',
+        permissions: { use: 0b010000, expand: 0b001000, derive: 0b010000, benefit: 0b010000 },
+        price: 0, downloads: 89, rating: 3.5,
+        author: 'Mallory', authorId: 'mallory', createdAt: '2024-02',
+        tags: ['AI', '数据', '训练'],
+        rules: { purchaseRate: 0.3, remixRate: 0.2, parentShare: 0.05 },
+        versions: [
+          { version: 'v1.1', date: '2024-03', change: '增加隐私保护条款' },
+          { version: 'v1.0', date: '2024-02', change: '初始版本' }
+        ],
+        reviews: [
+          { author: 'Eve', stars: 3, text: '需要更严格的隐私保护' },
+          { author: 'Mallory', stars: 4, text: '适合AI训练场景' }
+        ]
+      },
+      {
+        id: 'tpl_art_gallery', name: '视觉艺术画廊代理', type: 'image',
+        description: '适合视觉艺术作品的画廊代理模式',
+        permissions: { use: 0b001000, expand: 0b000100, derive: 0b000010, benefit: 0b000010 },
+        price: 2, downloads: 234, rating: 4.2,
+        author: 'Eve', authorId: 'eve', createdAt: '2024-01',
+        tags: ['视觉', '艺术', '画廊'],
+        rules: { purchaseRate: 0.8, remixRate: 0.6, parentShare: 0.15 },
+        versions: [
+          { version: 'v1.0', date: '2024-01', change: '初始版本' }
+        ],
+        reviews: [
+          { author: 'Diana', stars: 5, text: '艺术品代理的首选' },
+          { author: 'Alice', stars: 4, text: '分润比例对创作者很友好' }
+        ]
+      },
+      {
+        id: 'tpl_blog_friendly', name: '个人博客友好协议', type: 'text',
+        description: '适合个人博客文章的宽松授权',
+        permissions: { use: 0b100000, expand: 0b010000, derive: 0b001000, benefit: 0b000100 },
+        price: 0, downloads: 445, rating: 4.0,
+        author: 'Alice', authorId: 'alice', createdAt: '2024-01',
+        tags: ['博客', '文字', '友好'],
+        rules: { purchaseRate: 0, remixRate: 0.3, parentShare: 0.1 },
+        versions: [
+          { version: 'v1.0', date: '2024-01', change: '初始版本' }
+        ],
+        reviews: [
+          { author: 'Bob', stars: 4, text: '适合博客文章的转载' },
+          { author: 'Charlie', stars: 4, text: '简洁明了' }
+        ]
+      }
+    ];
+    
+    const colors = {
+      use: '#4a90a4', expand: '#c8a84c', derive: '#5a9a6e', benefit: '#c45c48'
+    };
+    
+    // ========================
+    // 渲染
+    // ========================
+    function renderGrid(tpls = templates) {
+      const grid = document.getElementById('marketGrid');
+      grid.innerHTML = tpls.map(t => `
+        <div class="shop-card" onclick="openModal('${t.id}')">
+          <div class="shop-sign">
+            <div class="shop-name">${t.name}</div>
+            <span class="shop-type">${t.type}</span>
+          </div>
+          <div class="shop-rights">
+            <div class="right-mini">
+              <div class="right-mini-label">用</div>
+              <div class="right-mini-bar">
+                <div class="right-mini-fill" style="width: ${openness(t.permissions.use)}%; background: ${colors.use}"></div>
+              </div>
+            </div>
+            <div class="right-mini">
+              <div class="right-mini-label">扩</div>
+              <div class="right-mini-bar">
+                <div class="right-mini-fill" style="width: ${openness(t.permissions.expand)}%; background: ${colors.expand}"></div>
+              </div>
+            </div>
+            <div class="right-mini">
+              <div class="right-mini-label">衍</div>
+              <div class="right-mini-bar">
+                <div class="right-mini-fill" style="width: ${openness(t.permissions.derive)}%; background: ${colors.derive}"></div>
+              </div>
+            </div>
+            <div class="right-mini">
+              <div class="right-mini-label">益</div>
+              <div class="right-mini-bar">
+                <div class="right-mini-fill" style="width: ${openness(t.permissions.benefit)}%; background: ${colors.benefit}"></div>
+              </div>
+            </div>
+          </div>
+          <div class="shop-footer">
+            <div class="shop-price ${t.price === 0 ? 'free' : ''}">${t.price === 0 ? '免费' : '¥' + t.price}</div>
+            <div class="shop-popularity">${t.downloads} 位来客</div>
+            <div class="shop-rating">${'★'.repeat(Math.floor(t.rating))}${'☆'.repeat(5 - Math.floor(t.rating))}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function openness(mask) {
+      let count = 0;
+      for (let i = 1; i <= 5; i++) if (mask & (1 << i)) count++;
+      return (count / 5) * 100;
+    }
+    
+    function filterTemplates() {
+      const type = document.getElementById('filterType').value;
+      const open = document.getElementById('filterOpen').value;
+      const price = document.getElementById('filterPrice').value;
+      
+      let filtered = templates;
+      if (type !== 'all') filtered = filtered.filter(t => t.type === type);
+      if (price !== 'all') filtered = filtered.filter(t => price === 'free' ? t.price === 0 : t.price > 0);
+      if (open !== 'all') {
+        filtered = filtered.filter(t => {
+          const avg = (openness(t.permissions.use) + openness(t.permissions.expand) + 
+                       openness(t.permissions.derive) + openness(t.permissions.benefit)) / 4;
+          if (open === 'conservative') return avg < 30;
+          if (open === 'balanced') return avg >= 30 && avg < 70;
+          if (open === 'open') return avg >= 70;
+        });
+      }
+      renderGrid(filtered);
+    }
+    
+    // ========================
+    // 弹窗
+    // ========================
+    let currentTemplate = null;
+    
+    function openModal(id) {
+      const t = templates.find(tpl => tpl.id === id);
+      if (!t) return;
+      currentTemplate = t;
+      
+      document.getElementById('modalTitle').textContent = t.name;
+      document.getElementById('modalType').textContent = t.type;
+      document.getElementById('modalAuthor').textContent = t.author;
+      document.getElementById('modalDownloads').textContent = t.downloads + ' 次使用';
+      document.getElementById('modalRating').textContent = '★'.repeat(Math.floor(t.rating)) + '☆'.repeat(5 - Math.floor(t.rating)) + ' ' + t.rating;
+      
+      // 分润规则
+      document.getElementById('ruleTableBody').innerHTML = `
+        <tr><td>购买</td><td>${(t.rules.purchaseRate * 100).toFixed(0)}%</td><td>${(t.rules.parentShare * 100).toFixed(0)}%</td><td>${((1 - t.rules.purchaseRate - t.rules.parentShare) * 100).toFixed(0)}%</td></tr>
+        <tr><td>改编</td><td>${(t.rules.remixRate * 100).toFixed(0)}%</td><td>${(t.rules.parentShare * 100).toFixed(0)}%</td><td>${((1 - t.rules.remixRate - t.rules.parentShare) * 100).toFixed(0)}%</td></tr>
+      `;
+      
+      // 版本历史
+      document.getElementById('versionList').innerHTML = t.versions.map(v => `
+        <div class="version-item">
+          <span style="color: var(--stone-blue);">${v.version}</span>
+          <span style="color: var(--ink-light);">${v.date}</span>
+          <span>${v.change}</span>
+        </div>
+      `).join('');
+      
+      // 评价
+      document.getElementById('reviewList').innerHTML = t.reviews.map(r => `
+        <div class="review-item">
+          <div class="review-header">
+            <span class="review-author">${r.author}</span>
+            <span class="review-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5 - r.stars)}</span>
+          </div>
+          <div class="review-text">${r.text}</div>
+        </div>
+      `).join('');
+      
+      // 绘制雷达图
+      drawRadar(t.permissions);
+      
+      document.getElementById('modalOverlay').classList.add('show');
+    }
+    
+    function closeModal(e) {
+      if (!e || e.target === document.getElementById('modalOverlay')) {
+        document.getElementById('modalOverlay').classList.remove('show');
+      }
+    }
+    
+    function drawRadar(perms) {
+      const canvas = document.getElementById('radarCanvas');
+      const c = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      const cx = w / 2, cy = h / 2;
+      const r = 80;
+      
+      c.clearRect(0, 0, w, h);
+      
+      // 背景网格
+      const dims = ['用', '扩', '衍', '益'];
+      const dimColors = [colors.use, colors.expand, colors.derive, colors.benefit];
+      
+      for (let ring = 1; ring <= 5; ring++) {
+        c.beginPath();
+        for (let i = 0; i < 4; i++) {
+          const angle = (Math.PI * 2 * i) / 4 - Math.PI / 2;
+          const x = cx + Math.cos(angle) * (r * ring / 5);
+          const y = cy + Math.sin(angle) * (r * ring / 5);
+          if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
+        }
+        c.closePath();
+        c.strokeStyle = 'rgba(42,42,48,0.5)';
+        c.lineWidth = 1;
+        c.stroke();
+      }
+      
+      // 轴线
+      for (let i = 0; i < 4; i++) {
+        const angle = (Math.PI * 2 * i) / 4 - Math.PI / 2;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+        c.beginPath(); c.moveTo(cx, cy); c.lineTo(x, y); c.stroke();
+        
+        // 标签
+        c.fillStyle = dimColors[i];
+        c.font = 'bold 14px "Noto Sans SC", sans-serif';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        const lx = cx + Math.cos(angle) * (r + 20);
+        const ly = cy + Math.sin(angle) * (r + 20);
+        c.fillText(dims[i], lx, ly);
+      }
+      
+      // 数据多边形
+      const values = [
+        openness(perms.use) / 100,
+        openness(perms.expand) / 100,
+        openness(perms.derive) / 100,
+        openness(perms.benefit) / 100
+      ];
+      
+      c.beginPath();
+      for (let i = 0; i < 4; i++) {
+        const angle = (Math.PI * 2 * i) / 4 - Math.PI / 2;
+        const x = cx + Math.cos(angle) * (r * values[i]);
+        const y = cy + Math.sin(angle) * (r * values[i]);
+        if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
+      }
+      c.closePath();
+      c.fillStyle = 'rgba(74,144,164,0.2)';
+      c.fill();
+      c.strokeStyle = colors.use;
+      c.lineWidth = 2;
+      c.stroke();
+      
+      // 数据点
+      for (let i = 0; i < 4; i++) {
+        const angle = (Math.PI * 2 * i) / 4 - Math.PI / 2;
+        const x = cx + Math.cos(angle) * (r * values[i]);
+        const y = cy + Math.sin(angle) * (r * values[i]);
+        c.beginPath(); c.arc(x, y, 4, 0, Math.PI * 2);
+        c.fillStyle = dimColors[i];
+        c.fill();
+      }
+    }
+    
+    // ========================
+    // 启动
+    // ========================
+    renderGrid();
+  </script>
+</body>
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECHO — 使用权生命周期网络</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ==================== 基础重置 ==================== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      /* 墨色系列 */
+      --ink-black: #0c0c0e;
+      --ink-deep: #1a1a1e;
+      --ink-mid: #2a2a30;
+      --ink-light: #8a8a90;
+      --ink-rice: #f0f0e8;
+      /* 点缀色 */
+      --cinnabar: #c45c48;
+      --stone-blue: #4a90a4;
+      --stone-green: #5a9a6e;
+      --vine-yellow: #c8a84c;
+      --ochre: #8b6914;
+      --indigo: #2c3e50;
+      /* 字体 */
+      --font-body: 'Noto Sans SC', -apple-system, sans-serif;
+      --font-serif: 'Noto Sans SC', serif;
+      /* 间距 */
+      --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+      --space-6: 24px; --space-8: 32px; --space-12: 48px;
+      /* 层级 */
+      --z-nav: 100; --z-content: 10; --z-canvas: 1;
+    }
+    
+    body {
+      font-family: var(--font-body);
+      background: var(--ink-black);
+      color: var(--ink-rice);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+    
+    /* 滚动条 */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--ink-mid); border-radius: 2px; }
+    
+    /* ==================== 左侧导航 ==================== */
+    .nav-sidebar {
+      width: 220px;
+      height: 100vh;
+      background: linear-gradient(180deg, var(--ink-deep) 0%, var(--ink-black) 100%);
+      border-right: 1px solid var(--ink-mid);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: var(--z-nav);
+      position: relative;
+    }
+    
+    /* 水墨晕染边界 */
+    .nav-sidebar::after {
+      content: '';
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 20px;
+      background: linear-gradient(90deg, transparent, rgba(42,42,48,0.3));
+      pointer-events: none;
+    }
+    
+    /* Logo区 */
+    .nav-logo {
+      padding: var(--space-6);
+      border-bottom: 1px solid var(--ink-mid);
+      text-align: center;
+    }
+    
+    .nav-logo h1 {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      color: var(--ink-rice);
+      text-shadow: 0 0 20px rgba(74,144,164,0.3);
+    }
+    
+    .nav-logo p {
+      font-size: 0.7rem;
+      color: var(--ink-light);
+      margin-top: var(--space-1);
+      letter-spacing: 0.15em;
+    }
+    
+    /* 导航项 */
+    .nav-items {
+      flex: 1;
+      padding: var(--space-4) 0;
+      overflow-y: auto;
+    }
+    
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      margin: 2px var(--space-3);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+      text-decoration: none;
+      color: var(--ink-light);
+      font-size: 0.85rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--stone-blue);
+      border-radius: 0 2px 2px 0;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .nav-item:hover {
+      background: rgba(42,42,48,0.5);
+      color: var(--ink-rice);
+    }
+    
+    .nav-item:hover::before { opacity: 0.5; }
+    
+    .nav-item.active {
+      background: rgba(74,144,164,0.15);
+      color: var(--stone-blue);
+    }
+    
+    .nav-item.active::before { opacity: 1; }
+    
+    .nav-item .icon {
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    
+    /* 分割线 */
+    .nav-divider {
+      margin: var(--space-3) var(--space-4);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--ink-mid), transparent);
+    }
+    
+    /* 底部信息 */
+    .nav-footer {
+      padding: var(--space-4);
+      border-top: 1px solid var(--ink-mid);
+      font-size: 0.7rem;
+      color: var(--ink-light);
+      text-align: center;
+      line-height: 1.8;
+    }
+    
+    /* ==================== 主内容区 ==================== */
+    .main-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .page-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: var(--ink-black);
+    }
+    
+    /* 加载动画 */
+    .loading-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--ink-black);
+      z-index: 50;
+      transition: opacity 0.5s;
+    }
+    
+    .loading-screen.hidden { opacity: 0; pointer-events: none; }
+    
+    .ink-loader {
+      width: 60px; height: 60px;
+      border: 2px solid var(--ink-mid);
+      border-radius: 50%;
+      position: relative;
+    }
+    
+    .ink-loader::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--stone-blue);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      margin-top: var(--space-4);
+      font-size: 0.85rem;
+      color: var(--ink-light);
+      letter-spacing: 0.2em;
+    }
+    
+    /* 移动端导航切换 */
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      top: var(--space-4); left: var(--space-4);
+      z-index: 200;
+      width: 40px; height: 40px;
+      background: var(--ink-deep);
+      border: 1px solid var(--ink-mid);
+      border-radius: 8px;
+      color: var(--ink-rice);
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    
+    @media (max-width: 768px) {
+      .mobile-toggle { display: flex; align-items: center; justify-content: center; }
+      .nav-sidebar {
+        position: fixed;
+        left: 0; top: 0;
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+      }
+      .nav-sidebar.open { transform: translateX(0); }
+      .main-area { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 移动端切换按钮 -->
+  <button class="mobile-toggle" onclick="toggleNav()">☰</button>
+  
+  <!-- 左侧导航 -->
+  <nav class="nav-sidebar" id="navSidebar">
+    <div class="nav-logo">
+      <h1>ECHO</h1>
+      <p>使用权生命周期网络</p>
+    </div>
+    
+    <div class="nav-items">
+      <a class="nav-item active" href="#" data-page="home" onclick="navTo('home')">
+        <span class="icon">☯</span>
+        <span>首页</span>
+      </a>
+      
+      <div class="nav-divider"></div>
+      <div style="padding: var(--space-2) var(--space-4); font-size: 0.65rem; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.1em;">核心概念</div>
+      
+      <a class="nav-item" href="#" data-page="rights" onclick="navTo('rights')">
+        <span class="icon">◉</span>
+        <span>四权六档</span>
+      </a>
+      <a class="nav-item" href="#" data-page="graph" onclick="navTo('graph')">
+        <span class="icon">◈</span>
+        <span>验证图</span>
+      </a>
+      <a class="nav-item" href="#" data-page="shi" onclick="navTo('shi')">
+        <span class="icon">◉</span>
+        <span>势体系</span>
+      </a>
+      <a class="nav-item" href="#" data-page="market" onclick="navTo('market')">
+        <span class="icon">◇</span>
+        <span>规则市场</span>
+      </a>
+      
+      <div class="nav-divider"></div>
+      <div style="padding: var(--space-2) var(--space-4); font-size: 0.65rem; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.1em;">模拟演示</div>
+      
+      <a class="nav-item" href="#" data-page="simulate" onclick="navTo('simulate')">
+        <span class="icon">▶</span>
+        <span>场景模拟</span>
+      </a>
+    </div>
+    
+    <div class="nav-footer">
+      <div>ECHO v2.0</div>
+      <div style="font-size: 0.6rem; opacity: 0.6;">万物有灵，皆可生长</div>
+    </div>
+  </nav>
+  
+  <!-- 主内容区 -->
+  <main class="main-area" id="mainArea">
+    <div class="loading-screen" id="loadingScreen">
+      <div class="ink-loader"></div>
+      <div class="loading-text">加载中...</div>
+    </div>
+    <iframe class="page-frame" id="pageFrame" src="pages/home.html"></iframe>
+  </main>
+  
+  <script>
+    const pageMap = {
+      home: 'pages/home.html',
+      rights: 'pages/rights.html',
+      graph: 'pages/graph.html',
+      shi: 'pages/shi.html',
+      market: 'pages/market.html',
+      simulate: 'pages/simulate.html'
+    };
+    
+    let currentPage = 'home';
+    const frame = document.getElementById('pageFrame');
+    const loading = document.getElementById('loadingScreen');
+    const navItems = document.querySelectorAll('.nav-item');
+    const sidebar = document.getElementById('navSidebar');
+    
+    function navTo(page) {
+      if (page === currentPage) return;
+      
+      // 更新导航状态
+      navItems.forEach(item => {
+        item.classList.toggle('active', item.dataset.page === page);
+      });
+      
+      // 显示加载
+      loading.classList.remove('hidden');
+      
+      // 切换页面
+      currentPage = page;
+      frame.src = pageMap[page];
+      
+      // 隐藏加载
+      frame.onload = () => {
+        setTimeout(() => loading.classList.add('hidden'), 300);
+      };
+      
+      // 移动端关闭导航
+      sidebar.classList.remove('open');
+      
+      // 更新标题
+      const titles = {
+        home: 'ECHO — 首页',
+        rights: 'ECHO — 四权六档',
+        graph: 'ECHO — 验证图',
+        shi: 'ECHO — 势体系',
+        market: 'ECHO — 规则市场',
+        simulate: 'ECHO — 场景模拟'
+      };
+      document.title = titles[page] || 'ECHO';
+    }
+    
+    function toggleNav() {
+      sidebar.classList.toggle('open');
+    }
+    
+    // 初始加载完成后隐藏loading
+    frame.onload = () => {
+      setTimeout(() => loading.classList.add('hidden'), 500);
+    };
+    
+    // 键盘快捷键
+    document.addEventListener('keydown', (e) => {
+      const pages = ['home','rights','graph','shi','market','simulate'];
+      const idx = pages.indexOf(currentPage);
+      if (e.key === 'ArrowRight' && idx < pages.length - 1) navTo(pages[idx+1]);
+      if (e.key === 'ArrowLeft' && idx > 0) navTo(pages[idx-1]);
+    });
+  </script>
+</body>
+</html>

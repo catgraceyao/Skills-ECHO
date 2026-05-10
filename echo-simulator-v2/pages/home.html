@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECHO — 使用权生命周期网络</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    /* ── 首页专用样式 ── */
+    .home-page {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* 粒子Canvas层 */
+    #particle-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: var(--z-canvas);
+    }
+
+    /* 内容层 */
+    .home-content {
+      position: relative;
+      z-index: var(--z-content);
+      text-align: center;
+      padding: var(--space-8);
+      max-width: 800px;
+    }
+
+    /* 主标题 — 书法体 */
+    .home-title {
+      font-family: var(--font-serif);
+      font-size: clamp(4rem, 12vw, 8rem);
+      font-weight: 700;
+      color: var(--ink-rice);
+      letter-spacing: 0.2em;
+      line-height: 1;
+      margin-bottom: var(--space-4);
+      text-shadow: 0 0 40px rgba(240,240,232,0.1), 0 0 80px rgba(74,144,164,0.08);
+      animation: fade-in-up 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s both;
+    }
+
+    /* 副标题 */
+    .home-subtitle {
+      font-family: var(--font-body);
+      font-size: clamp(1rem, 2.5vw, 1.5rem);
+      font-weight: 300;
+      color: var(--ink-fog);
+      letter-spacing: 0.3em;
+      margin-bottom: var(--space-12);
+      animation: fade-in-up 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s both;
+    }
+
+    /* 引言 */
+    .home-quote {
+      font-family: var(--font-serif);
+      font-size: clamp(0.875rem, 1.8vw, 1.125rem);
+      color: var(--ink-fog);
+      line-height: 2;
+      letter-spacing: 0.15em;
+      margin-bottom: var(--space-16);
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      animation: fade-in-up 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.9s both;
+    }
+
+    .home-quote::before,
+    .home-quote::after {
+      content: '「 』';
+      color: var(--ink-mist);
+      opacity: 0.5;
+      font-size: 0.8em;
+    }
+    .home-quote::before {
+      content: '「';
+      margin-right: var(--space-2);
+    }
+    .home-quote::after {
+      content: '」';
+      margin-left: var(--space-2);
+    }
+
+    /* 底部五行导航 */
+    .home-wuxing-nav {
+      position: relative;
+      z-index: var(--z-content);
+      display: flex;
+      gap: var(--space-6);
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 0 var(--space-4) var(--space-8);
+      animation: fade-in-up 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.2s both;
+    }
+
+    .home-wuxing-nav .wuxing-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-4) var(--space-5);
+      background: rgba(26,26,30,0.6);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--ink-mist);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all var(--duration-normal);
+      min-width: 72px;
+      text-decoration: none;
+    }
+
+    .home-wuxing-nav .wuxing-item:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .home-wuxing-nav .wuxing-item.use:hover {
+      border-color: var(--azurite);
+      box-shadow: var(--shadow-glow-azurite);
+    }
+    .home-wuxing-nav .wuxing-item.expand:hover {
+      border-color: var(--gamboge);
+      box-shadow: var(--shadow-glow-gamboge);
+    }
+    .home-wuxing-nav .wuxing-item.derive:hover {
+      border-color: var(--malachite);
+      box-shadow: var(--shadow-glow-malachite);
+    }
+    .home-wuxing-nav .wuxing-item.benefit:hover {
+      border-color: var(--ochre);
+    }
+    .home-wuxing-nav .wuxing-item.shi:hover {
+      border-color: var(--cinnabar);
+      box-shadow: var(--shadow-glow-cinnabar);
+    }
+
+    .home-wuxing-nav .wuxing-symbol {
+      font-family: var(--font-serif);
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 1px solid;
+      transition: all var(--duration-normal);
+    }
+
+    .home-wuxing-nav .wuxing-item.use .wuxing-symbol {
+      color: var(--azurite);
+      border-color: rgba(74,144,164,0.3);
+      background: rgba(74,144,164,0.1);
+    }
+    .home-wuxing-nav .wuxing-item.expand .wuxing-symbol {
+      color: var(--gamboge);
+      border-color: rgba(200,168,76,0.3);
+      background: rgba(200,168,76,0.1);
+    }
+    .home-wuxing-nav .wuxing-item.derive .wuxing-symbol {
+      color: var(--malachite);
+      border-color: rgba(90,154,110,0.3);
+      background: rgba(90,154,110,0.1);
+    }
+    .home-wuxing-nav .wuxing-item.benefit .wuxing-symbol {
+      color: var(--ochre);
+      border-color: rgba(139,105,20,0.3);
+      background: rgba(139,105,20,0.1);
+    }
+    .home-wuxing-nav .wuxing-item.shi .wuxing-symbol {
+      color: var(--cinnabar);
+      border-color: rgba(196,92,72,0.3);
+      background: rgba(196,92,72,0.1);
+    }
+
+    .home-wuxing-nav .wuxing-name {
+      font-family: var(--font-serif);
+      font-size: var(--text-sm);
+      color: var(--ink-fog);
+      letter-spacing: 0.2em;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+    }
+
+    .home-wuxing-nav .wuxing-item:hover .wuxing-name {
+      color: var(--ink-rice);
+    }
+
+    .home-wuxing-nav .wuxing-desc {
+      font-size: var(--text-xs);
+      color: var(--ink-fog);
+      opacity: 0.6;
+    }
+
+    /* 装饰墨线 */
+    .ink-line {
+      position: fixed;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.1;
+    }
+    .ink-line.top {
+      top: 15%;
+      left: 5%;
+      width: 30%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--ink-rice), transparent);
+    }
+    .ink-line.bottom {
+      bottom: 20%;
+      right: 5%;
+      width: 25%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--ink-rice), transparent);
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .home-wuxing-nav {
+        gap: var(--space-3);
+      }
+      .home-wuxing-nav .wuxing-item {
+        padding: var(--space-3) var(--space-3);
+        min-width: 60px;
+      }
+      .home-wuxing-nav .wuxing-symbol {
+        width: 40px;
+        height: 40px;
+        font-size: var(--text-lg);
+      }
+      .home-content {
+        padding: var(--space-4);
+      }
+    }
+  </style>
+</head>
+<body class="home-page">
+  <!-- 粒子Canvas背景 -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- 装饰墨线 -->
+  <div class="ink-line top"></div>
+  <div class="ink-line bottom"></div>
+
+  <!-- 云雾层 -->
+  <div class="cloud-layer">
+    <div class="cloud"></div>
+    <div class="cloud"></div>
+    <div class="cloud"></div>
+  </div>
+
+  <!-- 主内容 -->
+  <main class="home-content">
+    <h1 class="home-title">ECHO</h1>
+    <p class="home-subtitle">使用权生命周期网络</p>
+    <p class="home-quote">
+      万物有灵，皆可生长。<br>
+      势体系让生长有方向，让开放有边界。
+    </p>
+  </main>
+
+  <!-- 五行导航 -->
+  <nav class="home-wuxing-nav" aria-label="五行概念导航">
+    <a class="wuxing-item use" href="rights.html" title="用 — 罗盘配置">
+      <span class="wuxing-symbol">用</span>
+      <span class="wuxing-name">罗盘</span>
+      <span class="wuxing-desc">配置四权</span>
+    </a>
+    <a class="wuxing-item expand" href="graph.html" title="扩 — 关系网络">
+      <span class="wuxing-symbol">扩</span>
+      <span class="wuxing-name">山水</span>
+      <span class="wuxing-desc">验证图谱</span>
+    </a>
+    <a class="wuxing-item derive" href="shi.html" title="衍 — 生长演化">
+      <span class="wuxing-symbol">衍</span>
+      <span class="wuxing-name">生长</span>
+      <span class="wuxing-desc">势体系</span>
+    </a>
+    <a class="wuxing-item benefit" href="simulate.html" title="益 — 流金分润">
+      <span class="wuxing-symbol">益</span>
+      <span class="wuxing-name">流金</span>
+      <span class="wuxing-desc">场景模拟</span>
+    </a>
+    <a class="wuxing-item shi" href="market.html" title="势 — 规则市集">
+      <span class="wuxing-symbol">势</span>
+      <span class="wuxing-name">天地</span>
+      <span class="wuxing-desc">规则市场</span>
+    </a>
+  </nav>
+
+  <script>
+    /**
+     * ECHO首页 — 墨色粒子星云系统
+     * 东方美学粒子：墨色粒子缓慢旋转如星云
+     */
+    (function() {
+      const canvas = document.getElementById('particle-canvas');
+      const ctx = canvas.getContext('2d');
+
+      let width, height;
+      let particles = [];
+      let animationId;
+      let mouseX = 0, mouseY = 0;
+
+      // 配置参数
+      const CONFIG = {
+        particleCount: 180,      // 粒子数量
+        baseSpeed: 0.0003,       // 基础旋转速度
+        mouseInfluence: 0.15,    // 鼠标影响强度
+        connectionDist: 100,     // 连线最大距离
+        connectionMax: 3,        // 每个粒子最大连线数
+        sizeMin: 0.5,
+        sizeMax: 2.5,
+        trail: 0.15,             // 拖尾效果（越小拖尾越长）
+      };
+
+      // 墨色调色板 — 东方美学
+      const PALETTE = [
+        { r: 240, g: 240, b: 232, a: 0.8 },  // 素白
+        { r: 138, g: 138, b: 144, a: 0.6 },  // 雾灰
+        { r: 74,  g: 144, b: 164, a: 0.4 },  // 石青
+        { r: 90,  g: 154, b: 110, a: 0.3 },  // 石绿
+        { r: 200, g: 168, b: 76,  a: 0.3 },  // 藤黄
+        { r: 196, g: 92,  b: 72,  a: 0.2 },  // 朱砂
+      ];
+
+      /**
+       * 粒子类
+       */
+      class Particle {
+        constructor() {
+          this.reset();
+        }
+
+        reset() {
+          // 极坐标初始化 — 围绕中心分布
+          const angle = Math.random() * Math.PI * 2;
+          const radius = Math.random() * Math.min(width, height) * 0.45;
+          this.centerX = width / 2;
+          this.centerY = height / 2;
+          this.radius = radius;
+          this.angle = angle;
+          this.speed = CONFIG.baseSpeed * (0.3 + Math.random() * 1.4);
+          // 内层粒子转更快，外层更慢（开普勒既视感）
+          this.speed *= (1 / (1 + radius / 200));
+
+          // 粒子属性
+          const palette = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+          this.color = { ...palette };
+          this.baseSize = CONFIG.sizeMin + Math.random() * (CONFIG.sizeMax - CONFIG.sizeMin);
+          this.size = this.baseSize;
+          this.pulsePhase = Math.random() * Math.PI * 2;
+          this.pulseSpeed = 0.01 + Math.random() * 0.02;
+
+          // 位置（笛卡尔坐标缓存）
+          this.x = this.centerX + Math.cos(this.angle) * this.radius;
+          this.y = this.centerY + Math.sin(this.angle) * this.radius;
+        }
+
+        update(time) {
+          // 自转
+          this.angle += this.speed;
+
+          // 脉冲呼吸
+          this.pulsePhase += this.pulseSpeed;
+          const pulse = 0.7 + 0.3 * Math.sin(this.pulsePhase);
+          this.size = this.baseSize * pulse;
+
+          // 计算新位置
+          let targetX = this.centerX + Math.cos(this.angle) * this.radius;
+          let targetY = this.centerY + Math.sin(this.angle) * this.radius;
+
+          // 鼠标影响 — 粒子向鼠标位置轻微偏移（引力感）
+          const dx = mouseX - this.x;
+          const dy = mouseY - this.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 300 && dist > 0) {
+            const force = (1 - dist / 300) * CONFIG.mouseInfluence;
+            targetX += dx * force * 0.02;
+            targetY += dy * force * 0.02;
+          }
+
+          // 平滑移动
+          this.x += (targetX - this.x) * 0.05;
+          this.y += (targetY - this.y) * 0.05;
+        }
+
+        draw(ctx) {
+          const alpha = this.color.a * (0.6 + 0.4 * Math.sin(this.pulsePhase));
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},${alpha})`;
+          ctx.fill();
+
+          // 微光晕
+          if (this.size > 1.5) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+            const glowAlpha = alpha * 0.15;
+            ctx.fillStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},${glowAlpha})`;
+            ctx.fill();
+          }
+        }
+      }
+
+      /**
+       * 初始化画布尺寸
+       */
+      function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+
+        // 更新所有粒子的中心点
+        particles.forEach(p => {
+          p.centerX = width / 2;
+          p.centerY = height / 2;
+        });
+      }
+
+      /**
+       * 初始化粒子
+       */
+      function initParticles() {
+        particles = [];
+        for (let i = 0; i < CONFIG.particleCount; i++) {
+          particles.push(new Particle());
+        }
+      }
+
+      /**
+       * 绘制粒子连线 — 水墨笔触感
+       */
+      function drawConnections(ctx) {
+        for (let i = 0; i < particles.length; i++) {
+          let connections = 0;
+          for (let j = i + 1; j < particles.length; j++) {
+            if (connections >= CONFIG.connectionMax) break;
+
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < CONFIG.connectionDist) {
+              const alpha = (1 - dist / CONFIG.connectionDist) * 0.15;
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              // 使用二次贝塞尔曲线让连线有弧度（水墨笔触）
+              const midX = (particles[i].x + particles[j].x) / 2 + (Math.random() - 0.5) * 10;
+              const midY = (particles[i].y + particles[j].y) / 2 + (Math.random() - 0.5) * 10;
+              ctx.quadraticCurveTo(midX, midY, particles[j].x, particles[j].y);
+              ctx.strokeStyle = `rgba(138,138,144,${alpha})`;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+              connections++;
+            }
+          }
+        }
+      }
+
+      /**
+       * 主动画循环
+       */
+      function animate(time) {
+        // 拖尾效果 — 不完全清除，而是覆盖半透明层
+        ctx.fillStyle = `rgba(12,12,14,${CONFIG.trail})`;
+        ctx.fillRect(0, 0, width, height);
+
+        // 绘制连线
+        drawConnections(ctx);
+
+        // 更新并绘制粒子
+        particles.forEach(p => {
+          p.update(time);
+          p.draw(ctx);
+        });
+
+        animationId = requestAnimationFrame(animate);
+      }
+
+      /**
+       * 事件监听
+       */
+      window.addEventListener('resize', () => {
+        resize();
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+      });
+
+      // 触摸设备支持
+      window.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) {
+          mouseX = e.touches[0].clientX;
+          mouseY = e.touches[0].clientY;
+        }
+      });
+
+      /**
+       * 启动
+       */
+      function start() {
+        resize();
+        initParticles();
+        animate(0);
+      }
+
+      // 延迟启动，等字体加载
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(start);
+      } else {
+        start();
+      }
+
+      // 页面可见性控制 — 后台暂停动画节省资源
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          cancelAnimationFrame(animationId);
+        } else {
+          animate(0);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

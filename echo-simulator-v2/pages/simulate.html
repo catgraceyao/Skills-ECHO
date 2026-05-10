@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECHO — 场景模拟</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    :root {
+      --ink-black: #0c0c0e; --ink-deep: #1a1a1e; --ink-mid: #2a2a30;
+      --ink-light: #8a8a90; --ink-rice: #f0f0e8;
+      --cinnabar: #c45c48; --stone-blue: #4a90a4; --stone-green: #5a9a6e;
+      --vine-yellow: #c8a84c; --ochre: #8b6914; --indigo: #2c3e50;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: var(--ink-black); color: var(--ink-rice);
+      width: 100%; height: 100vh; overflow: hidden;
+    }
+    
+    .simulate-page {
+      display: flex; flex-direction: column;
+      height: 100vh;
+    }
+    
+    /* 顶部统计栏 */
+    .stats-bar {
+      display: flex; gap: 24px; padding: 12px 20px;
+      background: linear-gradient(90deg, var(--ink-deep), var(--ink-black));
+      border-bottom: 1px solid var(--ink-mid);
+      align-items: center;
+    }
+    .stat-item {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .stat-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .stat-text { display: flex; flex-direction: column; }
+    .stat-value {
+      font-size: 1.1rem; font-weight: 700; color: var(--stone-blue);
+    }
+    .stat-label {
+      font-size: 0.65rem; color: var(--ink-light); letter-spacing: 0.1em;
+    }
+    
+    /* 主内容区 */
+    .main-content {
+      flex: 1; display: flex; overflow: hidden;
+    }
+    
+    /* 左侧场景选择器 */
+    .scene-panel {
+      width: 220px; flex-shrink: 0;
+      background: var(--ink-deep);
+      border-right: 1px solid var(--ink-mid);
+      display: flex; flex-direction: column;
+    }
+    .scene-header {
+      padding: 16px; border-bottom: 1px solid var(--ink-mid);
+      font-size: 0.85rem; font-weight: 700;
+      color: var(--stone-blue); letter-spacing: 0.15em;
+    }
+    .scene-list {
+      flex: 1; overflow-y: auto; padding: 8px;
+    }
+    .scene-item {
+      padding: 12px; border-radius: 8px;
+      margin-bottom: 8px; cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.3s;
+    }
+    .scene-item:hover {
+      background: rgba(42,42,48,0.5);
+      border-color: var(--ink-mid);
+    }
+    .scene-item.active {
+      background: rgba(74,144,164,0.15);
+      border-color: var(--stone-blue);
+    }
+    .scene-item .scene-icon {
+      font-size: 1.5rem; margin-bottom: 4px;
+    }
+    .scene-item .scene-name {
+      font-size: 0.8rem; font-weight: 500; color: var(--ink-rice);
+    }
+    .scene-item .scene-desc {
+      font-size: 0.65rem; color: var(--ink-light); margin-top: 4px;
+      line-height: 1.4;
+    }
+    
+    /* 中央视图区 */
+    .view-area {
+      flex: 1; display: flex; flex-direction: column;
+      position: relative;
+    }
+    
+    /* 网络图 */
+    .network-view {
+      flex: 1; position: relative; overflow: hidden;
+    }
+    #networkSvg {
+      width: 100%; height: 100%;
+    }
+    
+    /* 经济活动面板 */
+    .economy-panel {
+      height: 200px;
+      background: var(--ink-deep);
+      border-top: 1px solid var(--ink-mid);
+      display: flex; gap: 0;
+    }
+    .economy-section {
+      flex: 1; padding: 12px; border-right: 1px solid var(--ink-mid);
+      overflow-y: auto;
+    }
+    .economy-section:last-child { border-right: none; }
+    .economy-title {
+      font-size: 0.7rem; color: var(--ink-light);
+      letter-spacing: 0.15em; margin-bottom: 8px;
+    }
+    
+    /* 交易记录 */
+    .tx-list { display: flex; flex-direction: column; gap: 4px; }
+    .tx-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 4px 8px; border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .tx-item:nth-child(odd) { background: rgba(42,42,48,0.3); }
+    .tx-amount { color: var(--stone-green); font-weight: 500; }
+    .tx-amount.negative { color: var(--cinnabar); }
+    
+    /* Agent面板 */
+    .agent-panel {
+      width: 200px; flex-shrink: 0;
+      background: var(--ink-deep);
+      border-left: 1px solid var(--ink-mid);
+      display: flex; flex-direction: column;
+    }
+    .agent-header {
+      padding: 16px; border-bottom: 1px solid var(--ink-mid);
+      font-size: 0.85rem; font-weight: 700;
+      color: var(--stone-green); letter-spacing: 0.15em;
+    }
+    .agent-list {
+      flex: 1; overflow-y: auto; padding: 8px;
+    }
+    .agent-card {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px; border-radius: 8px;
+      margin-bottom: 8px; border: 1px solid var(--ink-mid);
+      transition: all 0.3s;
+    }
+    .agent-card:hover { border-color: var(--stone-blue); }
+    .agent-card.active {
+      border-color: var(--stone-green);
+      background: rgba(90,154,110,0.1);
+    }
+    .agent-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; font-weight: 700; color: white;
+      flex-shrink: 0;
+    }
+    .agent-info { flex: 1; min-width: 0; }
+    .agent-name {
+      font-size: 0.8rem; font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .agent-balance {
+      font-size: 0.7rem; color: var(--stone-green);
+    }
+    .agent-action {
+      font-size: 0.65rem; color: var(--vine-yellow);
+      margin-top: 2px; font-style: italic;
+    }
+    
+    /* 控制栏 */
+    .control-bar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 20px;
+      background: linear-gradient(90deg, var(--ink-deep), var(--ink-black));
+      border-top: 1px solid var(--ink-mid);
+    }
+    .ctrl-btn {
+      padding: 8px 16px; border-radius: 6px;
+      background: var(--ink-mid); border: 1px solid var(--ink-mid);
+      color: var(--ink-rice); font-size: 0.8rem;
+      cursor: pointer; transition: all 0.2s;
+      font-family: inherit;
+    }
+    .ctrl-btn:hover {
+      background: var(--stone-blue); border-color: var(--stone-blue);
+    }
+    .ctrl-btn.primary {
+      background: var(--stone-green); border-color: var(--stone-green);
+    }
+    .ctrl-btn.primary:hover {
+      background: var(--stone-blue); border-color: var(--stone-blue);
+    }
+    .ctrl-btn:disabled {
+      opacity: 0.4; cursor: not-allowed;
+    }
+    .speed-select {
+      background: var(--ink-deep); border: 1px solid var(--ink-mid);
+      color: var(--ink-rice); padding: 6px 10px;
+      border-radius: 6px; font-size: 0.8rem;
+      font-family: inherit;
+    }
+    .progress-bar {
+      flex: 1; height: 6px; background: var(--ink-mid);
+      border-radius: 3px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg, var(--stone-blue), var(--stone-green));
+      border-radius: 3px; transition: width 0.3s;
+      width: 0%;
+    }
+    .step-counter {
+      font-size: 0.75rem; color: var(--ink-light);
+      min-width: 80px; text-align: center;
+    }
+    
+    /* 事件日志 */
+    .log-panel {
+      position: absolute; bottom: 0; left: 0; right: 220px;
+      max-height: 180px; background: rgba(12,12,14,0.95);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--ink-mid);
+      display: none; flex-direction: column;
+    }
+    .log-panel.show { display: flex; }
+    .log-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; border-bottom: 1px solid var(--ink-mid);
+    }
+    .log-title { font-size: 0.75rem; color: var(--ink-light); }
+    .log-close {
+      background: none; border: none; color: var(--ink-light);
+      cursor: pointer; font-size: 1rem;
+    }
+    .log-list {
+      flex: 1; overflow-y: auto; padding: 8px;
+    }
+    .log-item {
+      display: flex; gap: 8px; padding: 4px 8px;
+      border-radius: 4px; font-size: 0.75rem;
+      animation: logIn 0.3s ease-out;
+    }
+    @keyframes logIn {
+      from { opacity: 0; transform: translateX(-10px); }
+    }
+    .log-item:nth-child(odd) { background: rgba(42,42,48,0.3); }
+    .log-time { color: var(--ink-light); min-width: 50px; }
+    .log-type {
+      padding: 1px 6px; border-radius: 3px;
+      font-size: 0.65rem; min-width: 60px; text-align: center;
+    }
+    .log-type.register { background: rgba(74,144,164,0.2); color: var(--stone-blue); }
+    .log-type.purchase { background: rgba(90,154,110,0.2); color: var(--stone-green); }
+    .log-type.remix { background: rgba(200,168,76,0.2); color: var(--vine-yellow); }
+    .log-type.reference { background: rgba(139,105,20,0.2); color: var(--ochre); }
+    .log-type.shi { background: rgba(196,92,72,0.2); color: var(--cinnabar); }
+    .log-type.fork { background: rgba(44,62,80,0.2); color: var(--indigo); }
+    .log-msg { color: var(--ink-rice); flex: 1; }
+    
+    /* D3网络图样式 */
+    .node-circle { cursor: pointer; transition: all 0.3s; }
+    .node-circle:hover { filter: brightness(1.3); }
+    .node-label {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 11px; fill: var(--ink-rice);
+      pointer-events: none; text-anchor: middle;
+    }
+    .link-line {
+      stroke-opacity: 0.4;
+      transition: all 0.3s;
+    }
+    .link-line:hover { stroke-opacity: 0.8; stroke-width: 2; }
+  </style>
+</head>
+<body>
+  <div class="simulate-page">
+    <!-- 顶部统计栏 -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-icon" style="background: rgba(74,144,164,0.2);">📦</div>
+        <div class="stat-text">
+          <div class="stat-value" id="statAssets">0</div>
+          <div class="stat-label">资产总数</div>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon" style="background: rgba(90,154,110,0.2);">💰</div>
+        <div class="stat-text">
+          <div class="stat-value" id="statRevenue">¥0</div>
+          <div class="stat-label">总交易额</div>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon" style="background: rgba(200,168,76,0.2);">👥</div>
+        <div class="stat-text">
+          <div class="stat-value" id="statUsers">0</div>
+          <div class="stat-label">活跃用户</div>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon" style="background: rgba(196,92,72,0.2);">🌐</div>
+        <div class="stat-text">
+          <div class="stat-value" id="statValue">¥0</div>
+          <div class="stat-label">生态价值</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 主内容 -->
+    <div class="main-content">
+      <!-- 左侧场景选择 -->
+      <div class="scene-panel">
+        <div class="scene-header">场景选择</div>
+        <div class="scene-list" id="sceneList">
+          <!-- 由JS填充 -->
+        </div>
+      </div>
+      
+      <!-- 中央视图 -->
+      <div class="view-area">
+        <div class="network-view">
+          <svg id="networkSvg"></svg>
+        </div>
+        
+        <!-- 经济活动面板 -->
+        <div class="economy-panel">
+          <div class="economy-section">
+            <div class="economy-title">交易记录</div>
+            <div class="tx-list" id="txList">
+              <div style="color: var(--ink-light); font-size: 0.75rem; text-align: center; padding: 20px;">
+                选择场景开始模拟
+              </div>
+            </div>
+          </div>
+          <div class="economy-section">
+            <div class="economy-title">余额变化</div>
+            <canvas id="balanceChart" width="300" height="160"></canvas>
+          </div>
+          <div class="economy-section">
+            <div class="economy-title">分润明细</div>
+            <div class="tx-list" id="splitList">
+              <div style="color: var(--ink-light); font-size: 0.75rem; text-align: center; padding: 20px;">
+                模拟交易中...
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 事件日志浮层 -->
+        <div class="log-panel" id="logPanel">
+          <div class="log-header">
+            <div class="log-title">事件日志</div>
+            <button class="log-close" onclick="toggleLog()">×</button>
+          </div>
+          <div class="log-list" id="logList"></div>
+        </div>
+      </div>
+      
+      <!-- 右侧Agent面板 -->
+      <div class="agent-panel">
+        <div class="agent-header">Agent状态</div>
+        <div class="agent-list" id="agentList">
+          <!-- 由JS填充 -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- 控制栏 -->
+    <div class="control-bar">
+      <button class="ctrl-btn primary" id="playBtn" onclick="togglePlay()">▶ 播放</button>
+      <button class="ctrl-btn" id="stepBtn" onclick="stepForward()">⏭ 步进</button>
+      <button class="ctrl-btn" onclick="resetSim()">↺ 重置</button>
+      <button class="ctrl-btn" onclick="toggleLog()">📋 日志</button>
+      <select class="speed-select" id="speedSelect">
+        <option value="2000">0.5x</option>
+        <option value="1000" selected>1x</option>
+        <option value="500">2x</option>
+        <option value="250">4x</option>
+      </select>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="step-counter" id="stepCounter">0 / 0</div>
+    </div>
+  </div>
+  
+  <script>
+    // ========================
+    // 模拟数据
+    // ========================
+    const USERS = [
+      { id: 'alice', name: 'Alice', role: 'creator', type: '独立音乐人', balance: 1000, avatarColor: '#4a90a4', bio: '创作电子氛围音乐' },
+      { id: 'bob', name: 'Bob', role: 'creator', type: '视频创作者', balance: 500, avatarColor: '#5a9a6e', bio: '制作科普短视频' },
+      { id: 'charlie', name: 'Charlie', role: 'creator', type: '开源开发者', balance: 300, avatarColor: '#8b6914', bio: '开发音频处理工具' },
+      { id: 'diana', name: 'Diana', role: 'user', type: '普通用户', balance: 100, avatarColor: '#c8a84c', bio: '音乐爱好者' },
+      { id: 'eve', name: 'Eve', role: 'platform', type: '平台运营', balance: 5000, avatarColor: '#2c3e50', bio: 'ECHO平台运营' },
+      { id: 'mallory', name: 'Mallory', role: 'platform', type: 'AI公司', balance: 10000, avatarColor: '#c45c48', bio: '训练AI音乐模型' }
+    ];
+    
+    const ASSETS = [
+      { id: 'song_spring', name: '春日序曲', creatorId: 'alice', type: 'music', color: '#4a90a4' },
+      { id: 'video_tech', name: '量子计算科普', creatorId: 'bob', type: 'video', color: '#5a9a6e' },
+      { id: 'code_audio', name: 'EchoAudio', creatorId: 'charlie', type: 'code', color: '#8b6914' },
+      { id: 'photo_night', name: '城市夜景', creatorId: 'diana', type: 'image', color: '#c8a84c' },
+      { id: 'remix_spring', name: '春日Remix', creatorId: 'diana', type: 'music', parentId: 'song_spring', color: '#c8a84c' },
+      { id: 'app_podcast', name: '播客套件', creatorId: 'bob', type: 'tool', parentId: 'code_audio', color: '#5a9a6e' },
+      { id: 'ai_model', name: 'AI音乐模型', creatorId: 'mallory', type: 'ai', parentId: 'song_spring', color: '#c45c48' }
+    ];
+    
+    const SCENARIOS = [
+      {
+        id: 'scene_music', name: '独立音乐人生态生长', desc: 'Alice发布单曲，被引用、改编、传播，势图接管自动开放权限', icon: '🎵',
+        steps: [
+          { action: 'register', assetId: 'song_spring', userId: 'alice', note: 'Alice登记《春日序曲》', amount: 0 },
+          { action: 'view', assetId: 'song_spring', userId: 'bob', note: 'Bob发现并观看', amount: 0 },
+          { action: 'purchase', assetId: 'song_spring', userId: 'bob', note: 'Bob购买使用权', amount: 5 },
+          { action: 'reference', assetId: 'video_tech', parentId: 'song_spring', userId: 'bob', note: '视频引用音乐做BGM', amount: 0 },
+          { action: 'view', assetId: 'song_spring', userId: 'diana', note: 'Diana观看', amount: 0 },
+          { action: 'remix', assetId: 'remix_spring', parentId: 'song_spring', userId: 'diana', note: 'Diana创作Remix', amount: 0 },
+          { action: 'purchase', assetId: 'remix_spring', userId: 'diana', note: '购买Remix', amount: 3 },
+          { action: 'apply_law', assetId: 'ai_model', parentId: 'song_spring', userId: 'mallory', note: 'Mallory申请法档授权', amount: 0 },
+          { action: 'grant_law', assetId: 'song_spring', userId: 'alice', note: 'Alice同意法档授权', amount: 0 },
+          { action: 'purchase', assetId: 'ai_model', userId: 'diana', note: 'Diana购买AI模型', amount: 50 },
+          { action: 'shi_takeover', assetId: 'song_spring', note: '势图接管：用权自动开放至公档', amount: 0 },
+          { action: 'config_lock', assetId: 'song_spring', userId: 'alice', note: 'Alice试图收紧权限→被阻止', amount: 0 }
+        ]
+      },
+      {
+        id: 'scene_opensource', name: '开源软件社区自治', desc: 'Charlie发布开源工具，社区fork、改进、形成生态', icon: '💻',
+        steps: [
+          { action: 'register', assetId: 'code_audio', userId: 'charlie', note: '发布EchoAudio', amount: 0 },
+          { action: 'download', assetId: 'code_audio', userId: 'bob', note: 'Bob下载', amount: 0 },
+          { action: 'download', assetId: 'code_audio', userId: 'diana', note: 'Diana下载', amount: 0 },
+          { action: 'fork', assetId: 'app_podcast', parentId: 'code_audio', userId: 'bob', note: 'Bob Fork做播客工具', amount: 0 },
+          { action: 'purchase', assetId: 'app_podcast', userId: 'bob', note: '购买播客工具', amount: 15 },
+          { action: 'shi_takeover', assetId: 'code_audio', note: '势图接管：扩权自动开放', amount: 0 },
+          { action: 'remix', assetId: 'app_podcast', parentId: 'code_audio', userId: 'diana', note: 'Diana改进播客工具', amount: 0 },
+          { action: 'purchase', assetId: 'app_podcast', userId: 'mallory', note: 'Mallory购买', amount: 15 }
+        ]
+      },
+      {
+        id: 'scene_society', name: '多Agent社会经济', desc: '5个Agent在ECHO网络中自发交易、衍生、分润', icon: '🏙️',
+        steps: [
+          { action: 'register', assetId: 'song_spring', userId: 'alice', note: 'Alice发歌', amount: 0 },
+          { action: 'register', assetId: 'photo_night', userId: 'diana', note: 'Diana发照片', amount: 0 },
+          { action: 'register', assetId: 'code_audio', userId: 'charlie', note: 'Charlie发代码', amount: 0 },
+          { action: 'purchase', assetId: 'song_spring', userId: 'bob', note: 'Bob买歌', amount: 5 },
+          { action: 'purchase', assetId: 'photo_night', userId: 'eve', note: 'Eve买照片', amount: 10 },
+          { action: 'remix', assetId: 'remix_spring', parentId: 'song_spring', userId: 'diana', note: 'Diana Remix', amount: 0 },
+          { action: 'reference', assetId: 'video_tech', parentId: 'song_spring', userId: 'bob', note: 'Bob引用', amount: 0 },
+          { action: 'fork', assetId: 'app_podcast', parentId: 'code_audio', userId: 'bob', note: 'Bob Fork', amount: 0 },
+          { action: 'apply_law', assetId: 'ai_model', parentId: 'song_spring', userId: 'mallory', note: '申请法档', amount: 0 },
+          { action: 'grant_law', assetId: 'song_spring', userId: 'alice', note: '授权', amount: 0 },
+          { action: 'register', assetId: 'ai_model', userId: 'mallory', note: '发布AI模型', amount: 0 },
+          { action: 'purchase', assetId: 'ai_model', userId: 'diana', note: '买模型', amount: 50 },
+          { action: 'purchase', assetId: 'ai_model', userId: 'bob', note: '买模型', amount: 50 },
+          { action: 'shi_takeover', assetId: 'song_spring', note: '势图接管触发', amount: 0 },
+          { action: 'revenue_split', assetId: 'ai_model', note: '多级分润执行', amount: 0 }
+        ]
+      },
+      {
+        id: 'scene_takeover', name: '势图接管冲突', desc: '展示势图接管"只开放不收紧"原则和元规则约束', icon: '⚖️',
+        steps: [
+          { action: 'register', assetId: 'song_spring', userId: 'alice', note: 'Alice发歌（保守配置）', amount: 0 },
+          { action: 'view', assetId: 'song_spring', userId: 'bob', note: 'Bob观看', amount: 0 },
+          { action: 'view', assetId: 'song_spring', userId: 'diana', note: 'Diana观看', amount: 0 },
+          { action: 'view', assetId: 'song_spring', userId: 'charlie', note: 'Charlie观看', amount: 0 },
+          { action: 'remix', assetId: 'remix_spring', parentId: 'song_spring', userId: 'diana', note: 'Remix', amount: 0 },
+          { action: 'reference', assetId: 'video_tech', parentId: 'song_spring', userId: 'bob', note: '引用', amount: 0 },
+          { action: 'shi_takeover', assetId: 'song_spring', note: '接管：扩权开放至公档', amount: 0 },
+          { action: 'config_lock', assetId: 'song_spring', userId: 'alice', note: '试图收紧→被阻止', amount: 0 },
+          { action: 'apply_law', assetId: 'ai_model', parentId: 'song_spring', userId: 'mallory', note: '申请法档', amount: 0 },
+          { action: 'grant_law', assetId: 'song_spring', userId: 'alice', note: '授权', amount: 0 },
+          { action: 'shi_takeover', assetId: 'song_spring', note: '接管：益权开放至法档', amount: 0 }
+        ]
+      }
+    ];
+    
+    // ========================
+    // 状态管理
+    // ========================
+    let currentScenario = null;
+    let currentStep = 0;
+    let isPlaying = false;
+    let playInterval = null;
+    let simUsers = {}; // 当前模拟的用户余额副本
+    let simAssets = []; // 当前已注册资产
+    let transactions = [];
+    let revenueSplits = [];
+    
+    // ========================
+    // 初始化
+    // ========================
+    function init() {
+      renderScenes();
+      renderAgents();
+      initNetwork();
+      selectScenario(0);
+    }
+    
+    function renderScenes() {
+      const list = document.getElementById('sceneList');
+      list.innerHTML = SCENARIOS.map((s, i) => `
+        <div class="scene-item ${i === 0 ? 'active' : ''}" data-idx="${i}" onclick="selectScenario(${i})">
+          <div class="scene-icon">${s.icon}</div>
+          <div class="scene-name">${s.name}</div>
+          <div class="scene-desc">${s.desc}</div>
+        </div>
+      `).join('');
+    }
+    
+    function renderAgents() {
+      const list = document.getElementById('agentList');
+      list.innerHTML = USERS.map(u => `
+        <div class="agent-card" id="agent-${u.id}" data-id="${u.id}">
+          <div class="agent-avatar" style="background: ${u.avatarColor};">${u.name[0]}</div>
+          <div class="agent-info">
+            <div class="agent-name">${u.name}</div>
+            <div class="agent-balance" id="balance-${u.id}">¥${u.balance}</div>
+            <div class="agent-action" id="action-${u.id}">待机中</div>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // ========================
+    // 场景选择
+    // ========================
+    function selectScenario(idx) {
+      resetSim();
+      currentScenario = SCENARIOS[idx];
+      currentStep = 0;
+      
+      document.querySelectorAll('.scene-item').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+      });
+      
+      // 重置用户余额
+      simUsers = {};
+      USERS.forEach(u => simUsers[u.id] = u.balance);
+      simAssets = [];
+      transactions = [];
+      revenueSplits = [];
+      
+      updateStats();
+      updateStepCounter();
+      drawNetwork();
+      renderTxList();
+      renderSplitList();
+      updateAgentActions();
+    }
+    
+    // ========================
+    // 模拟控制
+    // ========================
+    function togglePlay() {
+      if (isPlaying) {
+        pause();
+      } else {
+        play();
+      }
+    }
+    
+    function play() {
+      isPlaying = true;
+      document.getElementById('playBtn').innerHTML = '⏸ 暂停';
+      document.getElementById('playBtn').classList.remove('primary');
+      const speed = parseInt(document.getElementById('speedSelect').value);
+      playInterval = setInterval(stepForward, speed);
+    }
+    
+    function pause() {
+      isPlaying = false;
+      document.getElementById('playBtn').innerHTML = '▶ 播放';
+      document.getElementById('playBtn').classList.add('primary');
+      clearInterval(playInterval);
+    }
+    
+    function stepForward() {
+      if (!currentScenario || currentStep >= currentScenario.steps.length) {
+        pause();
+        return;
+      }
+      
+      const step = currentScenario.steps[currentStep];
+      executeStep(step);
+      currentStep++;
+      updateStepCounter();
+      updateProgress();
+      
+      if (currentStep >= currentScenario.steps.length) {
+        pause();
+      }
+    }
+    
+    function resetSim() {
+      pause();
+      currentStep = 0;
+      if (currentScenario) {
+        selectScenario(SCENARIOS.indexOf(currentScenario));
+      }
+    }
+    
+    // ========================
+    // 执行单步
+    // ========================
+    function executeStep(step) {
+      const asset = ASSETS.find(a => a.id === step.assetId);
+      const user = USERS.find(u => u.id === step.userId);
+      
+      // 更新Agent动作
+      if (user) {
+        document.getElementById(`action-${user.id}`).textContent = step.note;
+        document.querySelector(`#agent-${user.id}`).classList.add('active');
+        setTimeout(() => {
+          document.querySelector(`#agent-${user.id}`).classList.remove('active');
+        }, 1000);
+      }
+      
+      // 处理交易
+      if (step.amount > 0 && step.action === 'purchase') {
+        // 购买者扣款
+        if (user) simUsers[user.id] -= step.amount;
+        // 创作者收款
+        if (asset) {
+          const creator = USERS.find(u => u.id === asset.creatorId);
+          if (creator) {
+            simUsers[creator.id] += step.amount * 0.7;
+            // 平台抽成
+            simUsers.eve += step.amount * 0.3;
+          }
+        }
+        
+        transactions.push({
+          from: user?.name || '系统',
+          to: asset?.name || '系统',
+          amount: step.amount,
+          time: `T+${currentStep}`,
+          action: step.action
+        });
+        
+        // 分润（如果有父资产）
+        if (asset?.parentId) {
+          const parent = ASSETS.find(a => a.id === asset.parentId);
+          if (parent) {
+            const parentCreator = USERS.find(u => u.id === parent.creatorId);
+            const splitAmount = step.amount * 0.1;
+            if (parentCreator) {
+              simUsers[parentCreator.id] += splitAmount;
+              revenueSplits.push({
+                from: asset.name,
+                to: parentCreator.name,
+                amount: splitAmount,
+                reason: '父资产分润(10%)'
+              });
+            }
+          }
+        }
+      }
+      
+      // 处理资产注册
+      if (step.action === 'register' && asset && !simAssets.find(a => a.id === asset.id)) {
+        simAssets.push({ ...asset, registeredAt: currentStep });
+      }
+      
+      // 添加到日志
+      addLog(step);
+      
+      // 更新网络图
+      if (step.action === 'register' || step.action === 'reference' || step.action === 'remix' || step.action === 'fork') {
+        drawNetwork();
+      }
+      
+      // 更新显示
+      updateStats();
+      updateAgentBalances();
+      renderTxList();
+      renderSplitList();
+      drawBalanceChart();
+    }
+    
+    function addLog(step) {
+      const logList = document.getElementById('logList');
+      const typeClass = {
+        register: 'register', purchase: 'purchase', remix: 'remix',
+        reference: 'reference', shi_takeover: 'shi', fork: 'fork',
+        apply_law: 'register', grant_law: 'register', config_lock: 'shi',
+        download: 'reference', revenue_split: 'purchase'
+      }[step.action] || 'register';
+      
+      const typeLabel = {
+        register: '登记', purchase: '购买', remix: '改编',
+        reference: '引用', shi_takeover: '势图', fork: '分叉',
+        apply_law: '申请', grant_law: '授权', config_lock: '阻止',
+        download: '下载', revenue_split: '分润'
+      }[step.action] || step.action;
+      
+      const item = document.createElement('div');
+      item.className = 'log-item';
+      item.innerHTML = `
+        <div class="log-time">T+${currentStep}</div>
+        <div class="log-type ${typeClass}">${typeLabel}</div>
+        <div class="log-msg">${step.note}</div>
+      `;
+      logList.insertBefore(item, logList.firstChild);
+      
+      // 保持最多50条
+      while (logList.children.length > 50) {
+        logList.removeChild(logList.lastChild);
+      }
+    }
+    
+    // ========================
+    // D3 网络图
+    // ========================
+    let svg, simulation;
+    
+    function initNetwork() {
+      svg = d3.select('#networkSvg');
+    }
+    
+    function drawNetwork() {
+      const nodes = simAssets.map(a => ({
+        id: a.id,
+        name: a.name,
+        creator: a.creatorId,
+        color: a.color,
+        radius: a.parentId ? 18 : 22
+      }));
+      
+      const links = [];
+      simAssets.forEach(a => {
+        if (a.parentId && simAssets.find(p => p.id === a.parentId)) {
+          links.push({ source: a.parentId, target: a.id, type: 'derive' });
+        }
+      });
+      
+      // 添加引用关系
+      const currentSteps = currentScenario ? currentScenario.steps.slice(0, currentStep) : [];
+      currentSteps.forEach(s => {
+        if (s.action === 'reference' && s.parentId) {
+          const exists = links.find(l => l.source === s.parentId && l.target === s.assetId);
+          if (!exists) {
+            links.push({ source: s.parentId, target: s.assetId, type: 'reference' });
+          }
+        }
+      });
+      
+      const width = document.querySelector('.network-view').clientWidth;
+      const height = document.querySelector('.network-view').clientHeight;
+      
+      svg.selectAll('*').remove();
+      svg.attr('width', width).attr('height', height);
+      
+      if (nodes.length === 0) return;
+      
+      simulation = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(links).id(d => d.id).distance(100))
+        .force('charge', d3.forceManyBody().strength(-300))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('collision', d3.forceCollide().radius(d => d.radius + 10));
+      
+      // 绘制连线
+      const link = svg.append('g')
+        .selectAll('line')
+        .data(links)
+        .enter().append('line')
+        .attr('class', 'link-line')
+        .attr('stroke', d => d.type === 'derive' ? '#5a9a6e' : '#8b6914')
+        .attr('stroke-width', d => d.type === 'derive' ? 2 : 1)
+        .attr('stroke-dasharray', d => d.type === 'reference' ? '5,5' : 'none');
+      
+      // 绘制节点
+      const node = svg.append('g')
+        .selectAll('g')
+        .data(nodes)
+        .enter().append('g')
+        .call(d3.drag()
+          .on('start', dragstarted)
+          .on('drag', dragged)
+          .on('end', dragended));
+      
+      node.append('circle')
+        .attr('class', 'node-circle')
+        .attr('r', d => d.radius)
+        .attr('fill', d => d.color)
+        .attr('stroke', 'rgba(240,240,232,0.3)')
+        .attr('stroke-width', 2);
+      
+      node.append('text')
+        .attr('class', 'node-label')
+        .attr('dy', d => d.radius + 16)
+        .text(d => d.name);
+      
+      simulation.on('tick', () => {
+        link
+          .attr('x1', d => d.source.x)
+          .attr('y1', d => d.source.y)
+          .attr('x2', d => d.target.x)
+          .attr('y2', d => d.target.y);
+        
+        node.attr('transform', d => `translate(${d.x},${d.y})`);
+      });
+    }
+    
+    function dragstarted(event, d) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x; d.fy = d.y;
+    }
+    function dragged(event, d) {
+      d.fx = event.x; d.fy = event.y;
+    }
+    function dragended(event, d) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = null; d.fy = null;
+    }
+    
+    // ========================
+    // 统计更新
+    // ========================
+    function updateStats() {
+      document.getElementById('statAssets').textContent = simAssets.length;
+      const totalRev = transactions.reduce((s, t) => s + t.amount, 0);
+      document.getElementById('statRevenue').textContent = '¥' + totalRev;
+      document.getElementById('statUsers').textContent = new Set(simAssets.map(a => a.creatorId)).size;
+      const ecoVal = simAssets.length * 100 + totalRev;
+      document.getElementById('statValue').textContent = '¥' + ecoVal;
+    }
+    
+    function updateAgentBalances() {
+      Object.keys(simUsers).forEach(id => {
+        const el = document.getElementById(`balance-${id}`);
+        if (el) el.textContent = '¥' + simUsers[id];
+      });
+    }
+    
+    function updateAgentActions() {
+      USERS.forEach(u => {
+        const el = document.getElementById(`action-${u.id}`);
+        if (el) el.textContent = '待机中';
+      });
+    }
+    
+    function updateStepCounter() {
+      const total = currentScenario ? currentScenario.steps.length : 0;
+      document.getElementById('stepCounter').textContent = `${currentStep} / ${total}`;
+    }
+    
+    function updateProgress() {
+      const total = currentScenario ? currentScenario.steps.length : 1;
+      const pct = (currentStep / total) * 100;
+      document.getElementById('progressFill').style.width = pct + '%';
+    }
+    
+    // ========================
+    // 交易/分润列表
+    // ========================
+    function renderTxList() {
+      const list = document.getElementById('txList');
+      if (transactions.length === 0) {
+        list.innerHTML = '<div style="color: var(--ink-light); font-size: 0.75rem; text-align: center; padding: 20px;">暂无交易</div>';
+        return;
+      }
+      list.innerHTML = transactions.slice(-8).map(t => `
+        <div class="tx-item">
+          <span>${t.from} → ${t.to}</span>
+          <span class="tx-amount ${t.amount < 0 ? 'negative' : ''}">${t.amount > 0 ? '+' : ''}¥${t.amount}</span>
+        </div>
+      `).join('');
+    }
+    
+    function renderSplitList() {
+      const list = document.getElementById('splitList');
+      if (revenueSplits.length === 0) {
+        list.innerHTML = '<div style="color: var(--ink-light); font-size: 0.75rem; text-align: center; padding: 20px;">暂无分润</div>';
+        return;
+      }
+      list.innerHTML = revenueSplits.slice(-6).map(s => `
+        <div class="tx-item">
+          <span>${s.from} → ${s.to}</span>
+          <span class="tx-amount">+¥${s.amount.toFixed(1)} <small style="color: var(--ink-light);">${s.reason}</small></span>
+        </div>
+      `).join('');
+    }
+    
+    // ========================
+    // 余额变化图
+    // ========================
+    function drawBalanceChart() {
+      const canvas = document.getElementById('balanceChart');
+      const c = canvas.getContext('2d');
+      const w = canvas.width; const h = canvas.height;
+      
+      c.clearRect(0, 0, w, h);
+      
+      // 背景
+      c.fillStyle = 'rgba(12,12,14,0.5)';
+      c.fillRect(0, 0, w, h);
+      
+      // 网格线
+      c.strokeStyle = 'rgba(42,42,48,0.5)';
+      c.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = (h - 20) * (i / 4) + 10;
+        c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke();
+      }
+      
+      if (transactions.length < 2) return;
+      
+      // 绘制每个用户的余额变化线
+      const colors = ['#4a90a4', '#5a9a6e', '#8b6914', '#c8a84c', '#2c3e50', '#c45c48'];
+      const userIds = Object.keys(simUsers);
+      
+      userIds.forEach((uid, idx) => {
+        const user = USERS.find(u => u.id === uid);
+        if (!user) return;
+        
+        // 简单折线（当前余额点）
+        const x = (w / userIds.length) * idx + (w / userIds.length) / 2;
+        const balance = simUsers[uid];
+        const maxBal = Math.max(...Object.values(simUsers), 1);
+        const y = h - 20 - (balance / maxBal) * (h - 40);
+        
+        c.beginPath();
+        c.arc(x, y, 4, 0, Math.PI * 2);
+        c.fillStyle = colors[idx % colors.length];
+        c.fill();
+        
+        // 标签
+        c.fillStyle = 'rgba(240,240,232,0.6)';
+        c.font = '10px "Noto Sans SC", sans-serif';
+        c.textAlign = 'center';
+        c.fillText(user.name, x, h - 5);
+        c.fillText('¥' + balance, x, y - 10);
+      });
+    }
+    
+    // ========================
+    // UI控制
+    // ========================
+    function toggleLog() {
+      document.getElementById('logPanel').classList.toggle('show');
+    }
+    
+    // ========================
+    // 启动
+    // ========================
+    window.addEventListener('resize', () => {
+      drawNetwork();
+      drawBalanceChart();
+    });
+    
+    init();
+  </script>
+</body>
+</html>

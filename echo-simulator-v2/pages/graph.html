@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECHO · 验证图 — 水墨关系网络</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/animations.css">
+<link rel="stylesheet" href="../css/components.css">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  /* ===== 页面专属样式 ===== */
+  .graph-page { display: flex; width: 100%; height: 100vh; }
+
+  /* 顶部栏 */
+  .graph-header {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--ink-mid);
+    background: var(--ink-dark);
+    z-index: 50;
+  }
+
+  .graph-header h1 {
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .graph-header h1 span { font-size: 14px; color: var(--ink-ghost); font-weight: 400; }
+
+  .header-controls { display: flex; gap: 12px; align-items: center; }
+
+  /* 图容器 */
+  .graph-viewport {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: var(--ink-black);
+  }
+
+  /* D3 SVG */
+  .graph-viewport svg {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+  }
+
+  .graph-viewport svg:active { cursor: grabbing; }
+
+  /* 节点样式 */
+  .node-rect {
+    rx: 8;
+    ry: 8;
+    stroke-width: 2;
+    transition: filter 0.3s;
+    cursor: pointer;
+  }
+
+  .node-rect:hover { filter: brightness(1.2); }
+
+  .node-label {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    fill: var(--snow);
+    text-anchor: middle;
+    pointer-events: none;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  }
+
+  .node-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    fill: var(--ink-ghost);
+    text-anchor: middle;
+    pointer-events: none;
+  }
+
+  /* 边样式 */
+  .link-line {
+    fill: none;
+    transition: stroke-opacity 0.3s;
+  }
+
+  .link-line.reference { stroke: var(--ink-ghost); stroke-width: 1.5; }
+  .link-line.remix { stroke: var(--malachite); stroke-width: 3; }
+  .link-line.integrate { stroke: var(--orpiment); stroke-width: 2; stroke-dasharray: 8 4; }
+  .link-line.fork { stroke: var(--cinnabar); stroke-width: 2; stroke-dasharray: 3 3; }
+
+  /* 墨迹流动动画 */
+  .link-line.animated {
+    animation: ink-flow-line 3s linear infinite;
+  }
+
+  @keyframes ink-flow-line {
+    0% { stroke-dashoffset: 24; }
+    100% { stroke-dashoffset: 0; }
+  }
+
+  /* 边标签 */
+  .link-label {
+    font-size: 10px;
+    fill: var(--ink-ghost);
+    text-anchor: middle;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .link-line:hover + .link-label,
+  .link-label:hover { opacity: 1; }
+
+  /* 节点高亮 */
+  .node-group.highlighted .node-rect {
+    filter: drop-shadow(0 0 12px var(--azurite));
+    stroke: var(--azurite);
+    stroke-width: 3;
+  }
+
+  .node-group.dimmed { opacity: 0.2; }
+
+  /* 底部控制栏 */
+  .graph-bottom-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: var(--panel-width);
+    padding: 12px 20px;
+    background: rgba(26,26,30,0.9);
+    border-top: 1px solid var(--ink-mid);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 60;
+  }
+
+  .timeline-section { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .timeline-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-ghost); }
+
+  .filter-section { display: flex; gap: 16px; align-items: center; }
+
+  .filter-group-title {
+    font-size: 12px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  /* 图例 */
+  .graph-legend {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    padding: 12px 16px;
+    background: rgba(26,26,30,0.85);
+    border: 1px solid var(--ink-mid);
+    border-radius: var(--radius-md);
+    backdrop-filter: blur(8px);
+    z-index: 60;
+  }
+
+  .legend-title {
+    font-size: 13px;
+    color: var(--snow);
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink-ghost);
+    margin-bottom: 6px;
+  }
+
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 2px solid;
+  }
+
+  .legend-line {
+    width: 24px;
+    height: 0;
+    border-top-style: solid;
+  }
+
+  /* 详情面板 */
+  .detail-panel {
+    width: var(--panel-width);
+    background: var(--ink-dark);
+    border-left: 1px solid var(--ink-mid);
+    display: flex;
+    flex-direction: column;
+    z-index: 80;
+    transform: translateX(100%);
+    transition: transform 0.5s var(--ease-unroll);
+  }
+
+  .detail-panel.open { transform: translateX(0); }
+
+  /* 节点tooltip */
+  .node-tooltip {
+    position: absolute;
+    padding: 10px 14px;
+    background: var(--ink-dark);
+    border: 1px solid var(--ink-mid);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    pointer-events: none;
+    z-index: 200;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    transition: opacity 0.2s;
+    max-width: 220px;
+  }
+
+  .node-tooltip.visible { opacity: 1; }
+
+  /* 缩放控制 */
+  .zoom-controls {
+    position: absolute;
+    bottom: 80px;
+    right: calc(var(--panel-width) + 16px);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 60;
+  }
+
+  .zoom-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(26,26,30,0.9);
+    border: 1px solid var(--ink-mid);
+    border-radius: var(--radius-sm);
+    color: var(--snow);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+  }
+
+  .zoom-btn:hover {
+    background: var(--ink-mid);
+    border-color: var(--azurite);
+  }
+
+  /* 子网络指示 */
+  .expand-indicator {
+    fill: var(--azurite);
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+
+  .expand-indicator:hover { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="graph-page">
+  <!-- 竹简导航 -->
+  <nav class="bamboo-nav">
+    <div class="bamboo-nav-logo">ECHO</div>
+    <div class="bamboo-nav-item" data-page="home"><span class="nav-tooltip">宇宙观</span>宇</div>
+    <div class="bamboo-nav-item" data-page="rights"><span class="nav-tooltip">四权六档</span>权</div>
+    <div class="bamboo-nav-item active" data-page="graph"><span class="nav-tooltip">验证图</span>图</div>
+    <div class="bamboo-nav-item" data-page="shi"><span class="nav-tooltip">势体系</span>势</div>
+    <div class="bamboo-nav-item" data-page="simulate"><span class="nav-tooltip">场景模拟</span>演</div>
+    <div class="bamboo-nav-item" data-page="market"><span class="nav-tooltip">规则市场</span>市</div>
+  </nav>
+
+  <div class="main-content">
+    <!-- 顶部栏 -->
+    <header class="graph-header">
+      <h1>验证图 <span>水墨关系网络</span></h1>
+      <div class="header-controls">
+        <div class="filter-group">
+          <button class="filter-chip active" data-filter="all">全部</button>
+          <button class="filter-chip" data-filter="hidden">潜藏</button>
+          <button class="filter-chip" data-filter="emerge">显现</button>
+          <button class="filter-chip" data-filter="grow">生长</button>
+          <button class="filter-chip" data-filter="great">大成</button>
+          <button class="filter-chip" data-filter="transform">转化</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 图视口 -->
+    <div class="graph-viewport" id="graphViewport">
+      <!-- 图例 -->
+      <div class="graph-legend">
+        <div class="legend-title">生命阶段</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#0c0c0e;border-color:#4a4a52"></div>潜藏 (P&lt;20)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#4a90a4;border-color:#6ab0c4"></div>显现 (P&lt;40)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#5a9a6e;border-color:#7aba8e"></div>生长 (P&lt;60)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c8a84c;border-color:#e8c86c"></div>大成 (P&lt;80)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c45c48;border-color:#e47c68"></div>转化 (P≥80)</div>
+        <div style="margin-top:12px;border-top:1px solid var(--ink-mid);padding-top:10px;">
+          <div class="legend-title">验证事件</div>
+          <div class="legend-item"><div class="legend-line" style="border-top:1.5px solid var(--ink-ghost)"></div>引用 reference</div>
+          <div class="legend-item"><div class="legend-line" style="border-top:3px solid var(--malachite)"></div>改编 remix</div>
+          <div class="legend-item"><div class="legend-line" style="border-top:2px dashed var(--orpiment)"></div>整合 integrate</div>
+          <div class="legend-item"><div class="legend-line" style="border-top:2px dotted var(--cinnabar)"></div>分叉 fork</div>
+        </div>
+      </div>
+
+      <!-- Tooltip -->
+      <div class="node-tooltip" id="nodeTooltip"></div>
+
+      <!-- 缩放控制 -->
+      <div class="zoom-controls">
+        <button class="zoom-btn" id="zoomIn">+</button>
+        <button class="zoom-btn" id="zoomOut">−</button>
+        <button class="zoom-btn" id="zoomReset">⌂</button>
+      </div>
+
+      <!-- D3 SVG 将插入这里 -->
+
+      <!-- 底部控制栏 -->
+      <div class="graph-bottom-bar">
+        <div class="timeline-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;color:var(--snow);">时间轴</span>
+            <span id="timelineDate" style="font-size:13px;color:var(--azurite);font-family:'JetBrains Mono',monospace;">2024-06-01</span>
+          </div>
+          <input type="range" class="timeline-slider" id="timelineSlider" min="0" max="100" value="100">
+          <div class="timeline-labels">
+            <span>2024-01</span><span>2024-03</span><span>2024-05</span><span>2024-07</span><span>2024-09</span><span>2024-11</span>
+          </div>
+        </div>
+        <div class="filter-section">
+          <span class="filter-group-title">事件筛选:</span>
+          <div class="filter-group">
+            <button class="filter-chip active" data-edge="all">全部</button>
+            <button class="filter-chip" data-edge="reference">引用</button>
+            <button class="filter-chip" data-edge="remix">改编</button>
+            <button class="filter-chip" data-edge="integrate">整合</button>
+            <button class="filter-chip" data-edge="fork">分叉</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧详情面板 -->
+  <div class="detail-panel" id="detailPanel">
+    <div class="scroll-panel-header">
+      <h2 id="panelTitle">资产详情</h2>
+      <div class="scroll-panel-close" id="panelClose">✕</div>
+    </div>
+    <div class="scroll-panel-body" id="panelBody">
+      <!-- 动态填充 -->
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== 模拟数据 ====================
+const stageColors = {
+  hidden: '#0c0c0e',
+  emerge: '#4a90a4',
+  grow: '#5a9a6e',
+  great: '#c8a84c',
+  transform: '#c45c48'
+};
+
+const stageNames = {
+  hidden: '潜藏',
+  emerge: '显现',
+  grow: '生长',
+  great: '大成',
+  transform: '转化'
+};
+
+const edgeStyles = {
+  reference: { width: 1.5, color: '#8a8a90', dash: '0' },
+  remix: { width: 3, color: '#5a9a6e', dash: '0' },
+  integrate: { width: 2, color: '#c8a84c', dash: '8 4' },
+  fork: { width: 2, color: '#c45c48', dash: '3 3' }
+};
+
+function getStage(score) {
+  if (score < 20) return 'hidden';
+  if (score < 40) return 'emerge';
+  if (score < 60) return 'grow';
+  if (score < 80) return 'great';
+  return 'transform';
+}
+
+function getStageName(score) {
+  return stageNames[getStage(score)];
+}
+
+function getStageColor(score) {
+  return stageColors[getStage(score)];
+}
+
+// 资产数据（12个）
+const assets = [
+  { id: 'a1', name: '春日序曲', creator: '林墨', score: 85, stage: 'transform',
+    permissions: { use: [1,2,3,4], expand: [1,2,3], derive: [1,2], benefit: [1,2] },
+    createdAt: '2024-01-15', revenue: 1280 },
+  { id: 'a2', name: '山涧流水', creator: '陈青', score: 62, stage: 'grow',
+    permissions: { use: [1,2,3], expand: [1,2], derive: [1], benefit: [1] },
+    createdAt: '2024-02-20', revenue: 640 },
+  { id: 'a3', name: '古刹钟声', creator: '王禅', score: 35, stage: 'emerge',
+    permissions: { use: [1,2], expand: [1], derive: [1], benefit: [1] },
+    createdAt: '2024-03-10', revenue: 120 },
+  { id: 'a4', name: '竹林七贤', creator: '张玄', score: 78, stage: 'great',
+    permissions: { use: [1,2,3,4,5], expand: [1,2,3,4], derive: [1,2,3], benefit: [1,2,3] },
+    createdAt: '2023-11-05', revenue: 2100 },
+  { id: 'a5', name: '墨梅图', creator: '林墨', score: 92, stage: 'transform',
+    permissions: { use: [1,2,3,4,5], expand: [1,2,3,4,5], derive: [1,2,3,4], benefit: [1,2,3,4] },
+    createdAt: '2023-08-18', revenue: 3500 },
+  { id: 'a6', name: '夜雨寄北', creator: '李诗', score: 48, stage: 'grow',
+    permissions: { use: [1,2,3], expand: [1,2], derive: [1,2], benefit: [1] },
+    createdAt: '2024-04-01', revenue: 380 },
+  { id: 'a7', name: '云深不知处', creator: '赵隐', score: 15, stage: 'hidden',
+    permissions: { use: [1], expand: [1], derive: [0], benefit: [0] },
+    createdAt: '2024-05-20', revenue: 0 },
+  { id: 'a8', name: '秋风辞', creator: '孙梧', score: 55, stage: 'grow',
+    permissions: { use: [1,2,3], expand: [1,2], derive: [1,2], benefit: [1,2] },
+    createdAt: '2024-03-25', revenue: 520 },
+  { id: 'a9', name: '月下独酌', creator: '李诗', score: 72, stage: 'great',
+    permissions: { use: [1,2,3,4], expand: [1,2,3], derive: [1,2,3], benefit: [1,2,3] },
+    createdAt: '2023-12-12', revenue: 1680 },
+  { id: 'a10', name: '桃花源记', creator: '陶源', score: 88, stage: 'transform',
+    permissions: { use: [1,2,3,4,5], expand: [1,2,3,4], derive: [1,2,3,4], benefit: [1,2,3,4] },
+    createdAt: '2023-09-01', revenue: 2800 },
+  { id: 'a11', name: '寒江雪', creator: '柳白', score: 42, stage: 'emerge',
+    permissions: { use: [1,2], expand: [1,2], derive: [1], benefit: [1] },
+    createdAt: '2024-04-15', revenue: 200 },
+  { id: 'a12', name: '采薇', creator: '诗经社', score: 95, stage: 'transform',
+    permissions: { use: [1,2,3,4,5], expand: [1,2,3,4,5], derive: [1,2,3,4,5], benefit: [1,2,3,4,5] },
+    createdAt: '2023-06-01', revenue: 5000 }
+];
+
+// 验证事件（20条）
+const events = [
+  { id: 'e1', type: 'reference', subject: 'a2', object: 'a1', timestamp: '2024-03-01', depth: 0.7, user: '陈青' },
+  { id: 'e2', type: 'remix', subject: 'a3', object: 'a1', timestamp: '2024-03-15', depth: 0.9, user: '王禅' },
+  { id: 'e3', type: 'reference', subject: 'a6', object: 'a2', timestamp: '2024-04-05', depth: 0.5, user: '李诗' },
+  { id: 'e4', type: 'integrate', subject: 'a4', object: 'a1', timestamp: '2024-02-10', depth: 0.8, user: '张玄' },
+  { id: 'e5', type: 'reference', subject: 'a5', object: 'a4', timestamp: '2024-01-20', depth: 0.6, user: '林墨' },
+  { id: 'e6', type: 'fork', subject: 'a8', object: 'a2', timestamp: '2024-04-20', depth: 0.85, user: '孙梧' },
+  { id: 'e7', type: 'remix', subject: 'a9', object: 'a5', timestamp: '2024-02-28', depth: 0.75, user: '李诗' },
+  { id: 'e8', type: 'reference', subject: 'a10', object: 'a4', timestamp: '2024-01-10', depth: 0.65, user: '陶源' },
+  { id: 'e9', type: 'integrate', subject: 'a11', object: 'a6', timestamp: '2024-05-01', depth: 0.55, user: '柳白' },
+  { id: 'e10', type: 'remix', subject: 'a12', object: 'a10', timestamp: '2024-01-05', depth: 0.9, user: '诗经社' },
+  { id: 'e11', type: 'reference', subject: 'a1', object: 'a5', timestamp: '2024-05-10', depth: 0.5, user: '林墨' },
+  { id: 'e12', type: 'fork', subject: 'a3', object: 'a11', timestamp: '2024-05-15', depth: 0.7, user: '王禅' },
+  { id: 'e13', type: 'remix', subject: 'a6', object: 'a9', timestamp: '2024-04-25', depth: 0.6, user: '李诗' },
+  { id: 'e14', type: 'reference', subject: 'a8', object: 'a4', timestamp: '2024-03-30', depth: 0.45, user: '孙梧' },
+  { id: 'e15', type: 'integrate', subject: 'a9', object: 'a12', timestamp: '2024-02-15', depth: 0.8, user: '李诗' },
+  { id: 'e16', type: 'reference', subject: 'a2', object: 'a5', timestamp: '2024-03-20', depth: 0.55, user: '陈青' },
+  { id: 'e17', type: 'remix', subject: 'a10', object: 'a12', timestamp: '2024-03-05', depth: 0.7, user: '陶源' },
+  { id: 'e18', type: 'fork', subject: 'a4', object: 'a8', timestamp: '2024-04-12', depth: 0.65, user: '张玄' },
+  { id: 'e19', type: 'reference', subject: 'a11', object: 'a3', timestamp: '2024-05-05', depth: 0.4, user: '柳白' },
+  { id: 'e20', type: 'integrate', subject: 'a1', object: 'a10', timestamp: '2024-05-18', depth: 0.75, user: '林墨' }
+];
+
+// 分润记录
+const revenueRecords = [
+  { from: 'a2', to: 'a1', amount: 64, type: 'reference', time: '2024-03-01' },
+  { from: 'a3', to: 'a1', amount: 180, type: 'remix', time: '2024-03-15' },
+  { from: 'a6', to: 'a2', amount: 45, type: 'reference', time: '2024-04-05' },
+  { from: 'a4', to: 'a1', amount: 128, type: 'integrate', time: '2024-02-10' },
+  { from: 'a5', to: 'a4', amount: 210, type: 'reference', time: '2024-01-20' },
+  { from: 'a8', to: 'a2', amount: 96, type: 'fork', time: '2024-04-20' },
+  { from: 'a9', to: 'a5', amount: 175, type: 'remix', time: '2024-02-28' },
+  { from: 'a10', to: 'a4', amount: 168, type: 'reference', time: '2024-01-10' },
+  { from: 'a11', to: 'a6', amount: 38, type: 'integrate', time: '2024-05-01' },
+  { from: 'a12', to: 'a10', amount: 350, type: 'remix', time: '2024-01-05' }
+];
+
+// ==================== D3 图引擎 ====================
+const viewport = document.getElementById('graphViewport');
+const width = viewport.clientWidth;
+const height = viewport.clientHeight;
+
+const svg = d3.select('#graphViewport')
+  .append('svg')
+  .attr('width', width)
+  .attr('height', height)
+  .attr('viewBox', [0, 0, width, height]);
+
+// 定义滤镜和渐变
+const defs = svg.append('defs');
+
+// 印章阴影
+const filterShadow = defs.append('filter')
+  .attr('id', 'sealShadow')
+  .attr('x', '-50%').attr('y', '-50%')
+  .attr('width', '200%').attr('height', '200%');
+filterShadow.append('feDropShadow')
+  .attr('dx', 0).attr('dy', 2)
+  .attr('stdDeviation', 4)
+  .attr('flood-color', 'rgba(0,0,0,0.5)');
+
+// 节点发光
+['emerge','grow','great','transform'].forEach(stage => {
+  const f = defs.append('filter').attr('id', `glow-${stage}`)
+    .attr('x', '-50%').attr('y', '-50%')
+    .attr('width', '200%').attr('height', '200%');
+  f.append('feGaussianBlur').attr('stdDeviation', 6).attr('result', 'blur');
+  f.append('feMerge')
+    .append('feMergeNode').attr('in', 'blur');
+});
+
+// 数据准备
+const nodes = assets.map(a => ({
+  id: a.id,
+  name: a.name,
+  creator: a.creator,
+  score: a.score,
+  stage: a.stage,
+  permissions: a.permissions,
+  createdAt: a.createdAt,
+  revenue: a.revenue,
+  radius: 18 + a.score * 0.25
+}));
+
+const links = events.map(e => ({
+  id: e.id,
+  source: e.subject,
+  target: e.object,
+  type: e.type,
+  timestamp: e.timestamp,
+  depth: e.depth,
+  user: e.user,
+  weight: e.depth * 3
+}));
+
+// 力导向模拟
+const simulation = d3.forceSimulation(nodes)
+  .force('link', d3.forceLink(links).id(d => d.id).distance(d => 120 + (1-d.depth)*80))
+  .force('charge', d3.forceManyBody().strength(-500))
+  .force('center', d3.forceCenter(width / 2, height / 2))
+  .force('collision', d3.forceCollide().radius(d => d.radius + 15));
+
+// 缩放行为
+const g = svg.append('g');
+const zoom = d3.zoom()
+  .scaleExtent([0.2, 4])
+  .on('zoom', (e) => g.attr('transform', e.transform));
+svg.call(zoom);
+
+// 绘制边
+const linkGroup = g.append('g').attr('class', 'links');
+const link = linkGroup.selectAll('line')
+  .data(links)
+  .join('line')
+  .attr('class', d => `link-line ${d.type} animated`)
+  .attr('stroke', d => edgeStyles[d.type].color)
+  .attr('stroke-width', d => edgeStyles[d.type].width)
+  .attr('stroke-dasharray', d => edgeStyles[d.type].dash)
+  .attr('opacity', 0.7);
+
+// 边标签
+const linkLabel = linkGroup.selectAll('text')
+  .data(links)
+  .join('text')
+  .attr('class', 'link-label')
+  .text(d => d.type);
+
+// 绘制节点
+const nodeGroup = g.append('g').attr('class', 'nodes');
+const node = nodeGroup.selectAll('g')
+  .data(nodes)
+  .join('g')
+  .attr('class', 'node-group')
+  .call(d3.drag()
+    .on('start', dragstarted)
+    .on('drag', dragged)
+    .on('end', dragended));
+
+// 节点矩形（印章效果）
+node.append('rect')
+  .attr('class', 'node-rect')
+  .attr('x', d => -d.radius)
+  .attr('y', d => -d.radius * 0.7)
+  .attr('width', d => d.radius * 2)
+  .attr('height', d => d.radius * 1.4)
+  .attr('rx', 6)
+  .attr('ry', 6)
+  .attr('fill', d => stageColors[d.stage])
+  .attr('stroke', d => {
+    const c = stageColors[d.stage];
+    return d.stage === 'hidden' ? '#4a4a52' : d3.color(c).brighter(0.5);
+  })
+  .attr('filter', 'url(#sealShadow)');
+
+// 节点名称
+node.append('text')
+  .attr('class', 'node-label')
+  .attr('dy', '-0.2em')
+  .text(d => d.name.length > 4 ? d.name.slice(0,3)+'…' : d.name);
+
+// 节点分数
+node.append('text')
+  .attr('class', 'node-score')
+  .attr('dy', '1.2em')
+  .text(d => d.score);
+
+// 模拟更新位置
+simulation.on('tick', () => {
+  link
+    .attr('x1', d => d.source.x)
+    .attr('y1', d => d.source.y)
+    .attr('x2', d => d.target.x)
+    .attr('y2', d => d.target.y);
+
+  linkLabel
+    .attr('x', d => (d.source.x + d.target.x) / 2)
+    .attr('y', d => (d.source.y + d.target.y) / 2);
+
+  node.attr('transform', d => `translate(${d.x},${d.y})`);
+});
+
+// ==================== 交互 ====================
+const tooltip = document.getElementById('nodeTooltip');
+const detailPanel = document.getElementById('detailPanel');
+const panelBody = document.getElementById('panelBody');
+const panelTitle = document.getElementById('panelTitle');
+const panelClose = document.getElementById('panelClose');
+
+// 悬停tooltip
+node.on('mouseenter', function(event, d) {
+  tooltip.innerHTML = `
+    <div style="font-weight:600;color:var(--snow);margin-bottom:4px;">${d.name}</div>
+    <div style="font-size:12px;color:var(--ink-ghost);">创作者: ${d.creator}</div>
+    <div style="font-size:12px;color:${stageColors[d.stage]};">${stageNames[d.stage]} · 势位 ${d.score}</div>
+  `;
+  tooltip.classList.add('visible');
+  tooltip.style.left = (event.pageX + 12) + 'px';
+  tooltip.style.top = (event.pageY - 8) + 'px';
+})
+.on('mousemove', function(event) {
+  tooltip.style.left = (event.pageX + 12) + 'px';
+  tooltip.style.top = (event.pageY - 8) + 'px';
+})
+.on('mouseleave', function() {
+  tooltip.classList.remove('visible');
+});
+
+// 点击展开详情
+node.on('click', function(event, d) {
+  event.stopPropagation();
+  showDetail(d);
+});
+
+// 双击展开/折叠子网络
+node.on('dblclick', function(event, d) {
+  event.stopPropagation();
+  toggleSubnetwork(d);
+});
+
+// 关闭面板
+panelClose.addEventListener('click', () => {
+  detailPanel.classList.remove('open');
+  node.classed('highlighted', false);
+  node.classed('dimmed', false);
+});
+
+// 点击空白关闭
+svg.on('click', () => {
+  detailPanel.classList.remove('open');
+  node.classed('highlighted', false);
+  node.classed('dimmed', false);
+});
+
+function showDetail(d) {
+  panelTitle.textContent = d.name;
+
+  const p = d.permissions;
+  const rightsHtml = Object.entries({ use: '用', expand: '扩', derive: '衍', benefit: '益' }).map(([key, label]) => {
+    const dots = [0,1,2,3,4,5].map(i => {
+      const active = p[key].includes(i);
+      const names = ['禁','己','亲','约','法','公'];
+      return `<div class="rights-dot ${active ? 'active' : 'inactive'}">${active ? names[i] : ''}</div>`;
+    }).join('');
+    return `<div class="rights-label">${label}</div><div class="rights-value">${dots}</div>`;
+  }).join('');
+
+  const assetEvents = events.filter(e => e.subject === d.id || e.object === d.id);
+  const assetRevenue = revenueRecords.filter(r => r.from === d.id || r.to === d.id);
+
+  const eventsHtml = assetEvents.map(e => {
+    const isOut = e.subject === d.id;
+    const other = isOut ? e.object : e.subject;
+    const otherAsset = assets.find(a => a.id === other);
+    return `
+      <div class="revenue-item">
+        <span class="event-badge ${e.type}">${e.type}</span>
+        <div style="flex:1;">
+          <div style="font-size:13px;color:var(--snow);">${isOut ? '→' : '←'} ${otherAsset ? otherAsset.name : other}</div>
+          <div style="font-size:12px;color:var(--ink-ghost);">${e.timestamp} · ${e.user}</div>
+        </div>
+      </div>
+    `;
+  }).join('') || '<div style="color:var(--ink-ghost);font-size:13px;">暂无验证事件</div>';
+
+  const revenueHtml = assetRevenue.map(r => {
+    const isOut = r.from === d.id;
+    const other = isOut ? r.to : r.from;
+    const otherAsset = assets.find(a => a.id === other);
+    return `
+      <div class="revenue-item">
+        <span style="font-size:12px;color:var(--ink-ghost);">${isOut ? '支出' : '收入'}</span>
+        <div style="flex:1;">
+          <div style="font-size:13px;color:var(--snow);">${otherAsset ? otherAsset.name : other}</div>
+          <div style="font-size:12px;color:var(--ink-ghost);">${r.type} · ${r.time}</div>
+        </div>
+        <span class="revenue-amount">${isOut ? '-' : '+'}${r.amount}</span>
+      </div>
+    `;
+  }).join('') || '<div style="color:var(--ink-ghost);font-size:13px;">暂无分润记录</div>';
+
+  panelBody.innerHTML = `
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div class="seal-tag ${d.stage}">${stageNames[d.stage]}</div>
+        <span style="font-size:13px;color:var(--ink-ghost);">${d.creator}</span>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px;color:var(--ink-ghost);margin-bottom:6px;">势位分数</div>
+        <div class="ink-progress">
+          <div class="ink-progress-fill" style="width:${d.score}%;background:${stageColors[d.stage]};"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--snow);">${d.score}</span>
+          <span style="font-size:12px;color:var(--ink-ghost);">/ 100</span>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--ink-ghost);margin-bottom:4px;">创建时间: ${d.createdAt}</div>
+      <div style="font-size:13px;color:var(--ink-ghost);">总收益: <span style="color:var(--orpiment);font-weight:600;">${d.revenue}</span> 文</div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <h3 style="font-size:16px;margin-bottom:12px;color:var(--snow);">四权配置</h3>
+      <div class="rights-display">${rightsHtml}</div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <h3 style="font-size:16px;margin-bottom:12px;color:var(--snow);">验证事件 (${assetEvents.length})</h3>
+      <div>${eventsHtml}</div>
+    </div>
+
+    <div>
+      <h3 style="font-size:16px;margin-bottom:12px;color:var(--snow);">分润记录</h3>
+      <div>${revenueHtml}</div>
+    </div>
+  `;
+
+  detailPanel.classList.add('open');
+
+  // 高亮当前节点，淡化其他
+  node.classed('highlighted', n => n.id === d.id);
+  node.classed('dimmed', n => n.id !== d.id);
+  link.classed('dimmed', l => l.source.id !== d.id && l.target.id !== d.id);
+}
+
+// 子网络展开/折叠
+const expandedNodes = new Set();
+function toggleSubnetwork(d) {
+  if (expandedNodes.has(d.id)) {
+    expandedNodes.delete(d.id);
+    // 恢复所有节点和边
+    node.style('display', 'block');
+    link.style('display', 'block');
+  } else {
+    expandedNodes.add(d.id);
+    // 找到直接关联的节点和边
+    const connected = new Set([d.id]);
+    links.forEach(l => {
+      if (l.source.id === d.id) connected.add(l.target.id);
+      if (l.target.id === d.id) connected.add(l.source.id);
+    });
+    // 只显示关联的
+    node.style('display', n => connected.has(n.id) ? 'block' : 'none');
+    link.style('display', l => l.source.id === d.id || l.target.id === d.id ? 'block' : 'none');
+  }
+  simulation.alpha(0.3).restart();
+}
+
+// ==================== 缩放控制 ====================
+document.getElementById('zoomIn').addEventListener('click', () => {
+  svg.transition().duration(300).call(zoom.scaleBy, 1.3);
+});
+document.getElementById('zoomOut').addEventListener('click', () => {
+  svg.transition().duration(300).call(zoom.scaleBy, 1 / 1.3);
+});
+document.getElementById('zoomReset').addEventListener('click', () => {
+  svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+});
+
+// ==================== 筛选器 ====================
+let stageFilter = 'all';
+let edgeFilter = 'all';
+
+// 生命阶段筛选
+document.querySelectorAll('.graph-header .filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.graph-header .filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    stageFilter = chip.dataset.filter;
+    applyFilters();
+  });
+});
+
+// 事件类型筛选
+document.querySelectorAll('[data-edge]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('[data-edge]').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    edgeFilter = chip.dataset.edge;
+    applyFilters();
+  });
+});
+
+function applyFilters() {
+  node.style('opacity', d => {
+    if (stageFilter === 'all') return 1;
+    return d.stage === stageFilter ? 1 : 0.15;
+  });
+
+  link.style('opacity', d => {
+    let show = true;
+    if (stageFilter !== 'all') {
+      const sourceStage = d.source.stage;
+      const targetStage = d.target.stage;
+      show = sourceStage === stageFilter || targetStage === stageFilter;
+    }
+    if (edgeFilter !== 'all') {
+      show = show && d.type === edgeFilter;
+    }
+    return show ? 0.7 : 0.05;
+  });
+
+  linkLabel.style('opacity', d => {
+    let show = true;
+    if (stageFilter !== 'all') {
+      show = d.source.stage === stageFilter || d.target.stage === stageFilter;
+    }
+    if (edgeFilter !== 'all') {
+      show = show && d.type === edgeFilter;
+    }
+    return show ? 0 : 0; // labels only show on hover
+  });
+}
+
+// ==================== 时间轴 ====================
+const timelineSlider = document.getElementById('timelineSlider');
+const timelineDate = document.getElementById('timelineDate');
+
+const dateRange = {
+  start: new Date('2024-01-01').getTime(),
+  end: new Date('2024-06-30').getTime()
+};
+
+timelineSlider.addEventListener('input', function() {
+  const pct = this.value / 100;
+  const currentTime = dateRange.start + (dateRange.end - dateRange.start) * pct;
+  const date = new Date(currentTime);
+  timelineDate.textContent = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+
+  // 过滤显示该时间点之前的事件
+  const cutoff = date.toISOString().slice(0, 10);
+  link.style('opacity', d => {
+    const show = d.timestamp <= cutoff;
+    if (stageFilter !== 'all') {
+      return (d.source.stage === stageFilter || d.target.stage === stageFilter) && show ? 0.7 : 0.05;
+    }
+    if (edgeFilter !== 'all') {
+      return d.type === edgeFilter && show ? 0.7 : 0.05;
+    }
+    return show ? 0.7 : 0.05;
+  });
+
+  // 根据历史事件重新计算节点势位显示
+  const historicalEvents = events.filter(e => e.timestamp <= cutoff);
+  const nodeScores = {};
+  assets.forEach(a => { nodeScores[a.id] = 0; });
+  historicalEvents.forEach(e => {
+    nodeScores[e.subject] = (nodeScores[e.subject] || 0) + e.depth * 8;
+    nodeScores[e.object] = (nodeScores[e.object] || 0) + e.depth * 4;
+  });
+
+  node.select('.node-rect')
+    .attr('fill', d => {
+      const score = Math.min(100, nodeScores[d.id] || d.score * 0.3);
+      return getStageColor(score);
+    });
+
+  node.select('.node-score')
+    .text(d => Math.round(Math.min(100, nodeScores[d.id] || d.score * 0.3)));
+});
+
+// ==================== 拖拽函数 ====================
+function dragstarted(event, d) {
+  if (!event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(event, d) {
+  d.fx = event.x;
+  d.fy = event.y;
+}
+
+function dragended(event, d) {
+  if (!event.active) simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+}
+
+// ==================== 导航 ====================
+document.querySelectorAll('.bamboo-nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const page = item.dataset.page;
+    if (page && page !== 'graph') {
+      window.location.href = `${page}.html`;
+    }
+  });
+});
+
+// ==================== 窗口调整 ====================
+window.addEventListener('resize', () => {
+  const w = viewport.clientWidth;
+  const h = viewport.clientHeight;
+  svg.attr('width', w).attr('height', h).attr('viewBox', [0, 0, w, h]);
+  simulation.force('center', d3.forceCenter(w / 2, h / 2));
+  simulation.alpha(0.3).restart();
+});
+</script>
+</body>
+</html>
