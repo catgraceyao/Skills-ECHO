@@ -8,9 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
-    /* ==================== ECHO东方美学全局样式 ==================== */
-
-/* ===== base.css ===== */
+    /* ===== ECHO GLOBAL ===== */
 /* ==================== ECHO 东方美学基础样式 ==================== */
 /* 文件名: base.css */
 /* 版本: v2.0 */
@@ -19,48 +17,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 
 :root {
-  --ink-rice: #f0f0e8;
-  --font-body: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-
-  --ink-rice: #f0f0e8;
-  --font-body: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  --font-serif: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
-
-  /* 兼容变量别名 */
-  --ink-fog: #6a6a72;
-  --ink-mist: rgba(138,138,144,0.3);
-  --vine-yellow: #c8a84c;
-  --gamboge: #c8a84c;
-  --duration-normal: 0.3s;
-  --duration-fast: 0.15s;
-  --duration-slow: 0.5s;
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-12: 48px;
-  --space-16: 64px;
-  --radius-full: 9999px;
-  --shadow-xl: 0 16px 48px rgba(0,0,0,0.6);
-  --shadow-glow-azurite: 0 0 20px rgba(74,144,164,0.3);
-  --shadow-glow-cinnabar: 0 0 20px rgba(196,92,72,0.3);
-  --shadow-glow-gamboge: 0 0 20px rgba(200,168,76,0.3);
-  --shadow-glow-malachite: 0 0 20px rgba(90,154,110,0.3);
-  --ink-void: #050508;
-  --z-canvas: 1;
-  --z-content: 10;
-  --z-nav: 100;
-  --z-toast: 1000;
-
   /* ===== 墨色系列 ===== */
   --ink-black: #0c0c0e;
   --ink-dark: #1a1a1e;
@@ -439,8 +395,6 @@ p { color: var(--snow-dim); }
   .panel-body { padding: 12px 16px; }
 }
 
-
-/* ===== animations.css ===== */
 /* ==================== ECHO 水墨动画系统 ==================== */
 /* 文件名: animations.css */
 
@@ -625,8 +579,6 @@ p { color: var(--snow-dim); }
   animation: toast-ink 0.4s var(--ease-unroll) forwards;
 }
 
-
-/* ===== components.css ===== */
 /**
  * ECHO东方美学CSS框架 — 组件库
  * components.css
@@ -1189,16 +1141,18 @@ p { color: var(--snow-dim); }
 }
 
 
-    /* ===== 单页应用框架 ===== */
+    /* ===== SPA框架 ===== */
     .page-section { display: none; width: 100%; min-height: 100vh; overflow-y: auto; }
     .page-section.active { display: block; }
     #home.page-section { position: relative; min-height: 100vh; }
-    .nav-item.active { background: rgba(74,144,164,0.15); border-left: 2px solid var(--stone-blue); }
 
     /* === HOME PAGE STYLES === */
-    
+    #home {
+      /* page container */
+    }
+
     /* ── 首页专用样式 ── */
-    .home-page {
+    #home .home-page {
       position: relative;
       width: 100%;
       min-height: 100vh;
@@ -1210,7 +1164,7 @@ p { color: var(--snow-dim); }
     }
 
     /* 粒子Canvas层 */
-    #particle-canvas {
+    #home #particle-canvas {
       position: fixed;
       top: 0;
       left: 0;
@@ -1220,7 +1174,7 @@ p { color: var(--snow-dim); }
     }
 
     /* 内容层 */
-    .home-content {
+    #home .home-content {
       position: relative;
       z-index: var(--z-content);
       text-align: center;
@@ -1229,7 +1183,7 @@ p { color: var(--snow-dim); }
     }
 
     /* 主标题 — 书法体 */
-    .home-title {
+    #home .home-title {
       font-family: var(--font-serif);
       font-size: clamp(4rem, 12vw, 8rem);
       font-weight: 700;
@@ -1242,7 +1196,7 @@ p { color: var(--snow-dim); }
     }
 
     /* 副标题 */
-    .home-subtitle {
+    #home .home-subtitle {
       font-family: var(--font-body);
       font-size: clamp(1rem, 2.5vw, 1.5rem);
       font-weight: 300;
@@ -1253,7 +1207,7 @@ p { color: var(--snow-dim); }
     }
 
     /* 引言 */
-    .home-quote {
+    #home .home-quote {
       font-family: var(--font-serif);
       font-size: clamp(0.875rem, 1.8vw, 1.125rem);
       color: var(--ink-fog);
@@ -1267,23 +1221,23 @@ p { color: var(--snow-dim); }
     }
 
     .home-quote::before,
-    .home-quote::after {
+    #home .home-quote::after {
       content: '「 』';
       color: var(--ink-mist);
       opacity: 0.5;
       font-size: 0.8em;
     }
-    .home-quote::before {
+    #home .home-quote::before {
       content: '「';
       margin-right: var(--space-2);
     }
-    .home-quote::after {
+    #home .home-quote::after {
       content: '」';
       margin-left: var(--space-2);
     }
 
     /* 底部五行导航 */
-    .home-wuxing-nav {
+    #home .home-wuxing-nav {
       position: relative;
       z-index: var(--z-content);
       display: flex;
@@ -1294,7 +1248,7 @@ p { color: var(--snow-dim); }
       animation: fade-in-up 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.2s both;
     }
 
-    .home-wuxing-nav .wuxing-item {
+    #home .home-wuxing-nav .wuxing-item {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -1310,32 +1264,32 @@ p { color: var(--snow-dim); }
       text-decoration: none;
     }
 
-    .home-wuxing-nav .wuxing-item:hover {
+    #home .home-wuxing-nav .wuxing-item:hover {
       transform: translateY(-6px);
       box-shadow: var(--shadow-lg);
     }
 
-    .home-wuxing-nav .wuxing-item.use:hover {
+    #home .home-wuxing-nav .wuxing-item.use:hover {
       border-color: var(--azurite);
       box-shadow: var(--shadow-glow-azurite);
     }
-    .home-wuxing-nav .wuxing-item.expand:hover {
+    #home .home-wuxing-nav .wuxing-item.expand:hover {
       border-color: var(--gamboge);
       box-shadow: var(--shadow-glow-gamboge);
     }
-    .home-wuxing-nav .wuxing-item.derive:hover {
+    #home .home-wuxing-nav .wuxing-item.derive:hover {
       border-color: var(--malachite);
       box-shadow: var(--shadow-glow-malachite);
     }
-    .home-wuxing-nav .wuxing-item.benefit:hover {
+    #home .home-wuxing-nav .wuxing-item.benefit:hover {
       border-color: var(--ochre);
     }
-    .home-wuxing-nav .wuxing-item.shi:hover {
+    #home .home-wuxing-nav .wuxing-item.shi:hover {
       border-color: var(--cinnabar);
       box-shadow: var(--shadow-glow-cinnabar);
     }
 
-    .home-wuxing-nav .wuxing-symbol {
+    #home .home-wuxing-nav .wuxing-symbol {
       font-family: var(--font-serif);
       font-size: var(--text-2xl);
       font-weight: 700;
@@ -1349,33 +1303,33 @@ p { color: var(--snow-dim); }
       transition: all var(--duration-normal);
     }
 
-    .home-wuxing-nav .wuxing-item.use .wuxing-symbol {
+    #home .home-wuxing-nav .wuxing-item.use .wuxing-symbol {
       color: var(--azurite);
       border-color: rgba(74,144,164,0.3);
       background: rgba(74,144,164,0.1);
     }
-    .home-wuxing-nav .wuxing-item.expand .wuxing-symbol {
+    #home .home-wuxing-nav .wuxing-item.expand .wuxing-symbol {
       color: var(--gamboge);
       border-color: rgba(200,168,76,0.3);
       background: rgba(200,168,76,0.1);
     }
-    .home-wuxing-nav .wuxing-item.derive .wuxing-symbol {
+    #home .home-wuxing-nav .wuxing-item.derive .wuxing-symbol {
       color: var(--malachite);
       border-color: rgba(90,154,110,0.3);
       background: rgba(90,154,110,0.1);
     }
-    .home-wuxing-nav .wuxing-item.benefit .wuxing-symbol {
+    #home .home-wuxing-nav .wuxing-item.benefit .wuxing-symbol {
       color: var(--ochre);
       border-color: rgba(139,105,20,0.3);
       background: rgba(139,105,20,0.1);
     }
-    .home-wuxing-nav .wuxing-item.shi .wuxing-symbol {
+    #home .home-wuxing-nav .wuxing-item.shi .wuxing-symbol {
       color: var(--cinnabar);
       border-color: rgba(196,92,72,0.3);
       background: rgba(196,92,72,0.1);
     }
 
-    .home-wuxing-nav .wuxing-name {
+    #home .home-wuxing-nav .wuxing-name {
       font-family: var(--font-serif);
       font-size: var(--text-sm);
       color: var(--ink-fog);
@@ -1384,31 +1338,31 @@ p { color: var(--snow-dim); }
       text-orientation: mixed;
     }
 
-    .home-wuxing-nav .wuxing-item:hover .wuxing-name {
+    #home .home-wuxing-nav .wuxing-item:hover .wuxing-name {
       color: var(--ink-rice);
     }
 
-    .home-wuxing-nav .wuxing-desc {
+    #home .home-wuxing-nav .wuxing-desc {
       font-size: var(--text-xs);
       color: var(--ink-fog);
       opacity: 0.6;
     }
 
     /* 装饰墨线 */
-    .ink-line {
+    #home .ink-line {
       position: fixed;
       z-index: 1;
       pointer-events: none;
       opacity: 0.1;
     }
-    .ink-line.top {
+    #home .ink-line.top {
       top: 15%;
       left: 5%;
       width: 30%;
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--ink-rice), transparent);
     }
-    .ink-line.bottom {
+    #home .ink-line.bottom {
       bottom: 20%;
       right: 5%;
       width: 25%;
@@ -1418,28 +1372,31 @@ p { color: var(--snow-dim); }
 
     /* 响应式 */
     @media (max-width: 768px) {
-      .home-wuxing-nav {
+    #home .home-wuxing-nav {
         gap: var(--space-3);
       }
-      .home-wuxing-nav .wuxing-item {
+    #home .home-wuxing-nav .wuxing-item {
         padding: var(--space-3) var(--space-3);
         min-width: 60px;
       }
-      .home-wuxing-nav .wuxing-symbol {
+    #home .home-wuxing-nav .wuxing-symbol {
         width: 40px;
         height: 40px;
         font-size: var(--text-lg);
       }
-      .home-content {
+    #home .home-content {
         padding: var(--space-4);
       }
     }
   
 
     /* === RIGHTS PAGE STYLES === */
-    
+    #rights {
+      /* page container */
+    }
+
 /* ===== 基础重置与CSS变量 ===== */
-:root {
+    #rights :root {
   --ink-black: #0c0c0e;
   --ink-deep: #1a1a1e;
   --ink-mid: #2a2a30;
@@ -1454,7 +1411,7 @@ p { color: var(--snow-dim); }
   --shadow-paper: rgba(12,12,14,0.6);
 }
 * { box-sizing: border-box; margin:0; padding:0; }
-body {
+    #rights body {
   font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   background: var(--ink-black);
   color: var(--paper);
@@ -1463,7 +1420,7 @@ body {
 }
 
 /* ===== 宣纸纹理背景 ===== */
-body::before {
+    #rights body::before {
   content:"";
   position:fixed; inset:0;
   background: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
@@ -1471,13 +1428,13 @@ body::before {
 }
 
 /* ===== 导航 ===== */
-.nav-sidebar {
+    #rights .nav-sidebar {
   position:fixed; left:0; top:0; width:60px; height:100vh;
   background: var(--ink-deep);
   border-right:1px solid var(--ink-mid);
   display:flex; flex-direction:column; align-items:center; padding-top:24px; z-index:100;
 }
-.nav-sidebar a {
+    #rights .nav-sidebar a {
   writing-mode:vertical-rl; text-decoration:none; color:var(--ink-light);
   font-size:15px; letter-spacing:4px; padding:16px 0; transition:color 0.3s;
   font-family: "STXingkai", "KaiTi", serif;
@@ -1487,17 +1444,17 @@ body::before {
 
 /* ===== 主布局 ===== */
 .main-wrap { margin-left:60px; min-height:100vh; position:relative; z-index:1; }
-.page-header {
+    #rights .page-header {
   padding:24px 32px 8px; border-bottom:1px solid var(--ink-mid);
 }
-.page-title {
+    #rights .page-title {
   font-family: "STXingkai", "KaiTi", serif; font-size:32px; color:var(--paper);
   letter-spacing:6px; margin-bottom:4px;
 }
 .page-subtitle { font-size:13px; color:var(--ink-light); letter-spacing:2px; }
 
 /* ===== 主体三栏布局 ===== */
-.content-grid {
+    #rights .content-grid {
   display:grid;
   grid-template-columns: 1fr 360px;
   grid-template-rows: 1fr auto;
@@ -1513,7 +1470,7 @@ body::before {
 
 /* ===== 罗盘区域 ===== */
 .compass-area { grid-area:compass; }
-.compass-container {
+    #rights .compass-container {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   background: var(--ink-deep);
   border:1px solid var(--ink-mid);
@@ -1522,13 +1479,13 @@ body::before {
 }
 .compass-svg-wrap { position:relative; width:520px; height:520px; }
 #compassSvg { width:100%; height:100%; }
-.compass-ring-label {
+    #rights .compass-ring-label {
   position:absolute; font-family:"STXingkai","KaiTi",serif; font-size:18px;
   color:var(--paper); pointer-events:none; text-shadow:0 0 8px rgba(0,0,0,0.8);
 }
 
 /* ===== 档位tooltip ===== */
-.tooltip {
+    #rights .tooltip {
   position:absolute; background:var(--ink-deep); border:1px solid var(--ink-mid);
   border-radius:4px; padding:8px 12px; font-size:13px; color:var(--paper);
   pointer-events:none; opacity:0; transition:opacity 0.2s; z-index:50; white-space:nowrap;
@@ -1537,7 +1494,7 @@ body::before {
 .tooltip.show { opacity:1; }
 
 /* ===== 配置JSON显示 ===== */
-.config-json {
+    #rights .config-json {
   grid-area: json; /* not used in grid, placed inside compass-area */
   margin-top:16px; background:var(--ink-black);
   border:1px solid var(--ink-mid); border-radius:6px;
@@ -1550,21 +1507,21 @@ body::before {
 
 /* ===== 规则市场面板 ===== */
 .market-panel { grid-area:market; }
-.market-scroll {
+    #rights .market-scroll {
   background: var(--ink-deep); border:1px solid var(--ink-mid); border-radius:8px;
   padding:20px; max-height: calc(100vh - 140px); overflow-y:auto;
 }
-.market-title {
+    #rights .market-title {
   font-family:"STXingkai","KaiTi",serif; font-size:22px; color:var(--rattan);
   margin-bottom:16px; letter-spacing:3px; text-align:center;
 }
-.template-card {
+    #rights .template-card {
   background: var(--ink-black); border:1px solid var(--ink-mid); border-radius:6px;
   padding:14px 16px; margin-bottom:12px; cursor:pointer;
   transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
   position:relative; overflow:hidden;
 }
-.template-card::before {
+    #rights .template-card::before {
   content:""; position:absolute; left:0; top:0; width:3px; height:100%;
   background:var(--rattan); opacity:0; transition:opacity 0.3s;
 }
@@ -1574,7 +1531,7 @@ body::before {
 .template-name { font-family:"STXingkai","KaiTi",serif; font-size:17px; color:var(--paper); margin-bottom:4px; }
 .template-desc { font-size:12px; color:var(--ink-light); line-height:1.5; }
 .template-badges { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
-.badge {
+    #rights .badge {
   font-size:11px; padding:2px 8px; border-radius:3px; border:1px solid;
   font-family:"JetBrains Mono",monospace;
 }
@@ -1585,31 +1542,31 @@ body::before {
 
 /* ===== 预览区 ===== */
 .preview-area { grid-area:preview; }
-.preview-box {
+    #rights .preview-box {
   background: var(--ink-deep); border:1px solid var(--ink-mid); border-radius:8px;
   padding:20px;
 }
-.preview-title {
+    #rights .preview-title {
   font-family:"STXingkai","KaiTi",serif; font-size:18px; color:var(--paper);
   margin-bottom:16px; letter-spacing:3px;
 }
-.preview-scenarios {
+    #rights .preview-scenarios {
   display:grid; grid-template-columns: repeat(3, 1fr); gap:16px;
 }
 @media (max-width:900px) { .preview-scenarios { grid-template-columns:1fr; } }
-.scenario-card {
+    #rights .scenario-card {
   background:var(--ink-black); border:1px solid var(--ink-mid); border-radius:6px; padding:16px;
   transition: border-color 0.3s;
 }
 .scenario-card:hover { border-color:var(--stone-blue); }
-.scenario-avatar {
+    #rights .scenario-avatar {
   width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   font-family:"STXingkai","KaiTi",serif; font-size:18px; color:var(--paper); margin-bottom:10px;
   border:2px solid var(--ink-mid);
 }
 .scenario-name { font-size:14px; font-weight:500; color:var(--paper); margin-bottom:4px; }
 .scenario-action { font-size:12px; color:var(--ink-light); margin-bottom:8px; }
-.scenario-result {
+    #rights .scenario-result {
   font-size:12px; padding:6px 10px; border-radius:4px; font-family:"JetBrains Mono",monospace;
   line-height:1.5;
 }
@@ -1619,20 +1576,20 @@ body::before {
 
 /* ===== 元规则提示 ===== */
 .meta-rules { grid-area:meta; }
-.meta-box {
+    #rights .meta-box {
   background: var(--ink-deep); border:1px solid var(--ink-mid); border-radius:8px;
   padding:20px;
 }
-.meta-title {
+    #rights .meta-title {
   font-family:"STXingkai","KaiTi",serif; font-size:18px; color:var(--paper);
   margin-bottom:14px; letter-spacing:3px;
 }
-.meta-item {
+    #rights .meta-item {
   display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; font-size:12px; line-height:1.6;
   color:var(--ink-light); padding:8px; border-radius:4px; transition:background 0.2s;
 }
 .meta-item:hover { background:rgba(240,240,232,0.03); }
-.meta-num {
+    #rights .meta-num {
   font-family:"JetBrains Mono",monospace; color:var(--rattan); font-size:13px;
   min-width:20px; text-align:center; flex-shrink:0;
 }
@@ -1644,7 +1601,7 @@ body::before {
   50% { transform:scale(1.2); opacity:0.4; }
   100% { transform:scale(1.5); opacity:0; }
 }
-.ink-ripple {
+    #rights .ink-ripple {
   animation: inkSpread 0.6s ease-out forwards;
 }
 @keyframes inkError {
@@ -1654,12 +1611,12 @@ body::before {
   75% { opacity:0.5; }
   100% { opacity:0; }
 }
-.ink-error {
+    #rights .ink-error {
   animation: inkError 1.2s ease-in-out;
 }
 
 /* ===== 错误提示 ===== */
-.error-toast {
+    #rights .error-toast {
   position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
   background:var(--cinnabar); color:var(--paper); padding:10px 24px; border-radius:4px;
   font-size:13px; opacity:0; transition:opacity 0.3s; z-index:200; pointer-events:none;
@@ -1668,10 +1625,10 @@ body::before {
 .error-toast.show { opacity:1; }
 
 /* ===== 卷轴装饰 ===== */
-.scroll-ends {
+    #rights .scroll-ends {
   position:relative;
 }
-.scroll-ends::before, .scroll-ends::after {
+    #rights .scroll-ends::before, .scroll-ends::after {
   content:""; position:absolute; left:0; width:100%; height:4px;
   background: linear-gradient(90deg, transparent, var(--ochre), transparent);
   opacity:0.5;
@@ -1684,30 +1641,30 @@ body::before {
 .compass-sector:hover { opacity:0.85; }
 .compass-sector.selected { filter: brightness(1.3) saturate(1.2); }
 .compass-sector.error { filter: hue-rotate(-30deg) saturate(2); }
-.compass-label {
+    #rights .compass-label {
   font-family:"STXingkai","KaiTi",serif; font-size:14px; fill:var(--paper);
   pointer-events:none; text-anchor:middle; dominant-baseline:middle;
   text-shadow:0 0 6px rgba(0,0,0,0.8);
 }
-.compass-ring-name {
+    #rights .compass-ring-name {
   font-family:"STXingkai","KaiTi",serif; font-size:16px; fill:var(--paper);
   pointer-events:none; text-anchor:middle; dominant-baseline:middle;
   opacity:0.6;
 }
-.compass-center-text {
+    #rights .compass-center-text {
   font-family:"STXingkai","KaiTi",serif; font-size:24px; fill:var(--paper);
   text-anchor:middle; dominant-baseline:middle; opacity:0.3;
 }
 
 /* ===== 档位legend ===== */
-.legend-bar {
+    #rights .legend-bar {
   display:flex; justify-content:center; gap:24px; margin-top:16px; flex-wrap:wrap;
 }
 .legend-item { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-light); }
 .legend-dot { width:10px; height:10px; border-radius:2px; }
 
 /* ===== 复选掩码显示 ===== */
-.mask-display {
+    #rights .mask-display {
   margin-top:12px; text-align:center; font-family:"JetBrains Mono",monospace; font-size:13px;
   color:var(--ink-light);
 }
@@ -1719,18 +1676,21 @@ body::before {
   33% { transform:translateX(20px) translateY(-10px); }
   66% { transform:translateX(-10px) translateY(5px); }
 }
-.cloud-bg {
+    #rights .cloud-bg {
   position:absolute; inset:0; pointer-events:none; z-index:0; opacity:0.15;
 }
 
 
     /* === GRAPH PAGE STYLES === */
-    
+    #graph {
+      /* page container */
+    }
+
   /* ===== 页面专属样式 ===== */
   .graph-page { display: flex; width: 100%; height: 100vh; }
 
   /* 顶部栏 */
-  .graph-header {
+    #graph .graph-header {
     height: var(--header-height);
     display: flex;
     align-items: center;
@@ -1741,7 +1701,7 @@ body::before {
     z-index: 50;
   }
 
-  .graph-header h1 {
+    #graph .graph-header h1 {
     font-size: 20px;
     display: flex;
     align-items: center;
@@ -1753,7 +1713,7 @@ body::before {
   .header-controls { display: flex; gap: 12px; align-items: center; }
 
   /* 图容器 */
-  .graph-viewport {
+    #graph .graph-viewport {
     flex: 1;
     position: relative;
     overflow: hidden;
@@ -1761,7 +1721,7 @@ body::before {
   }
 
   /* D3 SVG */
-  .graph-viewport svg {
+    #graph .graph-viewport svg {
     width: 100%;
     height: 100%;
     cursor: grab;
@@ -1770,7 +1730,7 @@ body::before {
   .graph-viewport svg:active { cursor: grabbing; }
 
   /* 节点样式 */
-  .node-rect {
+    #graph .node-rect {
     rx: 8;
     ry: 8;
     stroke-width: 2;
@@ -1780,7 +1740,7 @@ body::before {
 
   .node-rect:hover { filter: brightness(1.2); }
 
-  .node-label {
+    #graph .node-label {
     font-family: 'Noto Serif SC', serif;
     font-size: 12px;
     fill: var(--snow);
@@ -1789,7 +1749,7 @@ body::before {
     text-shadow: 0 1px 3px rgba(0,0,0,0.8);
   }
 
-  .node-score {
+    #graph .node-score {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     fill: var(--ink-ghost);
@@ -1798,7 +1758,7 @@ body::before {
   }
 
   /* 边样式 */
-  .link-line {
+    #graph .link-line {
     fill: none;
     transition: stroke-opacity 0.3s;
   }
@@ -1809,7 +1769,7 @@ body::before {
   .link-line.fork { stroke: var(--cinnabar); stroke-width: 2; stroke-dasharray: 3 3; }
 
   /* 墨迹流动动画 */
-  .link-line.animated {
+    #graph .link-line.animated {
     animation: ink-flow-line 3s linear infinite;
   }
 
@@ -1819,7 +1779,7 @@ body::before {
   }
 
   /* 边标签 */
-  .link-label {
+    #graph .link-label {
     font-size: 10px;
     fill: var(--ink-ghost);
     text-anchor: middle;
@@ -1832,7 +1792,7 @@ body::before {
   .link-label:hover { opacity: 1; }
 
   /* 节点高亮 */
-  .node-group.highlighted .node-rect {
+    #graph .node-group.highlighted .node-rect {
     filter: drop-shadow(0 0 12px var(--azurite));
     stroke: var(--azurite);
     stroke-width: 3;
@@ -1841,7 +1801,7 @@ body::before {
   .node-group.dimmed { opacity: 0.2; }
 
   /* 底部控制栏 */
-  .graph-bottom-bar {
+    #graph .graph-bottom-bar {
     position: absolute;
     bottom: 0;
     left: 0;
@@ -1861,14 +1821,14 @@ body::before {
 
   .filter-section { display: flex; gap: 16px; align-items: center; }
 
-  .filter-group-title {
+    #graph .filter-group-title {
     font-size: 12px;
     color: var(--ink-faint);
     white-space: nowrap;
   }
 
   /* 图例 */
-  .graph-legend {
+    #graph .graph-legend {
     position: absolute;
     top: 16px;
     left: 16px;
@@ -1880,14 +1840,14 @@ body::before {
     z-index: 60;
   }
 
-  .legend-title {
+    #graph .legend-title {
     font-size: 13px;
     color: var(--snow);
     margin-bottom: 10px;
     font-weight: 500;
   }
 
-  .legend-item {
+    #graph .legend-item {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1896,21 +1856,21 @@ body::before {
     margin-bottom: 6px;
   }
 
-  .legend-dot {
+    #graph .legend-dot {
     width: 14px;
     height: 14px;
     border-radius: 4px;
     border: 2px solid;
   }
 
-  .legend-line {
+    #graph .legend-line {
     width: 24px;
     height: 0;
     border-top-style: solid;
   }
 
   /* 详情面板 */
-  .detail-panel {
+    #graph .detail-panel {
     width: var(--panel-width);
     background: var(--ink-dark);
     border-left: 1px solid var(--ink-mid);
@@ -1924,7 +1884,7 @@ body::before {
   .detail-panel.open { transform: translateX(0); }
 
   /* 节点tooltip */
-  .node-tooltip {
+    #graph .node-tooltip {
     position: absolute;
     padding: 10px 14px;
     background: var(--ink-dark);
@@ -1942,7 +1902,7 @@ body::before {
   .node-tooltip.visible { opacity: 1; }
 
   /* 缩放控制 */
-  .zoom-controls {
+    #graph .zoom-controls {
     position: absolute;
     bottom: 80px;
     right: calc(var(--panel-width) + 16px);
@@ -1952,7 +1912,7 @@ body::before {
     z-index: 60;
   }
 
-  .zoom-btn {
+    #graph .zoom-btn {
     width: 32px;
     height: 32px;
     display: flex;
@@ -1967,13 +1927,13 @@ body::before {
     transition: all 0.2s;
   }
 
-  .zoom-btn:hover {
+    #graph .zoom-btn:hover {
     background: var(--ink-mid);
     border-color: var(--azurite);
   }
 
   /* 子网络指示 */
-  .expand-indicator {
+    #graph .expand-indicator {
     fill: var(--azurite);
     cursor: pointer;
     opacity: 0.6;
@@ -1984,26 +1944,29 @@ body::before {
 
 
     /* === SHI PAGE STYLES === */
-    
-    :root {
+    #shi {
+      /* page container */
+    }
+
+    #shi :root {
       --ink-black: #0c0c0e; --ink-deep: #1a1a1e; --ink-mid: #2a2a30;
       --ink-light: #8a8a90; --ink-rice: #f0f0e8;
       --cinnabar: #c45c48; --stone-blue: #4a90a4; --stone-green: #5a9a6e;
       --vine-yellow: #c8a84c; --ochre: #8b6914; --indigo: #2c3e50;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
+    #shi body {
       font-family: 'Noto Sans SC', sans-serif;
       background: var(--ink-black); color: var(--ink-rice);
       width: 100%; height: 100vh; overflow: hidden;
     }
     
-    .shi-page {
+    #shi .shi-page {
       display: flex; height: 100vh; width: 100%;
     }
     
     /* 左侧势位仪表盘 */
-    .dashboard {
+    #shi .dashboard {
       width: 280px; flex-shrink: 0;
       background: linear-gradient(180deg, var(--ink-deep), var(--ink-black));
       border-right: 1px solid var(--ink-mid);
@@ -2012,103 +1975,103 @@ body::before {
       gap: 16px; overflow-y: auto;
     }
     
-    .dash-title {
+    #shi .dash-title {
       font-size: 1.1rem; font-weight: 700;
       letter-spacing: 0.2em; color: var(--stone-blue);
       padding-bottom: 12px; border-bottom: 1px solid var(--ink-mid);
     }
     
-    .asset-selector {
+    #shi .asset-selector {
       display: flex; flex-direction: column; gap: 8px;
     }
-    .asset-selector label {
+    #shi .asset-selector label {
       font-size: 0.75rem; color: var(--ink-light); letter-spacing: 0.1em;
     }
-    .asset-selector select {
+    #shi .asset-selector select {
       background: var(--ink-deep); border: 1px solid var(--ink-mid);
       color: var(--ink-rice); padding: 8px 12px;
       border-radius: 6px; font-size: 0.85rem; cursor: pointer;
     }
-    .asset-selector select:focus {
+    #shi .asset-selector select:focus {
       outline: none; border-color: var(--stone-blue);
     }
     
     /* 势位分数 */
-    .position-score {
+    #shi .position-score {
       background: rgba(42,42,48,0.5); border-radius: 12px;
       padding: 16px; text-align: center;
     }
-    .score-value {
+    #shi .score-value {
       font-size: 3rem; font-weight: 700;
       background: linear-gradient(135deg, var(--stone-blue), var(--stone-green));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       line-height: 1;
     }
-    .score-label {
+    #shi .score-label {
       font-size: 0.7rem; color: var(--ink-light); margin-top: 4px;
       letter-spacing: 0.15em;
     }
     
     /* 生命阶段 */
-    .life-stage {
+    #shi .life-stage {
       display: flex; align-items: center; gap: 10px;
       padding: 12px; border-radius: 8px;
       background: rgba(42,42,48,0.3); border: 1px solid var(--ink-mid);
     }
-    .stage-dot {
+    #shi .stage-dot {
       width: 12px; height: 12px; border-radius: 50%;
       flex-shrink: 0;
     }
-    .stage-name {
+    #shi .stage-name {
       font-size: 0.9rem; font-weight: 500;
     }
-    .stage-desc {
+    #shi .stage-desc {
       font-size: 0.7rem; color: var(--ink-light);
     }
     
     /* 三维指标 */
-    .dimensions {
+    #shi .dimensions {
       display: flex; flex-direction: column; gap: 12px;
     }
-    .dim-row {
+    #shi .dim-row {
       display: flex; align-items: center; gap: 8px;
     }
-    .dim-label {
+    #shi .dim-label {
       width: 60px; font-size: 0.75rem; color: var(--ink-light);
       text-align: right;
     }
-    .dim-bar-bg {
+    #shi .dim-bar-bg {
       flex: 1; height: 8px; background: var(--ink-mid);
       border-radius: 4px; overflow: hidden;
     }
-    .dim-bar-fill {
+    #shi .dim-bar-fill {
       height: 100%; border-radius: 4px;
       transition: width 0.6s cubic-bezier(0.25,0.46,0.45,0.94);
     }
-    .dim-value {
+    #shi .dim-value {
       width: 30px; font-size: 0.75rem; color: var(--ink-light);
       text-align: right;
     }
     
     /* 势图接管面板 */
-    .takeover-panel {
+    #shi .takeover-panel {
       background: rgba(42,42,48,0.3); border-radius: 8px;
       padding: 12px; border: 1px solid var(--ink-mid);
     }
-    .takeover-header {
+    #shi .takeover-header {
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 8px;
     }
-    .takeover-title {
+    #shi .takeover-title {
       font-size: 0.85rem; font-weight: 500; color: var(--vine-yellow);
     }
-    .takeover-toggle {
+    #shi .takeover-toggle {
       position: relative; width: 40px; height: 20px;
       background: var(--ink-mid); border-radius: 10px; cursor: pointer;
       transition: background 0.3s;
     }
     .takeover-toggle.on { background: var(--stone-green); }
-    .takeover-toggle::after {
+    #shi .takeover-toggle::after {
       content: ''; position: absolute;
       width: 16px; height: 16px; border-radius: 50%;
       background: var(--ink-rice); top: 2px; left: 2px;
@@ -2116,7 +2079,7 @@ body::before {
     }
     .takeover-toggle.on::after { transform: translateX(20px); }
     
-    .takeover-rule {
+    #shi .takeover-rule {
       font-size: 0.75rem; color: var(--ink-light); line-height: 1.6;
       padding: 8px; background: rgba(196,92,72,0.1);
       border-radius: 6px; border-left: 3px solid var(--cinnabar);
@@ -2124,15 +2087,15 @@ body::before {
     .takeover-rule strong { color: var(--cinnabar); }
     
     /* 中央山水长卷 */
-    .scroll-view {
+    #shi .scroll-view {
       flex: 1; position: relative; overflow: hidden;
     }
-    #landscapeCanvas {
+    #shi #landscapeCanvas {
       position: absolute; inset: 0;
     }
     
     /* 浮层信息 */
-    .float-info {
+    #shi .float-info {
       position: absolute; top: 20px; right: 20px;
       background: rgba(12,12,14,0.9); backdrop-filter: blur(8px);
       border: 1px solid var(--ink-mid); border-radius: 12px;
@@ -2141,10 +2104,10 @@ body::before {
       transition: all 0.3s; pointer-events: none;
     }
     .float-info.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-    .float-info h3 {
+    #shi .float-info h3 {
       font-size: 0.9rem; color: var(--stone-blue); margin-bottom: 8px;
     }
-    .float-info .info-row {
+    #shi .float-info .info-row {
       display: flex; justify-content: space-between;
       font-size: 0.75rem; padding: 4px 0;
       border-bottom: 1px solid rgba(42,42,48,0.5);
@@ -2153,130 +2116,133 @@ body::before {
     .float-info .info-value { color: var(--ink-rice); }
     
     /* 底部事件流 */
-    .event-stream {
+    #shi .event-stream {
       position: absolute; bottom: 0; left: 0; right: 0;
       height: 120px; background: linear-gradient(0deg, var(--ink-black), transparent);
       padding: 12px 20px;
       display: flex; flex-direction: column; gap: 8px;
     }
-    .event-stream-title {
+    #shi .event-stream-title {
       font-size: 0.75rem; color: var(--ink-light); letter-spacing: 0.15em;
     }
-    .event-list {
+    #shi .event-list {
       display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px;
     }
-    .event-item {
+    #shi .event-item {
       flex-shrink: 0; padding: 8px 12px;
       background: rgba(42,42,48,0.5); border-radius: 8px;
       border: 1px solid var(--ink-mid); min-width: 160px;
       cursor: pointer; transition: all 0.2s;
     }
-    .event-item:hover {
+    #shi .event-item:hover {
       border-color: var(--stone-blue); background: rgba(74,144,164,0.1);
     }
-    .event-item .evt-time {
+    #shi .event-item .evt-time {
       font-size: 0.65rem; color: var(--ink-light);
     }
-    .event-item .evt-type {
+    #shi .event-item .evt-type {
       font-size: 0.8rem; color: var(--stone-blue); margin-top: 2px;
     }
-    .event-item .evt-note {
+    #shi .event-item .evt-note {
       font-size: 0.7rem; color: var(--ink-light); margin-top: 2px;
     }
     
     /* 图例 */
-    .legend {
+    #shi .legend {
       position: absolute; top: 20px; left: 20px;
       background: rgba(12,12,14,0.8); backdrop-filter: blur(8px);
       border: 1px solid var(--ink-mid); border-radius: 8px;
       padding: 12px;
     }
-    .legend-title {
+    #shi .legend-title {
       font-size: 0.75rem; color: var(--ink-light); margin-bottom: 8px;
       letter-spacing: 0.1em;
     }
-    .legend-item {
+    #shi .legend-item {
       display: flex; align-items: center; gap: 8px;
       font-size: 0.75rem; padding: 3px 0;
     }
-    .legend-color {
+    #shi .legend-color {
       width: 12px; height: 12px; border-radius: 3px;
     }
     
     /* 元规则提示 */
-    .meta-tip {
+    #shi .meta-tip {
       position: absolute; bottom: 140px; left: 20px;
       background: rgba(12,12,14,0.8); backdrop-filter: blur(8px);
       border: 1px solid var(--ink-mid); border-radius: 8px;
       padding: 12px; max-width: 200px;
     }
-    .meta-tip-title {
+    #shi .meta-tip-title {
       font-size: 0.75rem; color: var(--vine-yellow); margin-bottom: 4px;
     }
-    .meta-tip-text {
+    #shi .meta-tip-text {
       font-size: 0.7rem; color: var(--ink-light); line-height: 1.6;
     }
   
 
     /* === MARKET PAGE STYLES === */
-    
-    :root {
+    #market {
+      /* page container */
+    }
+
+    #market :root {
       --ink-black: #0c0c0e; --ink-deep: #1a1a1e; --ink-mid: #2a2a30;
       --ink-light: #8a8a90; --ink-rice: #f0f0e8;
       --cinnabar: #c45c48; --stone-blue: #4a90a4; --stone-green: #5a9a6e;
       --vine-yellow: #c8a84c; --ochre: #8b6914; --indigo: #2c3e50;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
+    #market body {
       font-family: 'Noto Sans SC', sans-serif;
       background: var(--ink-black); color: var(--ink-rice);
       width: 100%; height: 100vh; overflow: hidden;
     }
     
-    .market-page {
+    #market .market-page {
       display: flex; flex-direction: column;
       height: 100vh;
     }
     
     /* 顶部横幅 */
-    .market-banner {
+    #market .market-banner {
       padding: 20px 30px;
       background: linear-gradient(90deg, var(--ink-deep), var(--ink-black));
       border-bottom: 1px solid var(--ink-mid);
       display: flex; justify-content: space-between; align-items: center;
     }
-    .banner-title {
+    #market .banner-title {
       font-size: 1.3rem; font-weight: 700;
       color: var(--vine-yellow); letter-spacing: 0.2em;
     }
-    .banner-subtitle {
+    #market .banner-subtitle {
       font-size: 0.75rem; color: var(--ink-light); margin-top: 4px;
     }
-    .create-btn {
+    #market .create-btn {
       padding: 10px 20px; border-radius: 8px;
       background: var(--stone-green); border: none;
       color: var(--ink-rice); font-size: 0.85rem;
       cursor: pointer; font-family: inherit;
       transition: all 0.3s;
     }
-    .create-btn:hover {
+    #market .create-btn:hover {
       background: var(--stone-blue); transform: translateY(-2px);
     }
     
     /* 筛选栏 */
-    .filter-bar {
+    #market .filter-bar {
       display: flex; gap: 16px; padding: 12px 30px;
       background: var(--ink-deep);
       border-bottom: 1px solid var(--ink-mid);
       align-items: center;
     }
-    .filter-group {
+    #market .filter-group {
       display: flex; align-items: center; gap: 8px;
     }
-    .filter-label {
+    #market .filter-label {
       font-size: 0.75rem; color: var(--ink-light);
     }
-    .filter-select {
+    #market .filter-select {
       background: var(--ink-black); border: 1px solid var(--ink-mid);
       color: var(--ink-rice); padding: 6px 12px;
       border-radius: 6px; font-size: 0.8rem;
@@ -2285,7 +2251,7 @@ body::before {
     .filter-select:focus { outline: none; border-color: var(--stone-blue); }
     
     /* 主内容 */
-    .market-grid {
+    #market .market-grid {
       flex: 1; overflow-y: auto;
       padding: 20px 30px;
       display: grid;
@@ -2294,7 +2260,7 @@ body::before {
     }
     
     /* 店铺卡片 */
-    .shop-card {
+    #market .shop-card {
       background: linear-gradient(135deg, var(--ink-deep), rgba(26,26,30,0.8));
       border: 1px solid var(--ink-mid);
       border-radius: 12px;
@@ -2303,161 +2269,161 @@ body::before {
       cursor: pointer;
       position: relative;
     }
-    .shop-card:hover {
+    #market .shop-card:hover {
       border-color: var(--stone-blue);
       transform: translateY(-4px);
       box-shadow: 0 8px 32px rgba(74,144,164,0.15);
     }
     
     /* 招牌 */
-    .shop-sign {
+    #market .shop-sign {
       padding: 16px 16px 12px;
       border-bottom: 1px solid var(--ink-mid);
       position: relative;
     }
-    .shop-sign::after {
+    #market .shop-sign::after {
       content: '';
       position: absolute; bottom: -1px; left: 20px; right: 20px;
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--stone-blue), transparent);
     }
-    .shop-name {
+    #market .shop-name {
       font-size: 1rem; font-weight: 700; color: var(--ink-rice);
       letter-spacing: 0.1em;
     }
-    .shop-type {
+    #market .shop-type {
       display: inline-block; padding: 2px 8px; border-radius: 4px;
       font-size: 0.65rem; margin-top: 6px;
       background: rgba(74,144,164,0.15); color: var(--stone-blue);
     }
     
     /* 四权预览 */
-    .shop-rights {
+    #market .shop-rights {
       padding: 12px 16px;
       display: flex; gap: 12px;
     }
-    .right-mini {
+    #market .right-mini {
       flex: 1; text-align: center;
     }
-    .right-mini-label {
+    #market .right-mini-label {
       font-size: 0.6rem; color: var(--ink-light); margin-bottom: 4px;
     }
-    .right-mini-bar {
+    #market .right-mini-bar {
       height: 4px; background: var(--ink-mid); border-radius: 2px;
       overflow: hidden;
     }
-    .right-mini-fill {
+    #market .right-mini-fill {
       height: 100%; border-radius: 2px;
     }
     
     /* 底部信息 */
-    .shop-footer {
+    #market .shop-footer {
       padding: 12px 16px;
       display: flex; justify-content: space-between; align-items: center;
       border-top: 1px solid var(--ink-mid);
       background: rgba(12,12,14,0.5);
     }
-    .shop-price {
+    #market .shop-price {
       font-size: 0.9rem; font-weight: 700; color: var(--vine-yellow);
     }
     .shop-price.free { color: var(--stone-green); }
-    .shop-popularity {
+    #market .shop-popularity {
       font-size: 0.7rem; color: var(--ink-light);
     }
-    .shop-rating {
+    #market .shop-rating {
       color: var(--vine-yellow); font-size: 0.8rem;
     }
     
     /* 详情弹窗 */
-    .modal-overlay {
+    #market .modal-overlay {
       position: fixed; inset: 0;
       background: rgba(12,12,14,0.8); backdrop-filter: blur(8px);
       display: none; align-items: center; justify-content: center;
       z-index: 1000;
     }
     .modal-overlay.show { display: flex; }
-    .modal-scroll {
+    #market .modal-scroll {
       background: linear-gradient(180deg, var(--ink-deep), var(--ink-black));
       border: 1px solid var(--ink-mid); border-radius: 16px;
       width: 90%; max-width: 600px; max-height: 80vh;
       overflow-y: auto;
       position: relative;
     }
-    .modal-scroll::before {
+    #market .modal-scroll::before {
       content: '';
       position: absolute; top: 0; left: 0; right: 0; height: 4px;
       background: linear-gradient(90deg, var(--stone-blue), var(--stone-green), var(--vine-yellow));
       border-radius: 16px 16px 0 0;
     }
-    .modal-header {
+    #market .modal-header {
       padding: 24px 24px 16px;
       border-bottom: 1px solid var(--ink-mid);
     }
-    .modal-title {
+    #market .modal-title {
       font-size: 1.2rem; font-weight: 700; color: var(--ink-rice);
     }
-    .modal-meta {
+    #market .modal-meta {
       display: flex; gap: 16px; margin-top: 8px;
       font-size: 0.75rem; color: var(--ink-light);
     }
-    .modal-close {
+    #market .modal-close {
       position: absolute; top: 16px; right: 16px;
       background: none; border: none; color: var(--ink-light);
       font-size: 1.5rem; cursor: pointer;
     }
     
-    .modal-body {
+    #market .modal-body {
       padding: 20px 24px;
     }
-    .section-title {
+    #market .section-title {
       font-size: 0.8rem; color: var(--stone-blue);
       letter-spacing: 0.15em; margin-bottom: 12px;
     }
     
     /* 雷达图容器 */
-    .radar-container {
+    #market .radar-container {
       display: flex; justify-content: center;
       padding: 16px;
     }
-    #radarCanvas {
+    #market #radarCanvas {
       border-radius: 8px;
     }
     
     /* 分润规则表 */
-    .rule-table {
+    #market .rule-table {
       width: 100%; border-collapse: collapse;
       font-size: 0.8rem;
     }
-    .rule-table th {
+    #market .rule-table th {
       text-align: left; padding: 8px;
       color: var(--ink-light); border-bottom: 1px solid var(--ink-mid);
       font-weight: 500;
     }
-    .rule-table td {
+    #market .rule-table td {
       padding: 8px; border-bottom: 1px solid rgba(42,42,48,0.5);
       color: var(--ink-rice);
     }
     .rule-table tr:last-child td { border-bottom: none; }
     
     /* 版本历史 */
-    .version-list {
+    #market .version-list {
       display: flex; flex-direction: column; gap: 8px;
     }
-    .version-item {
+    #market .version-item {
       display: flex; justify-content: space-between;
       padding: 8px 12px; background: rgba(42,42,48,0.3);
       border-radius: 6px; font-size: 0.75rem;
     }
     
     /* 评价 */
-    .review-list {
+    #market .review-list {
       display: flex; flex-direction: column; gap: 8px;
     }
-    .review-item {
+    #market .review-item {
       padding: 10px 12px; background: rgba(42,42,48,0.3);
       border-radius: 6px;
     }
-    .review-header {
+    #market .review-header {
       display: flex; justify-content: space-between; margin-bottom: 4px;
     }
     .review-author { font-size: 0.8rem; color: var(--stone-blue); }
@@ -2465,7 +2431,7 @@ body::before {
     .review-text { font-size: 0.75rem; color: var(--ink-light); line-height: 1.5; }
     
     /* 应用按钮 */
-    .apply-btn {
+    #market .apply-btn {
       width: 100%; padding: 12px;
       background: var(--stone-green); border: none;
       color: var(--ink-rice); font-size: 0.9rem;
@@ -2477,127 +2443,130 @@ body::before {
   
 
     /* === SIMULATE PAGE STYLES === */
-    
-    :root {
+    #simulate {
+      /* page container */
+    }
+
+    #simulate :root {
       --ink-black: #0c0c0e; --ink-deep: #1a1a1e; --ink-mid: #2a2a30;
       --ink-light: #8a8a90; --ink-rice: #f0f0e8;
       --cinnabar: #c45c48; --stone-blue: #4a90a4; --stone-green: #5a9a6e;
       --vine-yellow: #c8a84c; --ochre: #8b6914; --indigo: #2c3e50;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
+    #simulate body {
       font-family: 'Noto Sans SC', sans-serif;
       background: var(--ink-black); color: var(--ink-rice);
       width: 100%; height: 100vh; overflow: hidden;
     }
     
-    .simulate-page {
+    #simulate .simulate-page {
       display: flex; flex-direction: column;
       height: 100vh;
     }
     
     /* 顶部统计栏 */
-    .stats-bar {
+    #simulate .stats-bar {
       display: flex; gap: 24px; padding: 12px 20px;
       background: linear-gradient(90deg, var(--ink-deep), var(--ink-black));
       border-bottom: 1px solid var(--ink-mid);
       align-items: center;
     }
-    .stat-item {
+    #simulate .stat-item {
       display: flex; align-items: center; gap: 8px;
     }
-    .stat-icon {
+    #simulate .stat-icon {
       width: 32px; height: 32px; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
       font-size: 1rem;
     }
     .stat-text { display: flex; flex-direction: column; }
-    .stat-value {
+    #simulate .stat-value {
       font-size: 1.1rem; font-weight: 700; color: var(--stone-blue);
     }
-    .stat-label {
+    #simulate .stat-label {
       font-size: 0.65rem; color: var(--ink-light); letter-spacing: 0.1em;
     }
     
     /* 主内容区 */
-    .main-content {
+    #simulate .main-content {
       flex: 1; display: flex; overflow: hidden;
     }
     
     /* 左侧场景选择器 */
-    .scene-panel {
+    #simulate .scene-panel {
       width: 220px; flex-shrink: 0;
       background: var(--ink-deep);
       border-right: 1px solid var(--ink-mid);
       display: flex; flex-direction: column;
     }
-    .scene-header {
+    #simulate .scene-header {
       padding: 16px; border-bottom: 1px solid var(--ink-mid);
       font-size: 0.85rem; font-weight: 700;
       color: var(--stone-blue); letter-spacing: 0.15em;
     }
-    .scene-list {
+    #simulate .scene-list {
       flex: 1; overflow-y: auto; padding: 8px;
     }
-    .scene-item {
+    #simulate .scene-item {
       padding: 12px; border-radius: 8px;
       margin-bottom: 8px; cursor: pointer;
       border: 1px solid transparent;
       transition: all 0.3s;
     }
-    .scene-item:hover {
+    #simulate .scene-item:hover {
       background: rgba(42,42,48,0.5);
       border-color: var(--ink-mid);
     }
-    .scene-item.active {
+    #simulate .scene-item.active {
       background: rgba(74,144,164,0.15);
       border-color: var(--stone-blue);
     }
-    .scene-item .scene-icon {
+    #simulate .scene-item .scene-icon {
       font-size: 1.5rem; margin-bottom: 4px;
     }
-    .scene-item .scene-name {
+    #simulate .scene-item .scene-name {
       font-size: 0.8rem; font-weight: 500; color: var(--ink-rice);
     }
-    .scene-item .scene-desc {
+    #simulate .scene-item .scene-desc {
       font-size: 0.65rem; color: var(--ink-light); margin-top: 4px;
       line-height: 1.4;
     }
     
     /* 中央视图区 */
-    .view-area {
+    #simulate .view-area {
       flex: 1; display: flex; flex-direction: column;
       position: relative;
     }
     
     /* 网络图 */
-    .network-view {
+    #simulate .network-view {
       flex: 1; position: relative; overflow: hidden;
     }
-    #networkSvg {
+    #simulate #networkSvg {
       width: 100%; height: 100%;
     }
     
     /* 经济活动面板 */
-    .economy-panel {
+    #simulate .economy-panel {
       height: 200px;
       background: var(--ink-deep);
       border-top: 1px solid var(--ink-mid);
       display: flex; gap: 0;
     }
-    .economy-section {
+    #simulate .economy-section {
       flex: 1; padding: 12px; border-right: 1px solid var(--ink-mid);
       overflow-y: auto;
     }
     .economy-section:last-child { border-right: none; }
-    .economy-title {
+    #simulate .economy-title {
       font-size: 0.7rem; color: var(--ink-light);
       letter-spacing: 0.15em; margin-bottom: 8px;
     }
     
     /* 交易记录 */
     .tx-list { display: flex; flex-direction: column; gap: 4px; }
-    .tx-item {
+    #simulate .tx-item {
       display: flex; justify-content: space-between; align-items: center;
       padding: 4px 8px; border-radius: 4px;
       font-size: 0.75rem;
@@ -2607,98 +2576,98 @@ body::before {
     .tx-amount.negative { color: var(--cinnabar); }
     
     /* Agent面板 */
-    .agent-panel {
+    #simulate .agent-panel {
       width: 200px; flex-shrink: 0;
       background: var(--ink-deep);
       border-left: 1px solid var(--ink-mid);
       display: flex; flex-direction: column;
     }
-    .agent-header {
+    #simulate .agent-header {
       padding: 16px; border-bottom: 1px solid var(--ink-mid);
       font-size: 0.85rem; font-weight: 700;
       color: var(--stone-green); letter-spacing: 0.15em;
     }
-    .agent-list {
+    #simulate .agent-list {
       flex: 1; overflow-y: auto; padding: 8px;
     }
-    .agent-card {
+    #simulate .agent-card {
       display: flex; align-items: center; gap: 10px;
       padding: 10px; border-radius: 8px;
       margin-bottom: 8px; border: 1px solid var(--ink-mid);
       transition: all 0.3s;
     }
     .agent-card:hover { border-color: var(--stone-blue); }
-    .agent-card.active {
+    #simulate .agent-card.active {
       border-color: var(--stone-green);
       background: rgba(90,154,110,0.1);
     }
-    .agent-avatar {
+    #simulate .agent-avatar {
       width: 36px; height: 36px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: 0.9rem; font-weight: 700; color: white;
       flex-shrink: 0;
     }
     .agent-info { flex: 1; min-width: 0; }
-    .agent-name {
+    #simulate .agent-name {
       font-size: 0.8rem; font-weight: 500;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .agent-balance {
+    #simulate .agent-balance {
       font-size: 0.7rem; color: var(--stone-green);
     }
-    .agent-action {
+    #simulate .agent-action {
       font-size: 0.65rem; color: var(--vine-yellow);
       margin-top: 2px; font-style: italic;
     }
     
     /* 控制栏 */
-    .control-bar {
+    #simulate .control-bar {
       display: flex; align-items: center; gap: 12px;
       padding: 10px 20px;
       background: linear-gradient(90deg, var(--ink-deep), var(--ink-black));
       border-top: 1px solid var(--ink-mid);
     }
-    .ctrl-btn {
+    #simulate .ctrl-btn {
       padding: 8px 16px; border-radius: 6px;
       background: var(--ink-mid); border: 1px solid var(--ink-mid);
       color: var(--ink-rice); font-size: 0.8rem;
       cursor: pointer; transition: all 0.2s;
       font-family: inherit;
     }
-    .ctrl-btn:hover {
+    #simulate .ctrl-btn:hover {
       background: var(--stone-blue); border-color: var(--stone-blue);
     }
-    .ctrl-btn.primary {
+    #simulate .ctrl-btn.primary {
       background: var(--stone-green); border-color: var(--stone-green);
     }
-    .ctrl-btn.primary:hover {
+    #simulate .ctrl-btn.primary:hover {
       background: var(--stone-blue); border-color: var(--stone-blue);
     }
-    .ctrl-btn:disabled {
+    #simulate .ctrl-btn:disabled {
       opacity: 0.4; cursor: not-allowed;
     }
-    .speed-select {
+    #simulate .speed-select {
       background: var(--ink-deep); border: 1px solid var(--ink-mid);
       color: var(--ink-rice); padding: 6px 10px;
       border-radius: 6px; font-size: 0.8rem;
       font-family: inherit;
     }
-    .progress-bar {
+    #simulate .progress-bar {
       flex: 1; height: 6px; background: var(--ink-mid);
       border-radius: 3px; overflow: hidden;
     }
-    .progress-fill {
+    #simulate .progress-fill {
       height: 100%; background: linear-gradient(90deg, var(--stone-blue), var(--stone-green));
       border-radius: 3px; transition: width 0.3s;
       width: 0%;
     }
-    .step-counter {
+    #simulate .step-counter {
       font-size: 0.75rem; color: var(--ink-light);
       min-width: 80px; text-align: center;
     }
     
     /* 事件日志 */
-    .log-panel {
+    #simulate .log-panel {
       position: absolute; bottom: 0; left: 0; right: 220px;
       max-height: 180px; background: rgba(12,12,14,0.95);
       backdrop-filter: blur(8px);
@@ -2706,19 +2675,19 @@ body::before {
       display: none; flex-direction: column;
     }
     .log-panel.show { display: flex; }
-    .log-header {
+    #simulate .log-header {
       display: flex; justify-content: space-between; align-items: center;
       padding: 8px 12px; border-bottom: 1px solid var(--ink-mid);
     }
     .log-title { font-size: 0.75rem; color: var(--ink-light); }
-    .log-close {
+    #simulate .log-close {
       background: none; border: none; color: var(--ink-light);
       cursor: pointer; font-size: 1rem;
     }
-    .log-list {
+    #simulate .log-list {
       flex: 1; overflow-y: auto; padding: 8px;
     }
-    .log-item {
+    #simulate .log-item {
       display: flex; gap: 8px; padding: 4px 8px;
       border-radius: 4px; font-size: 0.75rem;
       animation: logIn 0.3s ease-out;
@@ -2728,7 +2697,7 @@ body::before {
     }
     .log-item:nth-child(odd) { background: rgba(42,42,48,0.3); }
     .log-time { color: var(--ink-light); min-width: 50px; }
-    .log-type {
+    #simulate .log-type {
       padding: 1px 6px; border-radius: 3px;
       font-size: 0.65rem; min-width: 60px; text-align: center;
     }
@@ -2743,12 +2712,12 @@ body::before {
     /* D3网络图样式 */
     .node-circle { cursor: pointer; transition: all 0.3s; }
     .node-circle:hover { filter: brightness(1.3); }
-    .node-label {
+    #simulate .node-label {
       font-family: 'Noto Sans SC', sans-serif;
       font-size: 11px; fill: var(--ink-rice);
       pointer-events: none; text-anchor: middle;
     }
-    .link-line {
+    #simulate .link-line {
       stroke-opacity: 0.4;
       transition: all 0.3s;
     }
@@ -2759,6 +2728,7 @@ body::before {
 
 <body style="margin:0;padding:0;background:var(--ink-black);color:var(--ink-rice);font-family:var(--font-body);width:100vw;height:100vh;overflow:hidden;display:flex;">
 
+  <!-- 左侧导航 -->
   <nav class="nav-sidebar" id="navSidebar" style="width:220px;height:100vh;background:linear-gradient(180deg,var(--ink-deep) 0%,var(--ink-black) 100%);border-right:1px solid var(--ink-mid);display:flex;flex-direction:column;flex-shrink:0;z-index:100;position:relative;overflow-y:auto;">
     <div class="nav-logo" style="padding:24px;border-bottom:1px solid var(--ink-mid);text-align:center;">
       <h1 style="font-size:2rem;font-weight:700;letter-spacing:0.3em;color:var(--ink-rice);text-shadow:0 0 20px rgba(74,144,164,0.3);margin:0;">ECHO</h1>
@@ -2836,244 +2806,6 @@ body::before {
       <span class="wuxing-desc">规则市场</span>
     </a>
   </nav>
-
-  <script>
-    /**
-     * ECHO首页 — 墨色粒子星云系统
-     * 东方美学粒子：墨色粒子缓慢旋转如星云
-     */
-    (function() {
-      const canvas = document.getElementById('particle-canvas');
-      const ctx = canvas.getContext('2d');
-
-      let width, height;
-      let particles = [];
-      let animationId;
-      let mouseX = 0, mouseY = 0;
-
-      // 配置参数
-      const CONFIG = {
-        particleCount: 180,      // 粒子数量
-        baseSpeed: 0.0003,       // 基础旋转速度
-        mouseInfluence: 0.15,    // 鼠标影响强度
-        connectionDist: 100,     // 连线最大距离
-        connectionMax: 3,        // 每个粒子最大连线数
-        sizeMin: 0.5,
-        sizeMax: 2.5,
-        trail: 0.15,             // 拖尾效果（越小拖尾越长）
-      };
-
-      // 墨色调色板 — 东方美学
-      const PALETTE = [
-        { r: 240, g: 240, b: 232, a: 0.8 },  // 素白
-        { r: 138, g: 138, b: 144, a: 0.6 },  // 雾灰
-        { r: 74,  g: 144, b: 164, a: 0.4 },  // 石青
-        { r: 90,  g: 154, b: 110, a: 0.3 },  // 石绿
-        { r: 200, g: 168, b: 76,  a: 0.3 },  // 藤黄
-        { r: 196, g: 92,  b: 72,  a: 0.2 },  // 朱砂
-      ];
-
-      /**
-       * 粒子类
-       */
-      class Particle {
-        constructor() {
-          this.reset();
-        }
-
-        reset() {
-          // 极坐标初始化 — 围绕中心分布
-          const angle = Math.random() * Math.PI * 2;
-          const radius = Math.random() * Math.min(width, height) * 0.45;
-          this.centerX = width / 2;
-          this.centerY = height / 2;
-          this.radius = radius;
-          this.angle = angle;
-          this.speed = CONFIG.baseSpeed * (0.3 + Math.random() * 1.4);
-          // 内层粒子转更快，外层更慢（开普勒既视感）
-          this.speed *= (1 / (1 + radius / 200));
-
-          // 粒子属性
-          const palette = PALETTE[Math.floor(Math.random() * PALETTE.length)];
-          this.color = { ...palette };
-          this.baseSize = CONFIG.sizeMin + Math.random() * (CONFIG.sizeMax - CONFIG.sizeMin);
-          this.size = this.baseSize;
-          this.pulsePhase = Math.random() * Math.PI * 2;
-          this.pulseSpeed = 0.01 + Math.random() * 0.02;
-
-          // 位置（笛卡尔坐标缓存）
-          this.x = this.centerX + Math.cos(this.angle) * this.radius;
-          this.y = this.centerY + Math.sin(this.angle) * this.radius;
-        }
-
-        update(time) {
-          // 自转
-          this.angle += this.speed;
-
-          // 脉冲呼吸
-          this.pulsePhase += this.pulseSpeed;
-          const pulse = 0.7 + 0.3 * Math.sin(this.pulsePhase);
-          this.size = this.baseSize * pulse;
-
-          // 计算新位置
-          let targetX = this.centerX + Math.cos(this.angle) * this.radius;
-          let targetY = this.centerY + Math.sin(this.angle) * this.radius;
-
-          // 鼠标影响 — 粒子向鼠标位置轻微偏移（引力感）
-          const dx = mouseX - this.x;
-          const dy = mouseY - this.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 300 && dist > 0) {
-            const force = (1 - dist / 300) * CONFIG.mouseInfluence;
-            targetX += dx * force * 0.02;
-            targetY += dy * force * 0.02;
-          }
-
-          // 平滑移动
-          this.x += (targetX - this.x) * 0.05;
-          this.y += (targetY - this.y) * 0.05;
-        }
-
-        draw(ctx) {
-          const alpha = this.color.a * (0.6 + 0.4 * Math.sin(this.pulsePhase));
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},${alpha})`;
-          ctx.fill();
-
-          // 微光晕
-          if (this.size > 1.5) {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
-            const glowAlpha = alpha * 0.15;
-            ctx.fillStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},${glowAlpha})`;
-            ctx.fill();
-          }
-        }
-      }
-
-      /**
-       * 初始化画布尺寸
-       */
-      function resize() {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
-
-        // 更新所有粒子的中心点
-        particles.forEach(p => {
-          p.centerX = width / 2;
-          p.centerY = height / 2;
-        });
-      }
-
-      /**
-       * 初始化粒子
-       */
-      function initParticles() {
-        particles = [];
-        for (let i = 0; i < CONFIG.particleCount; i++) {
-          particles.push(new Particle());
-        }
-      }
-
-      /**
-       * 绘制粒子连线 — 水墨笔触感
-       */
-      function drawConnections(ctx) {
-        for (let i = 0; i < particles.length; i++) {
-          let connections = 0;
-          for (let j = i + 1; j < particles.length; j++) {
-            if (connections >= CONFIG.connectionMax) break;
-
-            const dx = particles[i].x - particles[j].x;
-            const dy = particles[i].y - particles[j].y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist < CONFIG.connectionDist) {
-              const alpha = (1 - dist / CONFIG.connectionDist) * 0.15;
-              ctx.beginPath();
-              ctx.moveTo(particles[i].x, particles[i].y);
-              // 使用二次贝塞尔曲线让连线有弧度（水墨笔触）
-              const midX = (particles[i].x + particles[j].x) / 2 + (Math.random() - 0.5) * 10;
-              const midY = (particles[i].y + particles[j].y) / 2 + (Math.random() - 0.5) * 10;
-              ctx.quadraticCurveTo(midX, midY, particles[j].x, particles[j].y);
-              ctx.strokeStyle = `rgba(138,138,144,${alpha})`;
-              ctx.lineWidth = 0.5;
-              ctx.stroke();
-              connections++;
-            }
-          }
-        }
-      }
-
-      /**
-       * 主动画循环
-       */
-      function animate(time) {
-        // 拖尾效果 — 不完全清除，而是覆盖半透明层
-        ctx.fillStyle = `rgba(12,12,14,${CONFIG.trail})`;
-        ctx.fillRect(0, 0, width, height);
-
-        // 绘制连线
-        drawConnections(ctx);
-
-        // 更新并绘制粒子
-        particles.forEach(p => {
-          p.update(time);
-          p.draw(ctx);
-        });
-
-        animationId = requestAnimationFrame(animate);
-      }
-
-      /**
-       * 事件监听
-       */
-      window.addEventListener('resize', () => {
-        resize();
-      });
-
-      window.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-      });
-
-      // 触摸设备支持
-      window.addEventListener('touchmove', (e) => {
-        if (e.touches.length > 0) {
-          mouseX = e.touches[0].clientX;
-          mouseY = e.touches[0].clientY;
-        }
-      });
-
-      /**
-       * 启动
-       */
-      function start() {
-        resize();
-        initParticles();
-        animate(0);
-      }
-
-      // 延迟启动，等字体加载
-      if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(start);
-      } else {
-        start();
-      }
-
-      // 页面可见性控制 — 后台暂停动画节省资源
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          cancelAnimationFrame(animationId);
-        } else {
-          animate(0);
-        }
-      });
-    })();
-  </script>
     </div>
 
     <!-- ===== RIGHTS PAGE ===== -->
@@ -3176,419 +2908,6 @@ body::before {
 <div class="error-toast" id="errorToast"></div>
 <!-- Tooltip -->
 <div class="tooltip" id="tooltip"></div>
-
-<script>
-// ===== 常量与数据 =====
-const RINGS = [
-  { name: '用', key: 'use', color: '#4a90a4', idx: 0, outerR: 250, innerR: 195 },
-  { name: '扩', key: 'expand', color: '#c8a84c', idx: 1, outerR: 190, innerR: 140 },
-  { name: '衍', key: 'derive', color: '#5a9a6e', idx: 2, outerR: 135, innerR: 85 },
-  { name: '益', key: 'benefit', color: '#c45c48', idx: 3, outerR: 80, innerR: 40 },
-];
-const LEVELS = [
-  { name: '禁', val: 0, desc: '完全禁止，无人可及' },
-  { name: '己', val: 1, desc: '仅创作者自己可用' },
-  { name: '亲', val: 2, desc: '亲友圈，礼物经济' },
-  { name: '约', val: 3, desc: '契约边界，市场交易' },
-  { name: '法', val: 4, desc: '社区自治，共同决策' },
-  { name: '公', val: 5, desc: '公共品，完全开放' },
-];
-const TEMPLATES = [
-  {
-    id: 'tpl_music_standard',
-    name: '独立音乐人标准合约',
-    desc: '允许个人收听与分享，禁止商业改编，收益归创作者',
-    config: { use: 0b0011110, expand: 0b0001110, derive: 0b0000010, benefit: 0b0000010 },
-    tags: ['音乐', '保守'],
-  },
-  {
-    id: 'tpl_gpl',
-    name: 'GPL风格开源',
-    desc: '自由使用、传播与改编，衍生作品须保持相同开放度',
-    config: { use: 0b1111111, expand: 0b1111111, derive: 0b1111111, benefit: 0b0000001 },
-    tags: ['代码', '开放'],
-  },
-  {
-    id: 'tpl_ai_data',
-    name: 'AI训练数据开放',
-    desc: '允许AI训练使用与衍生模型，要求保留数据来源声明',
-    config: { use: 0b1111111, expand: 0b0011110, derive: 0b1111111, benefit: 0b0001110 },
-    tags: ['AI', '平衡'],
-  },
-  {
-    id: 'tpl_cc_by_nc',
-    name: 'CC-BY-NC 知识共享',
-    desc: '署名-非商业性使用，允许传播与改编，禁止商业收益',
-    config: { use: 0b0111111, expand: 0b0111111, derive: 0b0111111, benefit: 0b0000010 },
-    tags: ['文字', '平衡'],
-  },
-  {
-    id: 'tpl_video_collab',
-    name: '视频协作共创',
-    desc: '开放给协作成员使用与改编，平台级传播需协商',
-    config: { use: 0b0001110, expand: 0b0000110, derive: 0b0001110, benefit: 0b0001110 },
-    tags: ['视频', '平衡'],
-  },
-  {
-    id: 'tpl_public_domain',
-    name: '完全公共领域',
-    desc: '无任何限制，任何人可做任何事',
-    config: { use: 0b1111111, expand: 0b1111111, derive: 0b1111111, benefit: 0b1111111 },
-    tags: ['通用', '开放'],
-  },
-  {
-    id: 'tpl_all_rights',
-    name: '全保留版权',
-    desc: '传统版权模式，禁止任何外部使用',
-    config: { use: 0b0000010, expand: 0b0000010, derive: 0b0000010, benefit: 0b0000010 },
-    tags: ['通用', '保守'],
-  },
-];
-const META_RULES = [
-  { num: '一', title: '初始配置不可篡改', desc: '谁有权利设定初始规则，这一点永久固化在链上。' },
-  { num: '二', title: '配置即承诺', desc: '你选择的档位不是标签，是对世界的承诺。承诺一旦发出，便在验证图中留下痕迹。' },
-  { num: '三', title: '流动即执行', desc: '不需要法院，不需要平台仲裁。当使用权在图中流动时，规则自动执行。' },
-  { num: '四', title: '衍生即继承', desc: '任何衍生作品都继承上游的配置约束。你不能比上游更封闭，但可以更开放。' },
-  { num: '五', title: '版本即历史', desc: '每一次配置变更都是历史的一部分。旧版本不会被删除，它们构成生长的年轮。' },
-  { num: '六', title: '势位即边界', desc: '势图接管时，生态的态势会为你建议边界。只开放，不收紧——这是生态的免疫原则。' },
-];
-const USERS = [
-  { id:'alice', name:'Alice', role:'creator', relation:'self' },
-  { id:'bob', name:'Bob', role:'friend', relation:'trust' },
-  { id:'charlie', name:'Charlie', role:'stranger', relation:'none' },
-];
-
-// ===== 状态 =====
-let state = {
-  use: 0b0000010,      // 默认仅己
-  expand: 0b0000010,
-  derive: 0b0000010,
-  benefit: 0b0000010,
-};
-let activeTemplate = null;
-
-// ===== 禁止组合检测 =====
-function isForbidden(ring, mask) {
-  const has = (bit) => (mask & (1 << bit)) !== 0;
-  // 0(禁) 与任何其他档位同时存在
-  if (has(0) && mask !== (1<<0)) return '禁(0)不可与其他档位共存';
-  // 5(公) 与 1(己) 或 2(亲)
-  if (has(5) && (has(1) || has(2))) return '公(5)与己(1)/亲(2)逻辑冲突';
-  // 0(禁) 与 3(约) 或 4(法)
-  if (has(0) && (has(3) || has(4))) return '禁(0)与约(3)/法(4)逻辑冲突';
-  return null;
-}
-
-// ===== 绘制罗盘 =====
-function drawCompass() {
-  const svg = document.getElementById('compassSvg');
-  const sectorsG = document.getElementById('sectorsGroup');
-  const labelsG = document.getElementById('labelsGroup');
-  sectorsG.innerHTML = '';
-  labelsG.innerHTML = '';
-  const cx = 260, cy = 260;
-
-  RINGS.forEach(ring => {
-    const ringMask = state[ring.key];
-    const anglePer = 360 / 6;
-    const startOffset = -90; // 从顶部开始
-
-    // 绘制每档扇区
-    LEVELS.forEach((level, li) => {
-      const startAngle = startOffset + li * anglePer;
-      const endAngle = startOffset + (li + 1) * anglePer;
-      const isSelected = (ringMask & (1 << level.val)) !== 0;
-      const forbidden = isSelected ? isForbidden(ring.key, ringMask) : null;
-
-      // 计算扇形路径
-      const p1 = polar(cx, cy, ring.outerR, startAngle);
-      const p2 = polar(cx, cy, ring.outerR, endAngle);
-      const p3 = polar(cx, cy, ring.innerR, endAngle);
-      const p4 = polar(cx, cy, ring.innerR, startAngle);
-      const largeArc = anglePer > 180 ? 1 : 0;
-      const d = `M ${p1.x} ${p1.y} A ${ring.outerR} ${ring.outerR} 0 ${largeArc} 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${ring.innerR} ${ring.innerR} 0 ${largeArc} 0 ${p4.x} ${p4.y} Z`;
-
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', d);
-      path.setAttribute('class', `compass-sector ${isSelected ? 'selected' : ''} ${forbidden ? 'error' : ''}`);
-      path.setAttribute('data-ring', ring.key);
-      path.setAttribute('data-level', level.val);
-      path.setAttribute('fill', isSelected ? ring.color : 'transparent');
-      path.setAttribute('stroke', ring.color);
-      path.setAttribute('stroke-width', isSelected ? '2' : '0.8');
-      path.setAttribute('stroke-opacity', isSelected ? '1' : '0.3');
-      path.setAttribute('fill-opacity', isSelected ? (forbidden ? '0.5' : '0.35') : '0.05');
-      if (forbidden) {
-        path.setAttribute('filter', 'url(#inkGlow)');
-      }
-      // 事件
-      path.addEventListener('mouseenter', e => showTooltip(e, `${ring.name}·${level.name} — ${level.desc}`));
-      path.addEventListener('mouseleave', hideTooltip);
-      path.addEventListener('click', e => toggleSector(ring.key, level.val, path));
-      sectorsG.appendChild(path);
-
-      // 档位文字
-      const midAngle = startAngle + anglePer / 2;
-      const textR = (ring.outerR + ring.innerR) / 2;
-      const tp = polar(cx, cy, textR, midAngle);
-      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      text.setAttribute('x', tp.x);
-      text.setAttribute('y', tp.y);
-      text.setAttribute('class', 'compass-label');
-      text.setAttribute('fill', isSelected ? '#f0f0e8' : ring.color);
-      text.setAttribute('font-size', ring.outerR > 180 ? '13' : '11');
-      text.setAttribute('opacity', isSelected ? '1' : '0.5');
-      text.textContent = level.name;
-      labelsG.appendChild(text);
-    });
-
-    // 环名（在外环外侧）
-    const ringLabelR = ring.outerR + 16;
-    const ringLabelAngle = startOffset - 15;
-    const rlp = polar(cx, cy, ringLabelR, ringLabelAngle);
-    const rtext = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    rtext.setAttribute('x', rlp.x);
-    rtext.setAttribute('y', rlp.y);
-    rtext.setAttribute('class', 'compass-ring-name');
-    rtext.setAttribute('fill', ring.color);
-    rtext.textContent = ring.name;
-    labelsG.appendChild(rtext);
-  });
-}
-
-function polar(cx, cy, r, angleDeg) {
-  const rad = angleDeg * Math.PI / 180;
-  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-}
-
-// ===== 交互 =====
-function toggleSector(ringKey, levelVal, pathEl) {
-  const bit = 1 << levelVal;
-  const current = state[ringKey];
-  const next = current ^ bit; // toggle
-
-  // 如果这是第一次点击（当前为0），先清除其他位只保留这一个
-  // 实际上支持多选，所以直接toggle
-  state[ringKey] = next;
-
-  // 检测禁止组合
-  const err = isForbidden(ringKey, state[ringKey]);
-  if (err) {
-    showError(err);
-    // 添加红色水墨动画
-    addInkRipple(pathEl, true);
-  } else {
-    addInkRipple(pathEl, false);
-  }
-
-  updateAll();
-}
-
-function addInkRipple(el, isError) {
-  const svg = document.getElementById('compassSvg');
-  const rect = el.getBoundingClientRect();
-  const svgRect = svg.getBoundingClientRect();
-  // 获取扇形中心 roughly
-  const bbox = el.getBBox();
-  const cx = bbox.x + bbox.width/2;
-  const cy = bbox.y + bbox.height/2;
-
-  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  circle.setAttribute('cx', cx);
-  circle.setAttribute('cy', cy);
-  circle.setAttribute('r', Math.max(bbox.width, bbox.height) * 0.3);
-  circle.setAttribute('fill', isError ? 'var(--cinnabar)' : 'var(--paper)');
-  circle.setAttribute('opacity', '0.6');
-  circle.setAttribute('class', isError ? 'ink-error' : 'ink-ripple');
-  circle.style.pointerEvents = 'none';
-  svg.appendChild(circle);
-  setTimeout(() => circle.remove(), isError ? 1200 : 700);
-}
-
-// ===== 模板列表 =====
-function renderTemplates() {
-  const list = document.getElementById('templateList');
-  list.innerHTML = '';
-  TEMPLATES.forEach((tpl, i) => {
-    const card = document.createElement('div');
-    card.className = 'template-card' + (activeTemplate === i ? ' active' : '');
-    card.innerHTML = `
-      <div class="template-name">${tpl.name}</div>
-      <div class="template-desc">${tpl.desc}</div>
-      <div class="template-badges">
-        <span class="badge badge-use">用:${maskToStr(tpl.config.use)}</span>
-        <span class="badge badge-expand">扩:${maskToStr(tpl.config.expand)}</span>
-        <span class="badge badge-derive">衍:${maskToStr(tpl.config.derive)}</span>
-        <span class="badge badge-benefit">益:${maskToStr(tpl.config.benefit)}</span>
-        ${tpl.tags.map(t => `<span class="badge" style="color:var(--ink-light);border-color:var(--ink-mid)">${t}</span>`).join('')}
-      </div>
-    `;
-    card.addEventListener('click', () => applyTemplate(i));
-    list.appendChild(card);
-  });
-}
-
-function maskToStr(mask) {
-  const parts = [];
-  LEVELS.forEach(l => { if (mask & (1<<l.val)) parts.push(l.name); });
-  return parts.join('/') || '禁';
-}
-
-function applyTemplate(idx) {
-  activeTemplate = idx;
-  const tpl = TEMPLATES[idx];
-  state = { ...tpl.config };
-  updateAll();
-  renderTemplates();
-}
-
-// ===== 预览区 =====
-function renderPreview() {
-  const container = document.getElementById('previewScenarios');
-  container.innerHTML = '';
-
-  const actions = [
-    { action:'view', label:'浏览内容', need:'use' },
-    { action:'share', label:'分享给朋友', need:'expand' },
-    { action:'remix', label:'改编创作', need:'derive' },
-    { action:'sell', label:'商业使用', need:'benefit' },
-  ];
-
-  USERS.forEach(user => {
-    const card = document.createElement('div');
-    card.className = 'scenario-card';
-    // 判断此用户在各权上的档位
-    const userLevel = getUserLevel(user);
-    let results = [];
-    actions.forEach(act => {
-      const allowed = checkPermission(act.need, userLevel);
-      results.push({ label: act.label, ...allowed });
-    });
-
-    const avatarColor = user.relation === 'self' ? 'var(--stone-blue)' :
-                        user.relation === 'trust' ? 'var(--stone-green)' : 'var(--ink-light)';
-
-    card.innerHTML = `
-      <div class="scenario-avatar" style="border-color:${avatarColor};background:rgba(0,0,0,0.3)">${user.name[0]}</div>
-      <div class="scenario-name">${user.name}</div>
-      <div class="scenario-action">关系：${user.relation === 'self' ? '创作者' : user.relation === 'trust' ? '信任网络' : '陌生人'}</div>
-      ${results.map(r => `
-        <div class="scenario-result ${r.result === 'allow' ? 'result-allow' : r.result === 'deny' ? 'result-deny' : 'result-conditional'}">
-          ${r.label}: ${r.result === 'allow' ? '✓ 允许' : r.result === 'deny' ? '✗ 禁止' : '? 需协商'}${r.detail ? ' — ' + r.detail : ''}
-        </div>
-      `).join('')}
-    `;
-    container.appendChild(card);
-  });
-}
-
-function getUserLevel(user) {
-  // 简化：self=己(1), trust=亲(2), none=陌生人用公(5)或约(3)
-  if (user.relation === 'self') return 1;
-  if (user.relation === 'trust') return 2;
-  return 5; // 陌生人默认按公档测试
-}
-
-function checkPermission(ringKey, userLevel) {
-  const mask = state[ringKey];
-  // 如果禁(0)被选中且是唯一档位
-  if (mask === 1) return { result: 'deny', detail: '完全禁止' };
-  // 检查用户档位是否在允许范围内
-  const hasLevel = (mask & (1 << userLevel)) !== 0;
-  if (hasLevel) return { result: 'allow', detail: `档位${LEVELS[userLevel].name}已开放` };
-  // 检查更低的档位是否开放（档位数字越小越私密）
-  for (let i = 0; i < userLevel; i++) {
-    if ((mask & (1 << i)) !== 0) return { result: 'conditional', detail: `需升至${LEVELS[userLevel].name}档` };
-  }
-  return { result: 'deny', detail: '无可用档位' };
-}
-
-// ===== 元规则 =====
-function renderMetaRules() {
-  const container = document.getElementById('metaRules');
-  container.innerHTML = META_RULES.map(m => `
-    <div class="meta-item">
-      <span class="meta-num">${m.num}</span>
-      <div><span class="meta-text">${m.title}</span> — ${m.desc}</div>
-    </div>
-  `).join('');
-}
-
-// ===== JSON显示 =====
-function updateJson() {
-  const el = document.getElementById('configJson');
-  const compressed = (state.benefit << 12) | (state.derive << 8) | (state.expand << 4) | state.use;
-  const json = {
-    permissions: {
-      use: { mask: state.use, levels: maskToArr(state.use) },
-      expand: { mask: state.expand, levels: maskToArr(state.expand) },
-      derive: { mask: state.derive, levels: maskToArr(state.derive) },
-      benefit: { mask: state.benefit, levels: maskToArr(state.benefit) },
-    },
-    compressedPermissions: '0x' + compressed.toString(16).padStart(4, '0'),
-  };
-
-  document.getElementById('maskUse').textContent = '0b' + state.use.toString(2).padStart(6, '0');
-  document.getElementById('maskExpand').textContent = '0b' + state.expand.toString(2).padStart(6, '0');
-  document.getElementById('maskDerive').textContent = '0b' + state.derive.toString(2).padStart(6, '0');
-  document.getElementById('maskBenefit').textContent = '0b' + state.benefit.toString(2).padStart(6, '0');
-  document.getElementById('maskCompressed').textContent = json.compressedPermissions;
-
-  const html = syntaxHighlight(JSON.stringify(json, null, 2));
-  el.innerHTML = html;
-}
-
-function maskToArr(mask) {
-  return LEVELS.filter(l => mask & (1<<l.val)).map(l => l.name);
-}
-
-function syntaxHighlight(json) {
-  return json.replace(/(".*?")(\s*:\s*)/g, '<span class="json-key">$1</span>$2')
-    .replace(/: "(.*?)"/g, ': <span class="json-str">"$1"</span>')
-    .replace(/: (0b[01]+|0x[0-9a-fA-F]+)/g, ': <span class="json-num">$1</span>');
-}
-
-// ===== Tooltip =====
-function showTooltip(e, text) {
-  const tt = document.getElementById('tooltip');
-  tt.textContent = text;
-  tt.classList.add('show');
-  const rect = e.target.getBoundingClientRect();
-  tt.style.left = (rect.left + rect.width/2 - tt.offsetWidth/2) + 'px';
-  tt.style.top = (rect.top - tt.offsetHeight - 8) + 'px';
-}
-function hideTooltip() {
-  document.getElementById('tooltip').classList.remove('show');
-}
-
-// ===== 错误提示 =====
-let errorTimer;
-function showError(msg) {
-  const el = document.getElementById('errorToast');
-  el.textContent = '⚠ ' + msg;
-  el.classList.add('show');
-  clearTimeout(errorTimer);
-  errorTimer = setTimeout(() => el.classList.remove('show'), 3000);
-}
-
-// ===== 全局更新 =====
-function updateAll() {
-  drawCompass();
-  updateJson();
-  renderPreview();
-}
-
-// ===== 初始化 =====
-function init() {
-  drawCompass();
-  renderTemplates();
-  renderMetaRules();
-  updateJson();
-  renderPreview();
-}
-
-init();
-</script>
     </div>
 
     <!-- ===== GRAPH PAGE ===== -->
@@ -3689,586 +3008,6 @@ init();
     </div>
   </div>
 </div>
-
-<script>
-// ==================== 模拟数据 ====================
-const stageColors = {
-  hidden: '#0c0c0e',
-  emerge: '#4a90a4',
-  grow: '#5a9a6e',
-  great: '#c8a84c',
-  transform: '#c45c48'
-};
-
-const stageNames = {
-  hidden: '潜藏',
-  emerge: '显现',
-  grow: '生长',
-  great: '大成',
-  transform: '转化'
-};
-
-const edgeStyles = {
-  reference: { width: 1.5, color: '#8a8a90', dash: '0' },
-  remix: { width: 3, color: '#5a9a6e', dash: '0' },
-  integrate: { width: 2, color: '#c8a84c', dash: '8 4' },
-  fork: { width: 2, color: '#c45c48', dash: '3 3' }
-};
-
-function getStage(score) {
-  if (score < 20) return 'hidden';
-  if (score < 40) return 'emerge';
-  if (score < 60) return 'grow';
-  if (score < 80) return 'great';
-  return 'transform';
-}
-
-function getStageName(score) {
-  return stageNames[getStage(score)];
-}
-
-function getStageColor(score) {
-  return stageColors[getStage(score)];
-}
-
-// 资产数据（12个）
-const assets = [
-  { id: 'a1', name: '春日序曲', creator: '林墨', score: 85, stage: 'transform',
-    permissions: { use: [1,2,3,4], expand: [1,2,3], derive: [1,2], benefit: [1,2] },
-    createdAt: '2024-01-15', revenue: 1280 },
-  { id: 'a2', name: '山涧流水', creator: '陈青', score: 62, stage: 'grow',
-    permissions: { use: [1,2,3], expand: [1,2], derive: [1], benefit: [1] },
-    createdAt: '2024-02-20', revenue: 640 },
-  { id: 'a3', name: '古刹钟声', creator: '王禅', score: 35, stage: 'emerge',
-    permissions: { use: [1,2], expand: [1], derive: [1], benefit: [1] },
-    createdAt: '2024-03-10', revenue: 120 },
-  { id: 'a4', name: '竹林七贤', creator: '张玄', score: 78, stage: 'great',
-    permissions: { use: [1,2,3,4,5], expand: [1,2,3,4], derive: [1,2,3], benefit: [1,2,3] },
-    createdAt: '2023-11-05', revenue: 2100 },
-  { id: 'a5', name: '墨梅图', creator: '林墨', score: 92, stage: 'transform',
-    permissions: { use: [1,2,3,4,5], expand: [1,2,3,4,5], derive: [1,2,3,4], benefit: [1,2,3,4] },
-    createdAt: '2023-08-18', revenue: 3500 },
-  { id: 'a6', name: '夜雨寄北', creator: '李诗', score: 48, stage: 'grow',
-    permissions: { use: [1,2,3], expand: [1,2], derive: [1,2], benefit: [1] },
-    createdAt: '2024-04-01', revenue: 380 },
-  { id: 'a7', name: '云深不知处', creator: '赵隐', score: 15, stage: 'hidden',
-    permissions: { use: [1], expand: [1], derive: [0], benefit: [0] },
-    createdAt: '2024-05-20', revenue: 0 },
-  { id: 'a8', name: '秋风辞', creator: '孙梧', score: 55, stage: 'grow',
-    permissions: { use: [1,2,3], expand: [1,2], derive: [1,2], benefit: [1,2] },
-    createdAt: '2024-03-25', revenue: 520 },
-  { id: 'a9', name: '月下独酌', creator: '李诗', score: 72, stage: 'great',
-    permissions: { use: [1,2,3,4], expand: [1,2,3], derive: [1,2,3], benefit: [1,2,3] },
-    createdAt: '2023-12-12', revenue: 1680 },
-  { id: 'a10', name: '桃花源记', creator: '陶源', score: 88, stage: 'transform',
-    permissions: { use: [1,2,3,4,5], expand: [1,2,3,4], derive: [1,2,3,4], benefit: [1,2,3,4] },
-    createdAt: '2023-09-01', revenue: 2800 },
-  { id: 'a11', name: '寒江雪', creator: '柳白', score: 42, stage: 'emerge',
-    permissions: { use: [1,2], expand: [1,2], derive: [1], benefit: [1] },
-    createdAt: '2024-04-15', revenue: 200 },
-  { id: 'a12', name: '采薇', creator: '诗经社', score: 95, stage: 'transform',
-    permissions: { use: [1,2,3,4,5], expand: [1,2,3,4,5], derive: [1,2,3,4,5], benefit: [1,2,3,4,5] },
-    createdAt: '2023-06-01', revenue: 5000 }
-];
-
-// 验证事件（20条）
-const events = [
-  { id: 'e1', type: 'reference', subject: 'a2', object: 'a1', timestamp: '2024-03-01', depth: 0.7, user: '陈青' },
-  { id: 'e2', type: 'remix', subject: 'a3', object: 'a1', timestamp: '2024-03-15', depth: 0.9, user: '王禅' },
-  { id: 'e3', type: 'reference', subject: 'a6', object: 'a2', timestamp: '2024-04-05', depth: 0.5, user: '李诗' },
-  { id: 'e4', type: 'integrate', subject: 'a4', object: 'a1', timestamp: '2024-02-10', depth: 0.8, user: '张玄' },
-  { id: 'e5', type: 'reference', subject: 'a5', object: 'a4', timestamp: '2024-01-20', depth: 0.6, user: '林墨' },
-  { id: 'e6', type: 'fork', subject: 'a8', object: 'a2', timestamp: '2024-04-20', depth: 0.85, user: '孙梧' },
-  { id: 'e7', type: 'remix', subject: 'a9', object: 'a5', timestamp: '2024-02-28', depth: 0.75, user: '李诗' },
-  { id: 'e8', type: 'reference', subject: 'a10', object: 'a4', timestamp: '2024-01-10', depth: 0.65, user: '陶源' },
-  { id: 'e9', type: 'integrate', subject: 'a11', object: 'a6', timestamp: '2024-05-01', depth: 0.55, user: '柳白' },
-  { id: 'e10', type: 'remix', subject: 'a12', object: 'a10', timestamp: '2024-01-05', depth: 0.9, user: '诗经社' },
-  { id: 'e11', type: 'reference', subject: 'a1', object: 'a5', timestamp: '2024-05-10', depth: 0.5, user: '林墨' },
-  { id: 'e12', type: 'fork', subject: 'a3', object: 'a11', timestamp: '2024-05-15', depth: 0.7, user: '王禅' },
-  { id: 'e13', type: 'remix', subject: 'a6', object: 'a9', timestamp: '2024-04-25', depth: 0.6, user: '李诗' },
-  { id: 'e14', type: 'reference', subject: 'a8', object: 'a4', timestamp: '2024-03-30', depth: 0.45, user: '孙梧' },
-  { id: 'e15', type: 'integrate', subject: 'a9', object: 'a12', timestamp: '2024-02-15', depth: 0.8, user: '李诗' },
-  { id: 'e16', type: 'reference', subject: 'a2', object: 'a5', timestamp: '2024-03-20', depth: 0.55, user: '陈青' },
-  { id: 'e17', type: 'remix', subject: 'a10', object: 'a12', timestamp: '2024-03-05', depth: 0.7, user: '陶源' },
-  { id: 'e18', type: 'fork', subject: 'a4', object: 'a8', timestamp: '2024-04-12', depth: 0.65, user: '张玄' },
-  { id: 'e19', type: 'reference', subject: 'a11', object: 'a3', timestamp: '2024-05-05', depth: 0.4, user: '柳白' },
-  { id: 'e20', type: 'integrate', subject: 'a1', object: 'a10', timestamp: '2024-05-18', depth: 0.75, user: '林墨' }
-];
-
-// 分润记录
-const revenueRecords = [
-  { from: 'a2', to: 'a1', amount: 64, type: 'reference', time: '2024-03-01' },
-  { from: 'a3', to: 'a1', amount: 180, type: 'remix', time: '2024-03-15' },
-  { from: 'a6', to: 'a2', amount: 45, type: 'reference', time: '2024-04-05' },
-  { from: 'a4', to: 'a1', amount: 128, type: 'integrate', time: '2024-02-10' },
-  { from: 'a5', to: 'a4', amount: 210, type: 'reference', time: '2024-01-20' },
-  { from: 'a8', to: 'a2', amount: 96, type: 'fork', time: '2024-04-20' },
-  { from: 'a9', to: 'a5', amount: 175, type: 'remix', time: '2024-02-28' },
-  { from: 'a10', to: 'a4', amount: 168, type: 'reference', time: '2024-01-10' },
-  { from: 'a11', to: 'a6', amount: 38, type: 'integrate', time: '2024-05-01' },
-  { from: 'a12', to: 'a10', amount: 350, type: 'remix', time: '2024-01-05' }
-];
-
-// ==================== D3 图引擎 ====================
-const viewport = document.getElementById('graphViewport');
-const width = viewport.clientWidth;
-const height = viewport.clientHeight;
-
-const svg = d3.select('#graphViewport')
-  .append('svg')
-  .attr('width', width)
-  .attr('height', height)
-  .attr('viewBox', [0, 0, width, height]);
-
-// 定义滤镜和渐变
-const defs = svg.append('defs');
-
-// 印章阴影
-const filterShadow = defs.append('filter')
-  .attr('id', 'sealShadow')
-  .attr('x', '-50%').attr('y', '-50%')
-  .attr('width', '200%').attr('height', '200%');
-filterShadow.append('feDropShadow')
-  .attr('dx', 0).attr('dy', 2)
-  .attr('stdDeviation', 4)
-  .attr('flood-color', 'rgba(0,0,0,0.5)');
-
-// 节点发光
-['emerge','grow','great','transform'].forEach(stage => {
-  const f = defs.append('filter').attr('id', `glow-${stage}`)
-    .attr('x', '-50%').attr('y', '-50%')
-    .attr('width', '200%').attr('height', '200%');
-  f.append('feGaussianBlur').attr('stdDeviation', 6).attr('result', 'blur');
-  f.append('feMerge')
-    .append('feMergeNode').attr('in', 'blur');
-});
-
-// 数据准备
-const nodes = assets.map(a => ({
-  id: a.id,
-  name: a.name,
-  creator: a.creator,
-  score: a.score,
-  stage: a.stage,
-  permissions: a.permissions,
-  createdAt: a.createdAt,
-  revenue: a.revenue,
-  radius: 18 + a.score * 0.25
-}));
-
-const links = events.map(e => ({
-  id: e.id,
-  source: e.subject,
-  target: e.object,
-  type: e.type,
-  timestamp: e.timestamp,
-  depth: e.depth,
-  user: e.user,
-  weight: e.depth * 3
-}));
-
-// 力导向模拟
-const simulation = d3.forceSimulation(nodes)
-  .force('link', d3.forceLink(links).id(d => d.id).distance(d => 120 + (1-d.depth)*80))
-  .force('charge', d3.forceManyBody().strength(-500))
-  .force('center', d3.forceCenter(width / 2, height / 2))
-  .force('collision', d3.forceCollide().radius(d => d.radius + 15));
-
-// 缩放行为
-const g = svg.append('g');
-const zoom = d3.zoom()
-  .scaleExtent([0.2, 4])
-  .on('zoom', (e) => g.attr('transform', e.transform));
-svg.call(zoom);
-
-// 绘制边
-const linkGroup = g.append('g').attr('class', 'links');
-const link = linkGroup.selectAll('line')
-  .data(links)
-  .join('line')
-  .attr('class', d => `link-line ${d.type} animated`)
-  .attr('stroke', d => edgeStyles[d.type].color)
-  .attr('stroke-width', d => edgeStyles[d.type].width)
-  .attr('stroke-dasharray', d => edgeStyles[d.type].dash)
-  .attr('opacity', 0.7);
-
-// 边标签
-const linkLabel = linkGroup.selectAll('text')
-  .data(links)
-  .join('text')
-  .attr('class', 'link-label')
-  .text(d => d.type);
-
-// 绘制节点
-const nodeGroup = g.append('g').attr('class', 'nodes');
-const node = nodeGroup.selectAll('g')
-  .data(nodes)
-  .join('g')
-  .attr('class', 'node-group')
-  .call(d3.drag()
-    .on('start', dragstarted)
-    .on('drag', dragged)
-    .on('end', dragended));
-
-// 节点矩形（印章效果）
-node.append('rect')
-  .attr('class', 'node-rect')
-  .attr('x', d => -d.radius)
-  .attr('y', d => -d.radius * 0.7)
-  .attr('width', d => d.radius * 2)
-  .attr('height', d => d.radius * 1.4)
-  .attr('rx', 6)
-  .attr('ry', 6)
-  .attr('fill', d => stageColors[d.stage])
-  .attr('stroke', d => {
-    const c = stageColors[d.stage];
-    return d.stage === 'hidden' ? '#4a4a52' : d3.color(c).brighter(0.5);
-  })
-  .attr('filter', 'url(#sealShadow)');
-
-// 节点名称
-node.append('text')
-  .attr('class', 'node-label')
-  .attr('dy', '-0.2em')
-  .text(d => d.name.length > 4 ? d.name.slice(0,3)+'…' : d.name);
-
-// 节点分数
-node.append('text')
-  .attr('class', 'node-score')
-  .attr('dy', '1.2em')
-  .text(d => d.score);
-
-// 模拟更新位置
-simulation.on('tick', () => {
-  link
-    .attr('x1', d => d.source.x)
-    .attr('y1', d => d.source.y)
-    .attr('x2', d => d.target.x)
-    .attr('y2', d => d.target.y);
-
-  linkLabel
-    .attr('x', d => (d.source.x + d.target.x) / 2)
-    .attr('y', d => (d.source.y + d.target.y) / 2);
-
-  node.attr('transform', d => `translate(${d.x},${d.y})`);
-});
-
-// ==================== 交互 ====================
-const tooltip = document.getElementById('nodeTooltip');
-const detailPanel = document.getElementById('detailPanel');
-const panelBody = document.getElementById('panelBody');
-const panelTitle = document.getElementById('panelTitle');
-const panelClose = document.getElementById('panelClose');
-
-// 悬停tooltip
-node.on('mouseenter', function(event, d) {
-  tooltip.innerHTML = `
-    <div style="font-weight:600;color:var(--snow);margin-bottom:4px;">${d.name}</div>
-    <div style="font-size:12px;color:var(--ink-ghost);">创作者: ${d.creator}</div>
-    <div style="font-size:12px;color:${stageColors[d.stage]};">${stageNames[d.stage]} · 势位 ${d.score}</div>
-  `;
-  tooltip.classList.add('visible');
-  tooltip.style.left = (event.pageX + 12) + 'px';
-  tooltip.style.top = (event.pageY - 8) + 'px';
-})
-.on('mousemove', function(event) {
-  tooltip.style.left = (event.pageX + 12) + 'px';
-  tooltip.style.top = (event.pageY - 8) + 'px';
-})
-.on('mouseleave', function() {
-  tooltip.classList.remove('visible');
-});
-
-// 点击展开详情
-node.on('click', function(event, d) {
-  event.stopPropagation();
-  showDetail(d);
-});
-
-// 双击展开/折叠子网络
-node.on('dblclick', function(event, d) {
-  event.stopPropagation();
-  toggleSubnetwork(d);
-});
-
-// 关闭面板
-panelClose.addEventListener('click', () => {
-  detailPanel.classList.remove('open');
-  node.classed('highlighted', false);
-  node.classed('dimmed', false);
-});
-
-// 点击空白关闭
-svg.on('click', () => {
-  detailPanel.classList.remove('open');
-  node.classed('highlighted', false);
-  node.classed('dimmed', false);
-});
-
-function showDetail(d) {
-  panelTitle.textContent = d.name;
-
-  const p = d.permissions;
-  const rightsHtml = Object.entries({ use: '用', expand: '扩', derive: '衍', benefit: '益' }).map(([key, label]) => {
-    const dots = [0,1,2,3,4,5].map(i => {
-      const active = p[key].includes(i);
-      const names = ['禁','己','亲','约','法','公'];
-      return `<div class="rights-dot ${active ? 'active' : 'inactive'}">${active ? names[i] : ''}</div>`;
-    }).join('');
-    return `<div class="rights-label">${label}</div><div class="rights-value">${dots}</div>`;
-  }).join('');
-
-  const assetEvents = events.filter(e => e.subject === d.id || e.object === d.id);
-  const assetRevenue = revenueRecords.filter(r => r.from === d.id || r.to === d.id);
-
-  const eventsHtml = assetEvents.map(e => {
-    const isOut = e.subject === d.id;
-    const other = isOut ? e.object : e.subject;
-    const otherAsset = assets.find(a => a.id === other);
-    return `
-      <div class="revenue-item">
-        <span class="event-badge ${e.type}">${e.type}</span>
-        <div style="flex:1;">
-          <div style="font-size:13px;color:var(--snow);">${isOut ? '→' : '←'} ${otherAsset ? otherAsset.name : other}</div>
-          <div style="font-size:12px;color:var(--ink-ghost);">${e.timestamp} · ${e.user}</div>
-        </div>
-      </div>
-    `;
-  }).join('') || '<div style="color:var(--ink-ghost);font-size:13px;">暂无验证事件</div>';
-
-  const revenueHtml = assetRevenue.map(r => {
-    const isOut = r.from === d.id;
-    const other = isOut ? r.to : r.from;
-    const otherAsset = assets.find(a => a.id === other);
-    return `
-      <div class="revenue-item">
-        <span style="font-size:12px;color:var(--ink-ghost);">${isOut ? '支出' : '收入'}</span>
-        <div style="flex:1;">
-          <div style="font-size:13px;color:var(--snow);">${otherAsset ? otherAsset.name : other}</div>
-          <div style="font-size:12px;color:var(--ink-ghost);">${r.type} · ${r.time}</div>
-        </div>
-        <span class="revenue-amount">${isOut ? '-' : '+'}${r.amount}</span>
-      </div>
-    `;
-  }).join('') || '<div style="color:var(--ink-ghost);font-size:13px;">暂无分润记录</div>';
-
-  panelBody.innerHTML = `
-    <div style="margin-bottom:20px;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-        <div class="seal-tag ${d.stage}">${stageNames[d.stage]}</div>
-        <span style="font-size:13px;color:var(--ink-ghost);">${d.creator}</span>
-      </div>
-      <div style="margin-bottom:12px;">
-        <div style="font-size:12px;color:var(--ink-ghost);margin-bottom:6px;">势位分数</div>
-        <div class="ink-progress">
-          <div class="ink-progress-fill" style="width:${d.score}%;background:${stageColors[d.stage]};"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-top:4px;">
-          <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--snow);">${d.score}</span>
-          <span style="font-size:12px;color:var(--ink-ghost);">/ 100</span>
-        </div>
-      </div>
-      <div style="font-size:13px;color:var(--ink-ghost);margin-bottom:4px;">创建时间: ${d.createdAt}</div>
-      <div style="font-size:13px;color:var(--ink-ghost);">总收益: <span style="color:var(--orpiment);font-weight:600;">${d.revenue}</span> 文</div>
-    </div>
-
-    <div style="margin-bottom:20px;">
-      <h3 style="font-size:16px;margin-bottom:12px;color:var(--snow);">四权配置</h3>
-      <div class="rights-display">${rightsHtml}</div>
-    </div>
-
-    <div style="margin-bottom:20px;">
-      <h3 style="font-size:16px;margin-bottom:12px;color:var(--snow);">验证事件 (${assetEvents.length})</h3>
-      <div>${eventsHtml}</div>
-    </div>
-
-    <div>
-      <h3 style="font-size:16px;margin-bottom:12px;color:var(--snow);">分润记录</h3>
-      <div>${revenueHtml}</div>
-    </div>
-  `;
-
-  detailPanel.classList.add('open');
-
-  // 高亮当前节点，淡化其他
-  node.classed('highlighted', n => n.id === d.id);
-  node.classed('dimmed', n => n.id !== d.id);
-  link.classed('dimmed', l => l.source.id !== d.id && l.target.id !== d.id);
-}
-
-// 子网络展开/折叠
-const expandedNodes = new Set();
-function toggleSubnetwork(d) {
-  if (expandedNodes.has(d.id)) {
-    expandedNodes.delete(d.id);
-    // 恢复所有节点和边
-    node.style('display', 'block');
-    link.style('display', 'block');
-  } else {
-    expandedNodes.add(d.id);
-    // 找到直接关联的节点和边
-    const connected = new Set([d.id]);
-    links.forEach(l => {
-      if (l.source.id === d.id) connected.add(l.target.id);
-      if (l.target.id === d.id) connected.add(l.source.id);
-    });
-    // 只显示关联的
-    node.style('display', n => connected.has(n.id) ? 'block' : 'none');
-    link.style('display', l => l.source.id === d.id || l.target.id === d.id ? 'block' : 'none');
-  }
-  simulation.alpha(0.3).restart();
-}
-
-// ==================== 缩放控制 ====================
-document.getElementById('zoomIn').addEventListener('click', () => {
-  svg.transition().duration(300).call(zoom.scaleBy, 1.3);
-});
-document.getElementById('zoomOut').addEventListener('click', () => {
-  svg.transition().duration(300).call(zoom.scaleBy, 1 / 1.3);
-});
-document.getElementById('zoomReset').addEventListener('click', () => {
-  svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
-});
-
-// ==================== 筛选器 ====================
-let stageFilter = 'all';
-let edgeFilter = 'all';
-
-// 生命阶段筛选
-document.querySelectorAll('.graph-header .filter-chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    document.querySelectorAll('.graph-header .filter-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    stageFilter = chip.dataset.filter;
-    applyFilters();
-  });
-});
-
-// 事件类型筛选
-document.querySelectorAll('[data-edge]').forEach(chip => {
-  chip.addEventListener('click', () => {
-    document.querySelectorAll('[data-edge]').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    edgeFilter = chip.dataset.edge;
-    applyFilters();
-  });
-});
-
-function applyFilters() {
-  node.style('opacity', d => {
-    if (stageFilter === 'all') return 1;
-    return d.stage === stageFilter ? 1 : 0.15;
-  });
-
-  link.style('opacity', d => {
-    let show = true;
-    if (stageFilter !== 'all') {
-      const sourceStage = d.source.stage;
-      const targetStage = d.target.stage;
-      show = sourceStage === stageFilter || targetStage === stageFilter;
-    }
-    if (edgeFilter !== 'all') {
-      show = show && d.type === edgeFilter;
-    }
-    return show ? 0.7 : 0.05;
-  });
-
-  linkLabel.style('opacity', d => {
-    let show = true;
-    if (stageFilter !== 'all') {
-      show = d.source.stage === stageFilter || d.target.stage === stageFilter;
-    }
-    if (edgeFilter !== 'all') {
-      show = show && d.type === edgeFilter;
-    }
-    return show ? 0 : 0; // labels only show on hover
-  });
-}
-
-// ==================== 时间轴 ====================
-const timelineSlider = document.getElementById('timelineSlider');
-const timelineDate = document.getElementById('timelineDate');
-
-const dateRange = {
-  start: new Date('2024-01-01').getTime(),
-  end: new Date('2024-06-30').getTime()
-};
-
-timelineSlider.addEventListener('input', function() {
-  const pct = this.value / 100;
-  const currentTime = dateRange.start + (dateRange.end - dateRange.start) * pct;
-  const date = new Date(currentTime);
-  timelineDate.textContent = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-
-  // 过滤显示该时间点之前的事件
-  const cutoff = date.toISOString().slice(0, 10);
-  link.style('opacity', d => {
-    const show = d.timestamp <= cutoff;
-    if (stageFilter !== 'all') {
-      return (d.source.stage === stageFilter || d.target.stage === stageFilter) && show ? 0.7 : 0.05;
-    }
-    if (edgeFilter !== 'all') {
-      return d.type === edgeFilter && show ? 0.7 : 0.05;
-    }
-    return show ? 0.7 : 0.05;
-  });
-
-  // 根据历史事件重新计算节点势位显示
-  const historicalEvents = events.filter(e => e.timestamp <= cutoff);
-  const nodeScores = {};
-  assets.forEach(a => { nodeScores[a.id] = 0; });
-  historicalEvents.forEach(e => {
-    nodeScores[e.subject] = (nodeScores[e.subject] || 0) + e.depth * 8;
-    nodeScores[e.object] = (nodeScores[e.object] || 0) + e.depth * 4;
-  });
-
-  node.select('.node-rect')
-    .attr('fill', d => {
-      const score = Math.min(100, nodeScores[d.id] || d.score * 0.3);
-      return getStageColor(score);
-    });
-
-  node.select('.node-score')
-    .text(d => Math.round(Math.min(100, nodeScores[d.id] || d.score * 0.3)));
-});
-
-// ==================== 拖拽函数 ====================
-function dragstarted(event, d) {
-  if (!event.active) simulation.alphaTarget(0.3).restart();
-  d.fx = d.x;
-  d.fy = d.y;
-}
-
-function dragged(event, d) {
-  d.fx = event.x;
-  d.fy = event.y;
-}
-
-function dragended(event, d) {
-  if (!event.active) simulation.alphaTarget(0);
-  d.fx = null;
-  d.fy = null;
-}
-
-// ==================== 导航 ====================
-document.querySelectorAll('.bamboo-nav-item').forEach(item => {
-  item.addEventListener('click', () => {
-    const page = item.dataset.page;
-    if (page && page !== 'graph') {
-      window.location.href = `${page}.html`;
-    }
-  });
-});
-
-// ==================== 窗口调整 ====================
-window.addEventListener('resize', () => {
-  const w = viewport.clientWidth;
-  const h = viewport.clientHeight;
-  svg.attr('width', w).attr('height', h).attr('viewBox', [0, 0, w, h]);
-  simulation.force('center', d3.forceCenter(w / 2, h / 2));
-  simulation.alpha(0.3).restart();
-});
-</script>
     </div>
 
     <!-- ===== SHI PAGE ===== -->
@@ -4403,280 +3142,6 @@ window.addEventListener('resize', () => {
       </div>
     </div>
   </div>
-  
-  <script>
-    // ========================
-    // 模拟数据
-    // ========================
-    const assetData = {
-      song_spring: { name: '春日序曲', creator: 'Alice', score: 68, stage: 2, stageName: '生长', color: '#5a9a6e', dims: { time: 60, center: 70, semantic: 40 }, events: ['登记', 'Bob观看', 'Bob购买', '引用视频', 'Diana观看', 'Diana Remix', '势图接管', 'AI申请法档'], use: '己·亲·约·法' },
-      video_tech: { name: '量子计算科普', creator: 'Bob', score: 35, stage: 1, stageName: '显现', color: '#4a90a4', dims: { time: 40, center: 30, semantic: 20 }, events: ['登记', '观看x56', '下载x23'], use: '公' },
-      code_audio: { name: 'EchoAudio工具库', creator: 'Charlie', score: 72, stage: 2, stageName: '生长', color: '#5a9a6e', dims: { time: 80, center: 65, semantic: 55 }, events: ['登记', '下载x312', 'Fork播客工具', '势图接管'], use: '公' },
-      photo_night: { name: '城市夜景', creator: 'Diana', score: 25, stage: 1, stageName: '显现', color: '#4a90a4', dims: { time: 25, center: 20, semantic: 30 }, events: ['登记', '购买x12', 'Remix x3'], use: '约' },
-      remix_spring: { name: '春日序曲·Remix', creator: 'Diana', score: 42, stage: 1, stageName: '显现', color: '#4a90a4', dims: { time: 45, center: 35, semantic: 50 }, events: ['Remix', '购买x67', '引用'], use: '己·亲·约' },
-      app_podcast: { name: '播客制作套件', creator: 'Bob', score: 55, stage: 2, stageName: '生长', color: '#5a9a6e', dims: { time: 55, center: 50, semantic: 60 }, events: ['Fork', '购买x23', '改进x2'], use: '公·法' },
-      ai_model: { name: '氛围音乐生成模型', creator: 'Mallory', score: 88, stage: 3, stageName: '大成', color: '#c8a84c', dims: { time: 90, center: 85, semantic: 80 }, events: ['法档授权', '发布', '购买x156', '广泛使用'], use: '公' }
-    };
-    
-    const stageColors = ['#2a2a30', '#4a90a4', '#5a9a6e', '#c8a84c', '#c45c48'];
-    const stageNames = ['潜藏', '显现', '生长', '大成', '转化'];
-    const stageDescs = ['无验证事件，独立存在', '开始被引用，建议开放', '中度连接，自动开放', '高度连接，锁定最低档', '周期尾声，建议完全开放'];
-    
-    // ========================
-    // Canvas 山水长卷
-    // ========================
-    const canvas = document.getElementById('landscapeCanvas');
-    const ctx = canvas.getContext('2d');
-    let width, height;
-    let particles = [];
-    let time = 0;
-    
-    function resize() {
-      width = canvas.width = canvas.parentElement.clientWidth;
-      height = canvas.height = canvas.parentElement.clientHeight;
-      initParticles();
-    }
-    
-    function initParticles() {
-      particles = [];
-      for (let i = 0; i < 80; i++) {
-        particles.push({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          size: Math.random() * 3 + 1,
-          speed: Math.random() * 0.3 + 0.1,
-          opacity: Math.random() * 0.5 + 0.2,
-          phase: Math.random() * Math.PI * 2
-        });
-      }
-    }
-    
-    // 绘制简化的水墨山水轮廓
-    function drawLandscape() {
-      ctx.fillStyle = '#0c0c0e';
-      ctx.fillRect(0, 0, width, height);
-      
-      // 背景渐变层 — 从下到上=潜藏→转化
-      const grad = ctx.createLinearGradient(0, height, 0, 0);
-      grad.addColorStop(0, 'rgba(42,42,48,0.3)');   // 底部=潜藏
-      grad.addColorStop(0.25, 'rgba(74,144,164,0.15)'); // 显现
-      grad.addColorStop(0.5, 'rgba(90,154,110,0.15)');   // 生长
-      grad.addColorStop(0.75, 'rgba(200,168,76,0.15)');  // 大成
-      grad.addColorStop(1, 'rgba(196,92,72,0.1)');       // 转化
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, width, height);
-      
-      // 山水轮廓 — 多层贝塞尔曲线模拟山脉
-      const layers = [
-        { y: height * 0.85, color: 'rgba(42,42,48,0.4)', amp: 60, freq: 0.003 },
-        { y: height * 0.7, color: 'rgba(74,144,164,0.2)', amp: 50, freq: 0.004 },
-        { y: height * 0.55, color: 'rgba(90,154,110,0.2)', amp: 40, freq: 0.005 },
-        { y: height * 0.4, color: 'rgba(200,168,76,0.15)', amp: 30, freq: 0.006 },
-        { y: height * 0.25, color: 'rgba(196,92,72,0.1)', amp: 20, freq: 0.007 }
-      ];
-      
-      layers.forEach((layer, idx) => {
-        ctx.beginPath();
-        ctx.moveTo(0, height);
-        for (let x = 0; x <= width; x += 5) {
-          const y = layer.y - Math.abs(Math.sin(x * layer.freq + time * 0.001 + idx) * layer.amp);
-          ctx.lineTo(x, y);
-        }
-        ctx.lineTo(width, height);
-        ctx.closePath();
-        ctx.fillStyle = layer.color;
-        ctx.fill();
-      });
-      
-      // 粒子效果 — 墨点飘散
-      particles.forEach(p => {
-        p.y -= p.speed;
-        p.x += Math.sin(time * 0.01 + p.phase) * 0.3;
-        if (p.y < 0) { p.y = height; p.x = Math.random() * width; }
-        
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(240,240,232,${p.opacity * 0.3})`;
-        ctx.fill();
-      });
-      
-      // 绘制资产节点 — 如花朵/叶子分布在山水长卷中
-      const assetIds = Object.keys(assetData);
-      assetIds.forEach((id, idx) => {
-        const data = assetData[id];
-        const yPos = height - (data.score / 100) * height * 0.8 - height * 0.1;
-        const xPos = (width / assetIds.length) * idx + (width / assetIds.length) / 2;
-        
-        // 节点光晕
-        const glow = ctx.createRadialGradient(xPos, yPos, 0, xPos, yPos, 30);
-        glow.addColorStop(0, data.color + '44');
-        glow.addColorStop(1, 'transparent');
-        ctx.fillStyle = glow;
-        ctx.fillRect(xPos - 30, yPos - 30, 60, 60);
-        
-        // 节点本体 — 简化印章样式
-        ctx.beginPath();
-        ctx.arc(xPos, yPos, 12, 0, Math.PI * 2);
-        ctx.fillStyle = data.color;
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(240,240,232,0.3)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // 名称标签
-        ctx.fillStyle = 'rgba(240,240,232,0.8)';
-        ctx.font = '11px "Noto Sans SC", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(data.name, xPos, yPos + 28);
-        
-        // 分数标签
-        ctx.fillStyle = data.color;
-        ctx.font = '10px "Noto Sans SC", sans-serif';
-        ctx.fillText(data.score, xPos, yPos - 20);
-        
-        // 连接线 — 如果有父资产
-        if (data.parentId && assetData[data.parentId]) {
-          const parent = assetData[data.parentId];
-          const parentIdx = assetIds.indexOf(data.parentId);
-          const parentX = (width / assetIds.length) * parentIdx + (width / assetIds.length) / 2;
-          const parentY = height - (parent.score / 100) * height * 0.8 - height * 0.1;
-          
-          ctx.beginPath();
-          ctx.moveTo(parentX, parentY);
-          ctx.quadraticCurveTo(
-            (parentX + xPos) / 2, (parentY + yPos) / 2 - 30,
-            xPos, yPos
-          );
-          ctx.strokeStyle = data.color + '33';
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
-      });
-      
-      // 阶段分界线
-      for (let i = 1; i < 5; i++) {
-        const y = height - (i * 20 / 100) * height * 0.8 - height * 0.1;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-        ctx.strokeStyle = stageColors[i] + '22';
-        ctx.setLineDash([8, 8]);
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.setLineDash([]);
-        
-        // 阶段标签
-        ctx.fillStyle = stageColors[i] + '66';
-        ctx.font = '12px "Noto Sans SC", sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(stageNames[i], 10, y - 5);
-      }
-      
-      time++;
-      requestAnimationFrame(drawLandscape);
-    }
-    
-    // ========================
-    // 交互逻辑
-    // ========================
-    const assetSelect = document.getElementById('assetSelect');
-    const scoreValue = document.getElementById('scoreValue');
-    const lifeStage = document.getElementById('lifeStage');
-    const dimTime = document.getElementById('dimTime');
-    const dimTimeVal = document.getElementById('dimTimeVal');
-    const dimCenter = document.getElementById('dimCenter');
-    const dimCenterVal = document.getElementById('dimCenterVal');
-    const dimSemantic = document.getElementById('dimSemantic');
-    const dimSemanticVal = document.getElementById('dimSemanticVal');
-    const eventList = document.getElementById('eventList');
-    const floatInfo = document.getElementById('floatInfo');
-    
-    function updateDashboard(assetId) {
-      const data = assetData[assetId];
-      if (!data) return;
-      
-      scoreValue.textContent = data.score;
-      scoreValue.style.background = `linear-gradient(135deg, ${data.color}, var(--stone-green))`;
-      scoreValue.style.webkitBackgroundClip = 'text';
-      scoreValue.style.webkitTextFillColor = 'transparent';
-      
-      lifeStage.innerHTML = `
-        <div class="stage-dot" style="background: ${data.color};"></div>
-        <div>
-          <div class="stage-name" style="color: ${data.color};">${data.stageName}</div>
-          <div class="stage-desc">${stageDescs[data.stage]}</div>
-        </div>
-      `;
-      
-      dimTime.style.width = data.dims.time + '%';
-      dimTimeVal.textContent = data.dims.time;
-      dimCenter.style.width = data.dims.center + '%';
-      dimCenterVal.textContent = data.dims.center;
-      dimSemantic.style.width = data.dims.semantic + '%';
-      dimSemanticVal.textContent = data.dims.semantic;
-      
-      // 更新事件流
-      eventList.innerHTML = data.events.map((evt, i) => `
-        <div class="event-item" onclick="highlightEvent(${i})">
-          <div class="evt-time">T+${i}</div>
-          <div class="evt-type">${evt}</div>
-          <div class="evt-note">${data.name}</div>
-        </div>
-      `).join('');
-    }
-    
-    assetSelect.addEventListener('change', (e) => {
-      updateDashboard(e.target.value);
-    });
-    
-    function toggleTakeover() {
-      const toggle = document.getElementById('takeoverToggle');
-      toggle.classList.toggle('on');
-    }
-    
-    function highlightEvent(idx) {
-      // 事件高亮效果
-    }
-    
-    // Canvas点击检测
-    canvas.addEventListener('click', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
-      const assetIds = Object.keys(assetData);
-      for (let idx = 0; idx < assetIds.length; idx++) {
-        const id = assetIds[idx];
-        const data = assetData[id];
-        const yPos = height - (data.score / 100) * height * 0.8 - height * 0.1;
-        const xPos = (width / assetIds.length) * idx + (width / assetIds.length) / 2;
-        
-        const dist = Math.sqrt((x - xPos) ** 2 + (y - yPos) ** 2);
-        if (dist < 30) {
-          assetSelect.value = id;
-          updateDashboard(id);
-          showFloatInfo(data);
-          break;
-        }
-      }
-    });
-    
-    function showFloatInfo(data) {
-      document.getElementById('floatName').textContent = data.name;
-      document.getElementById('floatCreator').textContent = data.creator;
-      document.getElementById('floatScore').textContent = data.score;
-      document.getElementById('floatStage').textContent = data.stageName;
-      document.getElementById('floatUse').textContent = data.use;
-      floatInfo.classList.add('show');
-      setTimeout(() => floatInfo.classList.remove('show'), 4000);
-    }
-    
-    // 初始化
-    window.addEventListener('resize', resize);
-    resize();
-    drawLandscape();
-    updateDashboard('song_spring');
-  </script>
     </div>
 
     <!-- ===== MARKET PAGE ===== -->
@@ -4769,310 +3234,6 @@ window.addEventListener('resize', () => {
       </div>
     </div>
   </div>
-  
-  <script>
-    // ========================
-    // 模拟数据
-    // ========================
-    const templates = [
-      {
-        id: 'tpl_music_std', name: '独立音乐人标准合约', type: 'music',
-        description: '适合独立音乐人的标准授权模板',
-        permissions: { use: 0b001110, expand: 0b000110, derive: 0b000010, benefit: 0b000010 },
-        price: 0, downloads: 523, rating: 4.5,
-        author: 'Eve', authorId: 'eve', createdAt: '2024-01',
-        tags: ['音乐', '标准', '独立'],
-        rules: { purchaseRate: 0.7, remixRate: 0.5, parentShare: 0.1 },
-        versions: [
-          { version: 'v1.2', date: '2024-03', change: '增加法档选项' },
-          { version: 'v1.1', date: '2024-02', change: '调整分润比例' },
-          { version: 'v1.0', date: '2024-01', change: '初始版本' }
-        ],
-        reviews: [
-          { author: 'Alice', stars: 5, text: '很实用的模板，保护了我的权益' },
-          { author: 'Bob', stars: 4, text: '分润规则合理，推荐' }
-        ]
-      },
-      {
-        id: 'tpl_gpl', name: 'GPL风格开源', type: 'code',
-        description: '类似GPL的开源协议，全部公开',
-        permissions: { use: 0b100000, expand: 0b100000, derive: 0b100000, benefit: 0b100000 },
-        price: 0, downloads: 1024, rating: 4.8,
-        author: 'Charlie', authorId: 'charlie', createdAt: '2024-01',
-        tags: ['代码', '开源', 'GPL'],
-        rules: { purchaseRate: 0, remixRate: 0, parentShare: 0 },
-        versions: [
-          { version: 'v2.0', date: '2024-05', change: '增加商业使用说明' },
-          { version: 'v1.0', date: '2024-01', change: '初始版本' }
-        ],
-        reviews: [
-          { author: 'Charlie', stars: 5, text: '开源精神的完美体现' },
-          { author: 'Diana', stars: 5, text: '免费又好用' }
-        ]
-      },
-      {
-        id: 'tpl_ai_open', name: 'AI训练数据开放', type: 'data',
-        description: '允许AI公司合法使用数据训练模型',
-        permissions: { use: 0b010000, expand: 0b001000, derive: 0b010000, benefit: 0b010000 },
-        price: 0, downloads: 89, rating: 3.5,
-        author: 'Mallory', authorId: 'mallory', createdAt: '2024-02',
-        tags: ['AI', '数据', '训练'],
-        rules: { purchaseRate: 0.3, remixRate: 0.2, parentShare: 0.05 },
-        versions: [
-          { version: 'v1.1', date: '2024-03', change: '增加隐私保护条款' },
-          { version: 'v1.0', date: '2024-02', change: '初始版本' }
-        ],
-        reviews: [
-          { author: 'Eve', stars: 3, text: '需要更严格的隐私保护' },
-          { author: 'Mallory', stars: 4, text: '适合AI训练场景' }
-        ]
-      },
-      {
-        id: 'tpl_art_gallery', name: '视觉艺术画廊代理', type: 'image',
-        description: '适合视觉艺术作品的画廊代理模式',
-        permissions: { use: 0b001000, expand: 0b000100, derive: 0b000010, benefit: 0b000010 },
-        price: 2, downloads: 234, rating: 4.2,
-        author: 'Eve', authorId: 'eve', createdAt: '2024-01',
-        tags: ['视觉', '艺术', '画廊'],
-        rules: { purchaseRate: 0.8, remixRate: 0.6, parentShare: 0.15 },
-        versions: [
-          { version: 'v1.0', date: '2024-01', change: '初始版本' }
-        ],
-        reviews: [
-          { author: 'Diana', stars: 5, text: '艺术品代理的首选' },
-          { author: 'Alice', stars: 4, text: '分润比例对创作者很友好' }
-        ]
-      },
-      {
-        id: 'tpl_blog_friendly', name: '个人博客友好协议', type: 'text',
-        description: '适合个人博客文章的宽松授权',
-        permissions: { use: 0b100000, expand: 0b010000, derive: 0b001000, benefit: 0b000100 },
-        price: 0, downloads: 445, rating: 4.0,
-        author: 'Alice', authorId: 'alice', createdAt: '2024-01',
-        tags: ['博客', '文字', '友好'],
-        rules: { purchaseRate: 0, remixRate: 0.3, parentShare: 0.1 },
-        versions: [
-          { version: 'v1.0', date: '2024-01', change: '初始版本' }
-        ],
-        reviews: [
-          { author: 'Bob', stars: 4, text: '适合博客文章的转载' },
-          { author: 'Charlie', stars: 4, text: '简洁明了' }
-        ]
-      }
-    ];
-    
-    const colors = {
-      use: '#4a90a4', expand: '#c8a84c', derive: '#5a9a6e', benefit: '#c45c48'
-    };
-    
-    // ========================
-    // 渲染
-    // ========================
-    function renderGrid(tpls = templates) {
-      const grid = document.getElementById('marketGrid');
-      grid.innerHTML = tpls.map(t => `
-        <div class="shop-card" onclick="openModal('${t.id}')">
-          <div class="shop-sign">
-            <div class="shop-name">${t.name}</div>
-            <span class="shop-type">${t.type}</span>
-          </div>
-          <div class="shop-rights">
-            <div class="right-mini">
-              <div class="right-mini-label">用</div>
-              <div class="right-mini-bar">
-                <div class="right-mini-fill" style="width: ${openness(t.permissions.use)}%; background: ${colors.use}"></div>
-              </div>
-            </div>
-            <div class="right-mini">
-              <div class="right-mini-label">扩</div>
-              <div class="right-mini-bar">
-                <div class="right-mini-fill" style="width: ${openness(t.permissions.expand)}%; background: ${colors.expand}"></div>
-              </div>
-            </div>
-            <div class="right-mini">
-              <div class="right-mini-label">衍</div>
-              <div class="right-mini-bar">
-                <div class="right-mini-fill" style="width: ${openness(t.permissions.derive)}%; background: ${colors.derive}"></div>
-              </div>
-            </div>
-            <div class="right-mini">
-              <div class="right-mini-label">益</div>
-              <div class="right-mini-bar">
-                <div class="right-mini-fill" style="width: ${openness(t.permissions.benefit)}%; background: ${colors.benefit}"></div>
-              </div>
-            </div>
-          </div>
-          <div class="shop-footer">
-            <div class="shop-price ${t.price === 0 ? 'free' : ''}">${t.price === 0 ? '免费' : '¥' + t.price}</div>
-            <div class="shop-popularity">${t.downloads} 位来客</div>
-            <div class="shop-rating">${'★'.repeat(Math.floor(t.rating))}${'☆'.repeat(5 - Math.floor(t.rating))}</div>
-          </div>
-        </div>
-      `).join('');
-    }
-    
-    function openness(mask) {
-      let count = 0;
-      for (let i = 1; i <= 5; i++) if (mask & (1 << i)) count++;
-      return (count / 5) * 100;
-    }
-    
-    function filterTemplates() {
-      const type = document.getElementById('filterType').value;
-      const open = document.getElementById('filterOpen').value;
-      const price = document.getElementById('filterPrice').value;
-      
-      let filtered = templates;
-      if (type !== 'all') filtered = filtered.filter(t => t.type === type);
-      if (price !== 'all') filtered = filtered.filter(t => price === 'free' ? t.price === 0 : t.price > 0);
-      if (open !== 'all') {
-        filtered = filtered.filter(t => {
-          const avg = (openness(t.permissions.use) + openness(t.permissions.expand) + 
-                       openness(t.permissions.derive) + openness(t.permissions.benefit)) / 4;
-          if (open === 'conservative') return avg < 30;
-          if (open === 'balanced') return avg >= 30 && avg < 70;
-          if (open === 'open') return avg >= 70;
-        });
-      }
-      renderGrid(filtered);
-    }
-    
-    // ========================
-    // 弹窗
-    // ========================
-    let currentTemplate = null;
-    
-    function openModal(id) {
-      const t = templates.find(tpl => tpl.id === id);
-      if (!t) return;
-      currentTemplate = t;
-      
-      document.getElementById('modalTitle').textContent = t.name;
-      document.getElementById('modalType').textContent = t.type;
-      document.getElementById('modalAuthor').textContent = t.author;
-      document.getElementById('modalDownloads').textContent = t.downloads + ' 次使用';
-      document.getElementById('modalRating').textContent = '★'.repeat(Math.floor(t.rating)) + '☆'.repeat(5 - Math.floor(t.rating)) + ' ' + t.rating;
-      
-      // 分润规则
-      document.getElementById('ruleTableBody').innerHTML = `
-        <tr><td>购买</td><td>${(t.rules.purchaseRate * 100).toFixed(0)}%</td><td>${(t.rules.parentShare * 100).toFixed(0)}%</td><td>${((1 - t.rules.purchaseRate - t.rules.parentShare) * 100).toFixed(0)}%</td></tr>
-        <tr><td>改编</td><td>${(t.rules.remixRate * 100).toFixed(0)}%</td><td>${(t.rules.parentShare * 100).toFixed(0)}%</td><td>${((1 - t.rules.remixRate - t.rules.parentShare) * 100).toFixed(0)}%</td></tr>
-      `;
-      
-      // 版本历史
-      document.getElementById('versionList').innerHTML = t.versions.map(v => `
-        <div class="version-item">
-          <span style="color: var(--stone-blue);">${v.version}</span>
-          <span style="color: var(--ink-light);">${v.date}</span>
-          <span>${v.change}</span>
-        </div>
-      `).join('');
-      
-      // 评价
-      document.getElementById('reviewList').innerHTML = t.reviews.map(r => `
-        <div class="review-item">
-          <div class="review-header">
-            <span class="review-author">${r.author}</span>
-            <span class="review-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5 - r.stars)}</span>
-          </div>
-          <div class="review-text">${r.text}</div>
-        </div>
-      `).join('');
-      
-      // 绘制雷达图
-      drawRadar(t.permissions);
-      
-      document.getElementById('modalOverlay').classList.add('show');
-    }
-    
-    function closeModal(e) {
-      if (!e || e.target === document.getElementById('modalOverlay')) {
-        document.getElementById('modalOverlay').classList.remove('show');
-      }
-    }
-    
-    function drawRadar(perms) {
-      const canvas = document.getElementById('radarCanvas');
-      const c = canvas.getContext('2d');
-      const w = canvas.width, h = canvas.height;
-      const cx = w / 2, cy = h / 2;
-      const r = 80;
-      
-      c.clearRect(0, 0, w, h);
-      
-      // 背景网格
-      const dims = ['用', '扩', '衍', '益'];
-      const dimColors = [colors.use, colors.expand, colors.derive, colors.benefit];
-      
-      for (let ring = 1; ring <= 5; ring++) {
-        c.beginPath();
-        for (let i = 0; i < 4; i++) {
-          const angle = (Math.PI * 2 * i) / 4 - Math.PI / 2;
-          const x = cx + Math.cos(angle) * (r * ring / 5);
-          const y = cy + Math.sin(angle) * (r * ring / 5);
-          if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
-        }
-        c.closePath();
-        c.strokeStyle = 'rgba(42,42,48,0.5)';
-        c.lineWidth = 1;
-        c.stroke();
-      }
-      
-      // 轴线
-      for (let i = 0; i < 4; i++) {
-        const angle = (Math.PI * 2 * i) / 4 - Math.PI / 2;
-        const x = cx + Math.cos(angle) * r;
-        const y = cy + Math.sin(angle) * r;
-        c.beginPath(); c.moveTo(cx, cy); c.lineTo(x, y); c.stroke();
-        
-        // 标签
-        c.fillStyle = dimColors[i];
-        c.font = 'bold 14px "Noto Sans SC", sans-serif';
-        c.textAlign = 'center';
-        c.textBaseline = 'middle';
-        const lx = cx + Math.cos(angle) * (r + 20);
-        const ly = cy + Math.sin(angle) * (r + 20);
-        c.fillText(dims[i], lx, ly);
-      }
-      
-      // 数据多边形
-      const values = [
-        openness(perms.use) / 100,
-        openness(perms.expand) / 100,
-        openness(perms.derive) / 100,
-        openness(perms.benefit) / 100
-      ];
-      
-      c.beginPath();
-      for (let i = 0; i < 4; i++) {
-        const angle = (Math.PI * 2 * i) / 4 - Math.PI / 2;
-        const x = cx + Math.cos(angle) * (r * values[i]);
-        const y = cy + Math.sin(angle) * (r * values[i]);
-        if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
-      }
-      c.closePath();
-      c.fillStyle = 'rgba(74,144,164,0.2)';
-      c.fill();
-      c.strokeStyle = colors.use;
-      c.lineWidth = 2;
-      c.stroke();
-      
-      // 数据点
-      for (let i = 0; i < 4; i++) {
-        const angle = (Math.PI * 2 * i) / 4 - Math.PI / 2;
-        const x = cx + Math.cos(angle) * (r * values[i]);
-        const y = cy + Math.sin(angle) * (r * values[i]);
-        c.beginPath(); c.arc(x, y, 4, 0, Math.PI * 2);
-        c.fillStyle = dimColors[i];
-        c.fill();
-      }
-    }
-    
-    // ========================
-    // 启动
-    // ========================
-    renderGrid();
-  </script>
     </div>
 
     <!-- ===== SIMULATE PAGE ===== -->
@@ -5187,581 +3348,11 @@ window.addEventListener('resize', () => {
       <div class="step-counter" id="stepCounter">0 / 0</div>
     </div>
   </div>
-  
-  <script>
-    // ========================
-    // 模拟数据
-    // ========================
-    const USERS = [
-      { id: 'alice', name: 'Alice', role: 'creator', type: '独立音乐人', balance: 1000, avatarColor: '#4a90a4', bio: '创作电子氛围音乐' },
-      { id: 'bob', name: 'Bob', role: 'creator', type: '视频创作者', balance: 500, avatarColor: '#5a9a6e', bio: '制作科普短视频' },
-      { id: 'charlie', name: 'Charlie', role: 'creator', type: '开源开发者', balance: 300, avatarColor: '#8b6914', bio: '开发音频处理工具' },
-      { id: 'diana', name: 'Diana', role: 'user', type: '普通用户', balance: 100, avatarColor: '#c8a84c', bio: '音乐爱好者' },
-      { id: 'eve', name: 'Eve', role: 'platform', type: '平台运营', balance: 5000, avatarColor: '#2c3e50', bio: 'ECHO平台运营' },
-      { id: 'mallory', name: 'Mallory', role: 'platform', type: 'AI公司', balance: 10000, avatarColor: '#c45c48', bio: '训练AI音乐模型' }
-    ];
-    
-    const ASSETS = [
-      { id: 'song_spring', name: '春日序曲', creatorId: 'alice', type: 'music', color: '#4a90a4' },
-      { id: 'video_tech', name: '量子计算科普', creatorId: 'bob', type: 'video', color: '#5a9a6e' },
-      { id: 'code_audio', name: 'EchoAudio', creatorId: 'charlie', type: 'code', color: '#8b6914' },
-      { id: 'photo_night', name: '城市夜景', creatorId: 'diana', type: 'image', color: '#c8a84c' },
-      { id: 'remix_spring', name: '春日Remix', creatorId: 'diana', type: 'music', parentId: 'song_spring', color: '#c8a84c' },
-      { id: 'app_podcast', name: '播客套件', creatorId: 'bob', type: 'tool', parentId: 'code_audio', color: '#5a9a6e' },
-      { id: 'ai_model', name: 'AI音乐模型', creatorId: 'mallory', type: 'ai', parentId: 'song_spring', color: '#c45c48' }
-    ];
-    
-    const SCENARIOS = [
-      {
-        id: 'scene_music', name: '独立音乐人生态生长', desc: 'Alice发布单曲，被引用、改编、传播，势图接管自动开放权限', icon: '🎵',
-        steps: [
-          { action: 'register', assetId: 'song_spring', userId: 'alice', note: 'Alice登记《春日序曲》', amount: 0 },
-          { action: 'view', assetId: 'song_spring', userId: 'bob', note: 'Bob发现并观看', amount: 0 },
-          { action: 'purchase', assetId: 'song_spring', userId: 'bob', note: 'Bob购买使用权', amount: 5 },
-          { action: 'reference', assetId: 'video_tech', parentId: 'song_spring', userId: 'bob', note: '视频引用音乐做BGM', amount: 0 },
-          { action: 'view', assetId: 'song_spring', userId: 'diana', note: 'Diana观看', amount: 0 },
-          { action: 'remix', assetId: 'remix_spring', parentId: 'song_spring', userId: 'diana', note: 'Diana创作Remix', amount: 0 },
-          { action: 'purchase', assetId: 'remix_spring', userId: 'diana', note: '购买Remix', amount: 3 },
-          { action: 'apply_law', assetId: 'ai_model', parentId: 'song_spring', userId: 'mallory', note: 'Mallory申请法档授权', amount: 0 },
-          { action: 'grant_law', assetId: 'song_spring', userId: 'alice', note: 'Alice同意法档授权', amount: 0 },
-          { action: 'purchase', assetId: 'ai_model', userId: 'diana', note: 'Diana购买AI模型', amount: 50 },
-          { action: 'shi_takeover', assetId: 'song_spring', note: '势图接管：用权自动开放至公档', amount: 0 },
-          { action: 'config_lock', assetId: 'song_spring', userId: 'alice', note: 'Alice试图收紧权限→被阻止', amount: 0 }
-        ]
-      },
-      {
-        id: 'scene_opensource', name: '开源软件社区自治', desc: 'Charlie发布开源工具，社区fork、改进、形成生态', icon: '💻',
-        steps: [
-          { action: 'register', assetId: 'code_audio', userId: 'charlie', note: '发布EchoAudio', amount: 0 },
-          { action: 'download', assetId: 'code_audio', userId: 'bob', note: 'Bob下载', amount: 0 },
-          { action: 'download', assetId: 'code_audio', userId: 'diana', note: 'Diana下载', amount: 0 },
-          { action: 'fork', assetId: 'app_podcast', parentId: 'code_audio', userId: 'bob', note: 'Bob Fork做播客工具', amount: 0 },
-          { action: 'purchase', assetId: 'app_podcast', userId: 'bob', note: '购买播客工具', amount: 15 },
-          { action: 'shi_takeover', assetId: 'code_audio', note: '势图接管：扩权自动开放', amount: 0 },
-          { action: 'remix', assetId: 'app_podcast', parentId: 'code_audio', userId: 'diana', note: 'Diana改进播客工具', amount: 0 },
-          { action: 'purchase', assetId: 'app_podcast', userId: 'mallory', note: 'Mallory购买', amount: 15 }
-        ]
-      },
-      {
-        id: 'scene_society', name: '多Agent社会经济', desc: '5个Agent在ECHO网络中自发交易、衍生、分润', icon: '🏙️',
-        steps: [
-          { action: 'register', assetId: 'song_spring', userId: 'alice', note: 'Alice发歌', amount: 0 },
-          { action: 'register', assetId: 'photo_night', userId: 'diana', note: 'Diana发照片', amount: 0 },
-          { action: 'register', assetId: 'code_audio', userId: 'charlie', note: 'Charlie发代码', amount: 0 },
-          { action: 'purchase', assetId: 'song_spring', userId: 'bob', note: 'Bob买歌', amount: 5 },
-          { action: 'purchase', assetId: 'photo_night', userId: 'eve', note: 'Eve买照片', amount: 10 },
-          { action: 'remix', assetId: 'remix_spring', parentId: 'song_spring', userId: 'diana', note: 'Diana Remix', amount: 0 },
-          { action: 'reference', assetId: 'video_tech', parentId: 'song_spring', userId: 'bob', note: 'Bob引用', amount: 0 },
-          { action: 'fork', assetId: 'app_podcast', parentId: 'code_audio', userId: 'bob', note: 'Bob Fork', amount: 0 },
-          { action: 'apply_law', assetId: 'ai_model', parentId: 'song_spring', userId: 'mallory', note: '申请法档', amount: 0 },
-          { action: 'grant_law', assetId: 'song_spring', userId: 'alice', note: '授权', amount: 0 },
-          { action: 'register', assetId: 'ai_model', userId: 'mallory', note: '发布AI模型', amount: 0 },
-          { action: 'purchase', assetId: 'ai_model', userId: 'diana', note: '买模型', amount: 50 },
-          { action: 'purchase', assetId: 'ai_model', userId: 'bob', note: '买模型', amount: 50 },
-          { action: 'shi_takeover', assetId: 'song_spring', note: '势图接管触发', amount: 0 },
-          { action: 'revenue_split', assetId: 'ai_model', note: '多级分润执行', amount: 0 }
-        ]
-      },
-      {
-        id: 'scene_takeover', name: '势图接管冲突', desc: '展示势图接管"只开放不收紧"原则和元规则约束', icon: '⚖️',
-        steps: [
-          { action: 'register', assetId: 'song_spring', userId: 'alice', note: 'Alice发歌（保守配置）', amount: 0 },
-          { action: 'view', assetId: 'song_spring', userId: 'bob', note: 'Bob观看', amount: 0 },
-          { action: 'view', assetId: 'song_spring', userId: 'diana', note: 'Diana观看', amount: 0 },
-          { action: 'view', assetId: 'song_spring', userId: 'charlie', note: 'Charlie观看', amount: 0 },
-          { action: 'remix', assetId: 'remix_spring', parentId: 'song_spring', userId: 'diana', note: 'Remix', amount: 0 },
-          { action: 'reference', assetId: 'video_tech', parentId: 'song_spring', userId: 'bob', note: '引用', amount: 0 },
-          { action: 'shi_takeover', assetId: 'song_spring', note: '接管：扩权开放至公档', amount: 0 },
-          { action: 'config_lock', assetId: 'song_spring', userId: 'alice', note: '试图收紧→被阻止', amount: 0 },
-          { action: 'apply_law', assetId: 'ai_model', parentId: 'song_spring', userId: 'mallory', note: '申请法档', amount: 0 },
-          { action: 'grant_law', assetId: 'song_spring', userId: 'alice', note: '授权', amount: 0 },
-          { action: 'shi_takeover', assetId: 'song_spring', note: '接管：益权开放至法档', amount: 0 }
-        ]
-      }
-    ];
-    
-    // ========================
-    // 状态管理
-    // ========================
-    let currentScenario = null;
-    let currentStep = 0;
-    let isPlaying = false;
-    let playInterval = null;
-    let simUsers = {}; // 当前模拟的用户余额副本
-    let simAssets = []; // 当前已注册资产
-    let transactions = [];
-    let revenueSplits = [];
-    
-    // ========================
-    // 初始化
-    // ========================
-    function init() {
-      renderScenes();
-      renderAgents();
-      initNetwork();
-      selectScenario(0);
-    }
-    
-    function renderScenes() {
-      const list = document.getElementById('sceneList');
-      list.innerHTML = SCENARIOS.map((s, i) => `
-        <div class="scene-item ${i === 0 ? 'active' : ''}" data-idx="${i}" onclick="selectScenario(${i})">
-          <div class="scene-icon">${s.icon}</div>
-          <div class="scene-name">${s.name}</div>
-          <div class="scene-desc">${s.desc}</div>
-        </div>
-      `).join('');
-    }
-    
-    function renderAgents() {
-      const list = document.getElementById('agentList');
-      list.innerHTML = USERS.map(u => `
-        <div class="agent-card" id="agent-${u.id}" data-id="${u.id}">
-          <div class="agent-avatar" style="background: ${u.avatarColor};">${u.name[0]}</div>
-          <div class="agent-info">
-            <div class="agent-name">${u.name}</div>
-            <div class="agent-balance" id="balance-${u.id}">¥${u.balance}</div>
-            <div class="agent-action" id="action-${u.id}">待机中</div>
-          </div>
-        </div>
-      `).join('');
-    }
-    
-    // ========================
-    // 场景选择
-    // ========================
-    function selectScenario(idx) {
-      resetSim();
-      currentScenario = SCENARIOS[idx];
-      currentStep = 0;
-      
-      document.querySelectorAll('.scene-item').forEach((el, i) => {
-        el.classList.toggle('active', i === idx);
-      });
-      
-      // 重置用户余额
-      simUsers = {};
-      USERS.forEach(u => simUsers[u.id] = u.balance);
-      simAssets = [];
-      transactions = [];
-      revenueSplits = [];
-      
-      updateStats();
-      updateStepCounter();
-      drawNetwork();
-      renderTxList();
-      renderSplitList();
-      updateAgentActions();
-    }
-    
-    // ========================
-    // 模拟控制
-    // ========================
-    function togglePlay() {
-      if (isPlaying) {
-        pause();
-      } else {
-        play();
-      }
-    }
-    
-    function play() {
-      isPlaying = true;
-      document.getElementById('playBtn').innerHTML = '⏸ 暂停';
-      document.getElementById('playBtn').classList.remove('primary');
-      const speed = parseInt(document.getElementById('speedSelect').value);
-      playInterval = setInterval(stepForward, speed);
-    }
-    
-    function pause() {
-      isPlaying = false;
-      document.getElementById('playBtn').innerHTML = '▶ 播放';
-      document.getElementById('playBtn').classList.add('primary');
-      clearInterval(playInterval);
-    }
-    
-    function stepForward() {
-      if (!currentScenario || currentStep >= currentScenario.steps.length) {
-        pause();
-        return;
-      }
-      
-      const step = currentScenario.steps[currentStep];
-      executeStep(step);
-      currentStep++;
-      updateStepCounter();
-      updateProgress();
-      
-      if (currentStep >= currentScenario.steps.length) {
-        pause();
-      }
-    }
-    
-    function resetSim() {
-      pause();
-      currentStep = 0;
-      if (currentScenario) {
-        selectScenario(SCENARIOS.indexOf(currentScenario));
-      }
-    }
-    
-    // ========================
-    // 执行单步
-    // ========================
-    function executeStep(step) {
-      const asset = ASSETS.find(a => a.id === step.assetId);
-      const user = USERS.find(u => u.id === step.userId);
-      
-      // 更新Agent动作
-      if (user) {
-        document.getElementById(`action-${user.id}`).textContent = step.note;
-        document.querySelector(`#agent-${user.id}`).classList.add('active');
-        setTimeout(() => {
-          document.querySelector(`#agent-${user.id}`).classList.remove('active');
-        }, 1000);
-      }
-      
-      // 处理交易
-      if (step.amount > 0 && step.action === 'purchase') {
-        // 购买者扣款
-        if (user) simUsers[user.id] -= step.amount;
-        // 创作者收款
-        if (asset) {
-          const creator = USERS.find(u => u.id === asset.creatorId);
-          if (creator) {
-            simUsers[creator.id] += step.amount * 0.7;
-            // 平台抽成
-            simUsers.eve += step.amount * 0.3;
-          }
-        }
-        
-        transactions.push({
-          from: user?.name || '系统',
-          to: asset?.name || '系统',
-          amount: step.amount,
-          time: `T+${currentStep}`,
-          action: step.action
-        });
-        
-        // 分润（如果有父资产）
-        if (asset?.parentId) {
-          const parent = ASSETS.find(a => a.id === asset.parentId);
-          if (parent) {
-            const parentCreator = USERS.find(u => u.id === parent.creatorId);
-            const splitAmount = step.amount * 0.1;
-            if (parentCreator) {
-              simUsers[parentCreator.id] += splitAmount;
-              revenueSplits.push({
-                from: asset.name,
-                to: parentCreator.name,
-                amount: splitAmount,
-                reason: '父资产分润(10%)'
-              });
-            }
-          }
-        }
-      }
-      
-      // 处理资产注册
-      if (step.action === 'register' && asset && !simAssets.find(a => a.id === asset.id)) {
-        simAssets.push({ ...asset, registeredAt: currentStep });
-      }
-      
-      // 添加到日志
-      addLog(step);
-      
-      // 更新网络图
-      if (step.action === 'register' || step.action === 'reference' || step.action === 'remix' || step.action === 'fork') {
-        drawNetwork();
-      }
-      
-      // 更新显示
-      updateStats();
-      updateAgentBalances();
-      renderTxList();
-      renderSplitList();
-      drawBalanceChart();
-    }
-    
-    function addLog(step) {
-      const logList = document.getElementById('logList');
-      const typeClass = {
-        register: 'register', purchase: 'purchase', remix: 'remix',
-        reference: 'reference', shi_takeover: 'shi', fork: 'fork',
-        apply_law: 'register', grant_law: 'register', config_lock: 'shi',
-        download: 'reference', revenue_split: 'purchase'
-      }[step.action] || 'register';
-      
-      const typeLabel = {
-        register: '登记', purchase: '购买', remix: '改编',
-        reference: '引用', shi_takeover: '势图', fork: '分叉',
-        apply_law: '申请', grant_law: '授权', config_lock: '阻止',
-        download: '下载', revenue_split: '分润'
-      }[step.action] || step.action;
-      
-      const item = document.createElement('div');
-      item.className = 'log-item';
-      item.innerHTML = `
-        <div class="log-time">T+${currentStep}</div>
-        <div class="log-type ${typeClass}">${typeLabel}</div>
-        <div class="log-msg">${step.note}</div>
-      `;
-      logList.insertBefore(item, logList.firstChild);
-      
-      // 保持最多50条
-      while (logList.children.length > 50) {
-        logList.removeChild(logList.lastChild);
-      }
-    }
-    
-    // ========================
-    // D3 网络图
-    // ========================
-    let svg, simulation;
-    
-    function initNetwork() {
-      svg = d3.select('#networkSvg');
-    }
-    
-    function drawNetwork() {
-      const nodes = simAssets.map(a => ({
-        id: a.id,
-        name: a.name,
-        creator: a.creatorId,
-        color: a.color,
-        radius: a.parentId ? 18 : 22
-      }));
-      
-      const links = [];
-      simAssets.forEach(a => {
-        if (a.parentId && simAssets.find(p => p.id === a.parentId)) {
-          links.push({ source: a.parentId, target: a.id, type: 'derive' });
-        }
-      });
-      
-      // 添加引用关系
-      const currentSteps = currentScenario ? currentScenario.steps.slice(0, currentStep) : [];
-      currentSteps.forEach(s => {
-        if (s.action === 'reference' && s.parentId) {
-          const exists = links.find(l => l.source === s.parentId && l.target === s.assetId);
-          if (!exists) {
-            links.push({ source: s.parentId, target: s.assetId, type: 'reference' });
-          }
-        }
-      });
-      
-      const width = document.querySelector('.network-view').clientWidth;
-      const height = document.querySelector('.network-view').clientHeight;
-      
-      svg.selectAll('*').remove();
-      svg.attr('width', width).attr('height', height);
-      
-      if (nodes.length === 0) return;
-      
-      simulation = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(links).id(d => d.id).distance(100))
-        .force('charge', d3.forceManyBody().strength(-300))
-        .force('center', d3.forceCenter(width / 2, height / 2))
-        .force('collision', d3.forceCollide().radius(d => d.radius + 10));
-      
-      // 绘制连线
-      const link = svg.append('g')
-        .selectAll('line')
-        .data(links)
-        .enter().append('line')
-        .attr('class', 'link-line')
-        .attr('stroke', d => d.type === 'derive' ? '#5a9a6e' : '#8b6914')
-        .attr('stroke-width', d => d.type === 'derive' ? 2 : 1)
-        .attr('stroke-dasharray', d => d.type === 'reference' ? '5,5' : 'none');
-      
-      // 绘制节点
-      const node = svg.append('g')
-        .selectAll('g')
-        .data(nodes)
-        .enter().append('g')
-        .call(d3.drag()
-          .on('start', dragstarted)
-          .on('drag', dragged)
-          .on('end', dragended));
-      
-      node.append('circle')
-        .attr('class', 'node-circle')
-        .attr('r', d => d.radius)
-        .attr('fill', d => d.color)
-        .attr('stroke', 'rgba(240,240,232,0.3)')
-        .attr('stroke-width', 2);
-      
-      node.append('text')
-        .attr('class', 'node-label')
-        .attr('dy', d => d.radius + 16)
-        .text(d => d.name);
-      
-      simulation.on('tick', () => {
-        link
-          .attr('x1', d => d.source.x)
-          .attr('y1', d => d.source.y)
-          .attr('x2', d => d.target.x)
-          .attr('y2', d => d.target.y);
-        
-        node.attr('transform', d => `translate(${d.x},${d.y})`);
-      });
-    }
-    
-    function dragstarted(event, d) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x; d.fy = d.y;
-    }
-    function dragged(event, d) {
-      d.fx = event.x; d.fy = event.y;
-    }
-    function dragended(event, d) {
-      if (!event.active) simulation.alphaTarget(0);
-      d.fx = null; d.fy = null;
-    }
-    
-    // ========================
-    // 统计更新
-    // ========================
-    function updateStats() {
-      document.getElementById('statAssets').textContent = simAssets.length;
-      const totalRev = transactions.reduce((s, t) => s + t.amount, 0);
-      document.getElementById('statRevenue').textContent = '¥' + totalRev;
-      document.getElementById('statUsers').textContent = new Set(simAssets.map(a => a.creatorId)).size;
-      const ecoVal = simAssets.length * 100 + totalRev;
-      document.getElementById('statValue').textContent = '¥' + ecoVal;
-    }
-    
-    function updateAgentBalances() {
-      Object.keys(simUsers).forEach(id => {
-        const el = document.getElementById(`balance-${id}`);
-        if (el) el.textContent = '¥' + simUsers[id];
-      });
-    }
-    
-    function updateAgentActions() {
-      USERS.forEach(u => {
-        const el = document.getElementById(`action-${u.id}`);
-        if (el) el.textContent = '待机中';
-      });
-    }
-    
-    function updateStepCounter() {
-      const total = currentScenario ? currentScenario.steps.length : 0;
-      document.getElementById('stepCounter').textContent = `${currentStep} / ${total}`;
-    }
-    
-    function updateProgress() {
-      const total = currentScenario ? currentScenario.steps.length : 1;
-      const pct = (currentStep / total) * 100;
-      document.getElementById('progressFill').style.width = pct + '%';
-    }
-    
-    // ========================
-    // 交易/分润列表
-    // ========================
-    function renderTxList() {
-      const list = document.getElementById('txList');
-      if (transactions.length === 0) {
-        list.innerHTML = '<div style="color: var(--ink-light); font-size: 0.75rem; text-align: center; padding: 20px;">暂无交易</div>';
-        return;
-      }
-      list.innerHTML = transactions.slice(-8).map(t => `
-        <div class="tx-item">
-          <span>${t.from} → ${t.to}</span>
-          <span class="tx-amount ${t.amount < 0 ? 'negative' : ''}">${t.amount > 0 ? '+' : ''}¥${t.amount}</span>
-        </div>
-      `).join('');
-    }
-    
-    function renderSplitList() {
-      const list = document.getElementById('splitList');
-      if (revenueSplits.length === 0) {
-        list.innerHTML = '<div style="color: var(--ink-light); font-size: 0.75rem; text-align: center; padding: 20px;">暂无分润</div>';
-        return;
-      }
-      list.innerHTML = revenueSplits.slice(-6).map(s => `
-        <div class="tx-item">
-          <span>${s.from} → ${s.to}</span>
-          <span class="tx-amount">+¥${s.amount.toFixed(1)} <small style="color: var(--ink-light);">${s.reason}</small></span>
-        </div>
-      `).join('');
-    }
-    
-    // ========================
-    // 余额变化图
-    // ========================
-    function drawBalanceChart() {
-      const canvas = document.getElementById('balanceChart');
-      const c = canvas.getContext('2d');
-      const w = canvas.width; const h = canvas.height;
-      
-      c.clearRect(0, 0, w, h);
-      
-      // 背景
-      c.fillStyle = 'rgba(12,12,14,0.5)';
-      c.fillRect(0, 0, w, h);
-      
-      // 网格线
-      c.strokeStyle = 'rgba(42,42,48,0.5)';
-      c.lineWidth = 1;
-      for (let i = 0; i <= 4; i++) {
-        const y = (h - 20) * (i / 4) + 10;
-        c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke();
-      }
-      
-      if (transactions.length < 2) return;
-      
-      // 绘制每个用户的余额变化线
-      const colors = ['#4a90a4', '#5a9a6e', '#8b6914', '#c8a84c', '#2c3e50', '#c45c48'];
-      const userIds = Object.keys(simUsers);
-      
-      userIds.forEach((uid, idx) => {
-        const user = USERS.find(u => u.id === uid);
-        if (!user) return;
-        
-        // 简单折线（当前余额点）
-        const x = (w / userIds.length) * idx + (w / userIds.length) / 2;
-        const balance = simUsers[uid];
-        const maxBal = Math.max(...Object.values(simUsers), 1);
-        const y = h - 20 - (balance / maxBal) * (h - 40);
-        
-        c.beginPath();
-        c.arc(x, y, 4, 0, Math.PI * 2);
-        c.fillStyle = colors[idx % colors.length];
-        c.fill();
-        
-        // 标签
-        c.fillStyle = 'rgba(240,240,232,0.6)';
-        c.font = '10px "Noto Sans SC", sans-serif';
-        c.textAlign = 'center';
-        c.fillText(user.name, x, h - 5);
-        c.fillText('¥' + balance, x, y - 10);
-      });
-    }
-    
-    // ========================
-    // UI控制
-    // ========================
-    function toggleLog() {
-      document.getElementById('logPanel').classList.toggle('show');
-    }
-    
-    // ========================
-    // 启动
-    // ========================
-    window.addEventListener('resize', () => {
-      drawNetwork();
-      drawBalanceChart();
-    });
-    
-    init();
-  </script>
     </div>
   </main>
 
   <script>
-
-/* ===== engine.js ===== */
+/* ===== ENGINE ===== */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined'
     ? module.exports = factory()
@@ -7139,8 +4730,7 @@ window.addEventListener('resize', () => {
   };
 });
 
-
-/* ===== data.js ===== */
+/* ===== DATA ===== */
 /**
  * ECHO 模拟器 — 共享数据层
  * 包含用户、资产、验证事件、规则模板的模拟数据
@@ -7548,7 +5138,7 @@ const DataUtils = {
 })(typeof globalThis !== 'undefined' ? globalThis : window);
 
 
-/* ===== HOME PAGE SCRIPTS ===== */
+/* ===== HOME SCRIPTS ===== */
 
     /**
      * ECHO首页 — 墨色粒子星云系统
@@ -7787,7 +5377,7 @@ const DataUtils = {
     })();
   
 
-/* ===== RIGHTS PAGE SCRIPTS ===== */
+/* ===== RIGHTS SCRIPTS ===== */
 
 // ===== 常量与数据 =====
 const RINGS = [
@@ -8201,7 +5791,7 @@ function init() {
 init();
 
 
-/* ===== GRAPH PAGE SCRIPTS ===== */
+/* ===== GRAPH SCRIPTS ===== */
 
 
 // ==================== 模拟数据 ====================
@@ -8783,7 +6373,7 @@ window.addEventListener('resize', () => {
 });
 
 
-/* ===== SHI PAGE SCRIPTS ===== */
+/* ===== SHI SCRIPTS ===== */
 
     // ========================
     // 模拟数据
@@ -9058,7 +6648,7 @@ window.addEventListener('resize', () => {
     updateDashboard('song_spring');
   
 
-/* ===== MARKET PAGE SCRIPTS ===== */
+/* ===== MARKET SCRIPTS ===== */
 
     // ========================
     // 模拟数据
@@ -9363,7 +6953,7 @@ window.addEventListener('resize', () => {
     renderGrid();
   
 
-/* ===== SIMULATE PAGE SCRIPTS ===== */
+/* ===== SIMULATE SCRIPTS ===== */
 
 
     // ========================
