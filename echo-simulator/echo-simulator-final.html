@@ -1,0 +1,2168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHO 系统模拟器</title>
+    <style>
+        /* ==================== 基础重置与变量 ==================== */
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a28;
+            --bg-hover: #252538;
+            --border: #2a2a40;
+            --border-light: #3a3a55;
+            --text-primary: #e8e8f0;
+            --text-secondary: #8a8aa0;
+            --text-muted: #5a5a70;
+            --accent: #8b5cf6;
+            --accent-light: #a78bfa;
+            --accent-dark: #7c3aed;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --yong: #3b82f6;
+            --yan: #8b5cf6;
+            --kuo: #f59e0b;
+            --yi: #22c55e;
+            --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --shadow: 0 4px 20px rgba(0,0,0,0.4);
+            --radius: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 13px;
+            line-height: 1.5;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ==================== 滚动条 ==================== */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* ==================== 布局框架 ==================== */
+        #app {
+            display: grid;
+            grid-template-rows: 48px 1fr 28px;
+            grid-template-columns: 260px 1fr 280px;
+            grid-template-areas:
+                "header header header"
+                "left main right"
+                "footer footer footer";
+            height: 100vh;
+            width: 100vw;
+            gap: 1px;
+            background: var(--bg-primary);
+        }
+
+        /* ==================== 顶部导航 ==================== */
+        .header {
+            grid-area: header;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            font-family: var(--font-mono);
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-btn {
+            padding: 6px 14px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 12px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-sans);
+        }
+
+        .nav-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .nav-btn.active { background: var(--accent-dark); color: #fff; }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border-radius: var(--radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: 8px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        .status-dot.paused { background: var(--warning); }
+
+        /* ==================== 左侧面板 ==================== */
+        .panel-left {
+            grid-area: left;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-section {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-section:last-child { border-bottom: none; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .section-header:hover { color: var(--text-secondary); }
+
+        .section-toggle {
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+
+        .section-toggle.collapsed { transform: rotate(-90deg); }
+
+        .section-body {
+            padding: 0 14px 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            transition: max-height 0.3s;
+        }
+
+        .section-body.collapsed {
+            max-height: 0;
+            padding-bottom: 0;
+            overflow: hidden;
+        }
+
+        /* 场景列表 */
+        .scenario-list { display: flex; flex-direction: column; gap: 4px; }
+
+        .scenario-item {
+            padding: 10px 12px;
+            border-radius: var(--radius);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .scenario-item:hover {
+            border-color: var(--accent);
+            background: var(--bg-hover);
+        }
+
+        .scenario-item.active {
+            border-color: var(--accent);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .scenario-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .scenario-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* 资产列表 */
+        .asset-list { display: flex; flex-direction: column; gap: 4px; }
+
+        .asset-item {
+            padding: 8px 10px;
+            border-radius: var(--radius);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .asset-item:hover { border-color: var(--border-light); }
+        .asset-item.selected { border-color: var(--accent); background: rgba(139, 92, 246, 0.08); }
+
+        .asset-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .asset-icon.skill { background: rgba(59, 130, 246, 0.15); color: var(--yong); }
+        .asset-icon.agent { background: rgba(139, 92, 246, 0.15); color: var(--yan); }
+        .asset-icon.blueprint { background: rgba(245, 158, 11, 0.15); color: var(--kuo); }
+
+        .asset-info { flex: 1; min-width: 0; }
+        .asset-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .asset-meta { font-size: 10px; color: var(--text-muted); }
+
+        .asset-shi {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        /* 四权面板 */
+        .right-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .right-card {
+            padding: 10px;
+            border-radius: var(--radius);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+        }
+
+        .right-card-header {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .right-card-header.yong { color: var(--yong); }
+        .right-card-header.yan { color: var(--yan); }
+        .right-card-header.kuo { color: var(--kuo); }
+        .right-card-header.yi { color: var(--yi); }
+
+        .right-card-value {
+            font-family: var(--font-mono);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .right-card-sub {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ==================== 中央画布 ==================== */
+        .panel-main {
+            grid-area: main;
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sim-canvas {
+            flex: 1;
+            width: 100%;
+            cursor: crosshair;
+        }
+
+        .canvas-overlay {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .overlay-top-left {
+            top: 12px;
+            left: 12px;
+        }
+
+        .overlay-top-right {
+            top: 12px;
+            right: 12px;
+            text-align: right;
+        }
+
+        .overlay-bottom-left {
+            bottom: 12px;
+            left: 12px;
+        }
+
+        .overlay-bottom-right {
+            bottom: 12px;
+            right: 12px;
+            text-align: right;
+        }
+
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(10, 10, 15, 0.85);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            backdrop-filter: blur(8px);
+        }
+
+        .stat-pill .value { color: var(--text-primary); font-weight: 600; }
+        .stat-pill .unit { color: var(--text-muted); font-size: 10px; }
+
+        /* ==================== 右侧面板 ==================== */
+        .panel-right {
+            grid-area: right;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 日志面板 */
+        .log-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+            font-family: var(--font-mono);
+            font-size: 11px;
+        }
+
+        .log-entry {
+            padding: 4px 14px;
+            border-left: 2px solid transparent;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            animation: logIn 0.3s ease;
+        }
+
+        @keyframes logIn {
+            from { opacity: 0; transform: translateX(-8px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .log-entry:hover { background: var(--bg-hover); }
+
+        .log-entry.event-AssetRegistered { border-left-color: var(--info); }
+        .log-entry.event-UsageOccurred { border-left-color: var(--yong); }
+        .log-entry.event-DeploymentEvent { border-left-color: var(--yan); }
+        .log-entry.event-DerivativeCreated { border-left-color: var(--kuo); }
+        .log-entry.event-CitationEvent { border-left-color: var(--accent-light); }
+        .log-entry.event-ShiStateChanged { border-left-color: var(--warning); }
+        .log-entry.event-PolicyAdjusted { border-left-color: var(--danger); }
+        .log-entry.event-RevenueDistributed { border-left-color: var(--yi); }
+
+        .log-time {
+            color: var(--text-muted);
+            font-size: 10px;
+            margin-right: 6px;
+        }
+
+        .log-type {
+            font-weight: 600;
+            margin-right: 6px;
+        }
+
+        .log-entry.event-AssetRegistered .log-type { color: var(--info); }
+        .log-entry.event-UsageOccurred .log-type { color: var(--yong); }
+        .log-entry.event-DeploymentEvent .log-type { color: var(--yan); }
+        .log-entry.event-DerivativeCreated .log-type { color: var(--kuo); }
+        .log-entry.event-CitationEvent .log-type { color: var(--accent-light); }
+        .log-entry.event-ShiStateChanged .log-type { color: var(--warning); }
+        .log-entry.event-PolicyAdjusted .log-type { color: var(--danger); }
+        .log-entry.event-RevenueDistributed .log-type { color: var(--yi); }
+
+        /* ==================== 底部状态栏 ==================== */
+        .footer {
+            grid-area: footer;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .footer-left, .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .perf-stat {
+            font-family: var(--font-mono);
+        }
+
+        .perf-stat .label { color: var(--text-muted); }
+        .perf-stat .value { color: var(--text-secondary); }
+        .perf-stat .value.good { color: var(--success); }
+        .perf-stat .value.warn { color: var(--warning); }
+        .perf-stat .value.bad { color: var(--danger); }
+
+        /* ==================== 按钮 ==================== */
+        .btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 12px;
+            font-family: var(--font-sans);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            border-color: var(--border-light);
+            color: var(--text-primary);
+            background: var(--bg-hover);
+        }
+
+        .btn-primary {
+            background: var(--accent-dark);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent-light);
+        }
+
+        .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+        .btn-group { display: flex; gap: 4px; }
+
+        /* ==================== 模态框 ==================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow);
+            transform: scale(0.95);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal { transform: scale(1); }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title { font-size: 16px; font-weight: 600; }
+
+        .modal-close {
+            width: 28px; height: 28px;
+            border: none; background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* 表单 */
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-family: var(--font-sans);
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .form-textarea { min-height: 120px; resize: vertical; font-family: var(--font-mono); font-size: 12px; }
+
+        /* ==================== ShiGraph 可视化 ==================== */
+        .shigraph-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+            gap: 8px;
+        }
+
+        .hexagram-container {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 3px;
+            padding: 8px;
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .hexagram-cell {
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-family: var(--font-mono);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .hexagram-cell:hover { transform: scale(1.15); z-index: 10; }
+
+        .hexagram-cell.active {
+            box-shadow: 0 0 8px currentColor;
+            border: 1px solid currentColor;
+        }
+
+        .hexagram-legend {
+            display: flex;
+            gap: 12px;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+        /* ==================== 时间线 ==================== */
+        .timeline-container {
+            padding: 8px 0;
+        }
+
+        .timeline-track {
+            position: relative;
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            margin: 8px 14px;
+        }
+
+        .timeline-progress {
+            position: absolute;
+            left: 0; top: 0;
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+
+        .timeline-marks {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 14px;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* ==================== 提示框 ==================== */
+        .tooltip {
+            position: absolute;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 8px 12px;
+            font-size: 11px;
+            color: var(--text-primary);
+            pointer-events: none;
+            z-index: 500;
+            box-shadow: var(--shadow);
+            max-width: 240px;
+            display: none;
+        }
+
+        .tooltip.visible { display: block; }
+
+        /* ==================== 事件粒子 ==================== */
+        .event-particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            animation: particleFloat 3s ease-out forwards;
+        }
+
+        @keyframes particleFloat {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(0.3); }
+        }
+
+        /* ==================== 响应式 ==================== */
+        @media (max-width: 1024px) {
+            #app {
+                grid-template-columns: 200px 1fr 220px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #app {
+                grid-template-columns: 1fr;
+                grid-template-rows: 48px 1fr 200px 28px;
+                grid-template-areas:
+                    "header"
+                    "main"
+                    "right"
+                    "footer";
+            }
+            .panel-left { display: none; }
+        }
+
+        /* ==================== 动画 ==================== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in { animation: fadeIn 0.3s ease; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-up { animation: slideUp 0.3s ease; }
+
+        /* ==================== 空状态 ==================== */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 12px;
+            max-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 顶部导航 -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">ECHO SIM</div>
+                <nav class="header-nav">
+                    <button class="nav-btn active" data-view="simulation">模拟</button>
+                    <button class="nav-btn" data-view="shigraph">势图</button>
+                    <button class="nav-btn" data-view="events">事件</button>
+                </nav>
+                <div class="status-indicator">
+                    <span class="status-dot" id="sim-status-dot"></span>
+                    <span id="sim-status-text">运行中</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn" id="btn-import" title="导入状态">📥</button>
+                <button class="icon-btn" id="btn-export" title="导出状态">📤</button>
+                <button class="icon-btn" id="btn-settings" title="设置">⚙️</button>
+                <button class="icon-btn" id="btn-help" title="帮助">❓</button>
+            </div>
+        </header>
+
+        <!-- 左侧面板 -->
+        <aside class="panel-left">
+            <!-- 场景选择 -->
+            <div class="panel-section">
+                <div class="section-header" data-section="scenarios">
+                    <span>预设场景</span>
+                    <span class="section-toggle">▼</span>
+                </div>
+                <div class="section-body" id="section-scenarios">
+                    <div class="scenario-list" id="scenario-list"></div>
+                </div>
+            </div>
+
+            <!-- 资产列表 -->
+            <div class="panel-section">
+                <div class="section-header" data-section="assets">
+                    <span>资产列表</span>
+                    <span class="section-toggle">▼</span>
+                </div>
+                <div class="section-body" id="section-assets">
+                    <div class="asset-list" id="asset-list"></div>
+                </div>
+            </div>
+
+            <!-- 四权概览 -->
+            <div class="panel-section">
+                <div class="section-header" data-section="rights">
+                    <span>四权概览</span>
+                    <span class="section-toggle">▼</span>
+                </div>
+                <div class="section-body" id="section-rights">
+                    <div class="right-grid">
+                        <div class="right-card">
+                            <div class="right-card-header yong">◉ 用</div>
+                            <div class="right-card-value" id="stat-yong">0</div>
+                            <div class="right-card-sub">使用次数</div>
+                        </div>
+                        <div class="right-card">
+                            <div class="right-card-header yan">◈ 衍</div>
+                            <div class="right-card-value" id="stat-yan">0</div>
+                            <div class="right-card-sub">衍生资产</div>
+                        </div>
+                        <div class="right-card">
+                            <div class="right-card-header kuo">◆ 扩</div>
+                            <div class="right-card-value" id="stat-kuo">0</div>
+                            <div class="right-card-sub">扩展平台</div>
+                        </div>
+                        <div class="right-card">
+                            <div class="right-card-header yi">◊ 益</div>
+                            <div class="right-card-value" id="stat-yi">0</div>
+                            <div class="right-card-sub">总收益</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 时间线控制 -->
+            <div class="panel-section">
+                <div class="section-header" data-section="timeline">
+                    <span>时间线</span>
+                    <span class="section-toggle">▼</span>
+                </div>
+                <div class="section-body" id="section-timeline">
+                    <div class="timeline-container">
+                        <div class="btn-group" style="padding: 0 14px 8px;">
+                            <button class="btn btn-sm" id="btn-play">▶ 播放</button>
+                            <button class="btn btn-sm" id="btn-pause">⏸ 暂停</button>
+                            <button class="btn btn-sm" id="btn-step">⏭ 步进</button>
+                            <button class="btn btn-sm" id="btn-reset">↺ 重置</button>
+                        </div>
+                        <div class="timeline-track">
+                            <div class="timeline-progress" id="timeline-progress" style="width: 0%"></div>
+                        </div>
+                        <div class="timeline-marks">
+                            <span>T0</span>
+                            <span id="timeline-current">T0</span>
+                            <span id="timeline-end">T100</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 中央画布 -->
+        <main class="panel-main">
+            <canvas id="sim-canvas"></canvas>
+            <div class="canvas-overlay overlay-top-left">
+                <div class="stat-pill"><span>事件</span><span class="value" id="overlay-events">0</span></div>
+                <div class="stat-pill"><span>资产</span><span class="value" id="overlay-assets">0</span></div>
+            </div>
+            <div class="canvas-overlay overlay-top-right">
+                <div class="stat-pill"><span>当前场景</span><span class="value" id="overlay-scenario">-</span></div>
+                <div class="stat-pill"><span>模拟时间</span><span class="value" id="overlay-time">0</span><span class="unit">ms</span></div>
+            </div>
+            <div class="canvas-overlay overlay-bottom-left">
+                <div class="stat-pill"><span>FPS</span><span class="value" id="overlay-fps">60</span></div>
+                <div class="stat-pill"><span>延迟</span><span class="value" id="overlay-latency">0</span><span class="unit">ms</span></div>
+            </div>
+            <div class="canvas-overlay overlay-bottom-right">
+                <div class="stat-pill"><span>Shi状态</span><span class="value" id="overlay-shi">坤</span></div>
+            </div>
+            <div class="tooltip" id="tooltip"></div>
+        </main>
+
+        <!-- 右侧面板 -->
+        <aside class="panel-right">
+            <div class="panel-section" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="section-header" data-section="logs">
+                    <span>实时日志</span>
+                    <span class="section-toggle">▼</span>
+                </div>
+                <div class="section-body" id="section-logs" style="flex: 1; display: flex; flex-direction: column; padding: 0;">
+                    <div class="log-container" id="log-container"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 底部状态栏 -->
+        <footer class="footer">
+            <div class="footer-left">
+                <span class="perf-stat"><span class="label">FPS:</span> <span class="value good" id="perf-fps">60</span></span>
+                <span class="perf-stat"><span class="label">帧时间:</span> <span class="value good" id="perf-frame">16.7</span><span class="label">ms</span></span>
+                <span class="perf-stat"><span class="label">事件/秒:</span> <span class="value" id="perf-eps">0</span></span>
+            </div>
+            <div class="footer-right">
+                <span>ECHO System Simulator v1.0</span>
+                <span>·</span>
+                <span id="footer-status">就绪</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 导出/导入模态框 -->
+    <div class="modal-overlay" id="modal-io">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="modal-io-title">导出状态</span>
+                <button class="modal-close" id="modal-io-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" id="io-export-group">
+                    <label class="form-label">JSON 数据</label>
+                    <textarea class="form-textarea" id="io-textarea" readonly></textarea>
+                </div>
+                <div class="form-group" id="io-import-group" style="display:none;">
+                    <label class="form-label">粘贴 JSON 数据</label>
+                    <textarea class="form-textarea" id="io-import-textarea" placeholder='{"assets": [...], "events": [...]}'></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="btn-io-cancel">取消</button>
+                <button class="btn btn-primary" id="btn-io-action">复制到剪贴板</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 帮助模态框 -->
+    <div class="modal-overlay" id="modal-help">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">ECHO 系统模拟器 · 帮助</span>
+                <button class="modal-close" id="modal-help-close">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:12px; color:var(--text-secondary);">ECHO 是一个创作者主权协议，模拟器用于可视化资产生命周期与事件流。</p>
+                <h3 style="font-size:13px; margin:16px 0 8px; color:var(--accent);">核心概念</h3>
+                <ul style="padding-left:18px; color:var(--text-secondary); line-height:1.8;">
+                    <li><strong style="color:var(--yong)">用 (Usage)</strong> — 使用权，控制谁可以调用资产</li>
+                    <li><strong style="color:var(--yan)">衍 (Derivative)</strong> — 衍生权，控制谁可以基于资产创建新资产</li>
+                    <li><strong style="color:var(--kuo)">扩 (Expansion)</strong> — 扩展权，控制资产可在哪些平台分发</li>
+                    <li><strong style="color:var(--yi)">益 (Benefit)</strong> — 收益权，控制收益分配规则</li>
+                </ul>
+                <h3 style="font-size:13px; margin:16px 0 8px; color:var(--accent);">操作指南</h3>
+                <ul style="padding-left:18px; color:var(--text-secondary); line-height:1.8;">
+                    <li>点击左侧「预设场景」加载模拟数据</li>
+                    <li>使用播放/暂停控制模拟运行</li>
+                    <li>点击画布中的节点查看详情</li>
+                    <li>右侧日志面板实时显示事件流</li>
+                    <li>使用 📤/📥 导出导入模拟状态</li>
+                </ul>
+                <h3 style="font-size:13px; margin:16px 0 8px; color:var(--accent);">快捷键</h3>
+                <ul style="padding-left:18px; color:var(--text-secondary); line-height:1.8;">
+                    <li><kbd style="background:var(--bg-tertiary); padding:2px 6px; border-radius:4px;">Space</kbd> 播放/暂停</li>
+                    <li><kbd style="background:var(--bg-tertiary); padding:2px 6px; border-radius:4px;">→</kbd> 步进</li>
+                    <li><kbd style="background:var(--bg-tertiary); padding:2px 6px; border-radius:4px;">R</kbd> 重置</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="btn-help-close">知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ==================== ECHO 系统模拟器核心代码 ====================
+    // 单文件完整实现，包含引擎、UI渲染、场景播放、数据导入导出
+
+    (function() {
+        'use strict';
+
+        // ==================== 常量与配置 ====================
+        const HEXAGRAMS = [
+            '坤','剥','比','观','豫','晋','萃','否',
+            '谦','艮','蹇','渐','小过','旅','咸','遁',
+            '师','蒙','坎','涣','解','未济','困','讼',
+            '升','蛊','井','巽','恒','鼎','大过','姤',
+            '复','颐','屯','益','震','噬嗑','随','无妄',
+            '明夷','贲','既济','家人','丰','离','革','同人',
+            '临','损','节','中孚','归妹','睽','兑','履',
+            '泰','大畜','需','小畜','大壮','大有','夬','乾'
+        ];
+
+        const EVENT_TYPES = [
+            'AssetRegistered', 'UsageOccurred', 'DeploymentEvent',
+            'DerivativeCreated', 'CitationEvent', 'ShiStateChanged',
+            'PolicyAdjusted', 'RevenueDistributed'
+        ];
+
+        const EVENT_COLORS = {
+            AssetRegistered: '#3b82f6',
+            UsageOccurred: '#3b82f6',
+            DeploymentEvent: '#8b5cf6',
+            DerivativeCreated: '#f59e0b',
+            CitationEvent: '#a78bfa',
+            ShiStateChanged: '#f59e0b',
+            PolicyAdjusted: '#ef4444',
+            RevenueDistributed: '#22c55e'
+        };
+
+        const ASSET_TYPES = { skill: '技能', agent: '代理', blueprint: '蓝图' };
+        const ASSET_ICONS = { skill: '⚡', agent: '🤖', blueprint: '📐' };
+
+        // ==================== 数据模型 ====================
+        class Asset {
+            constructor(props) {
+                this.id = props.id || ('A' + Math.random().toString(36).substr(2, 8));
+                this.name = props.name || '未命名资产';
+                this.type = props.type || 'skill';
+                this.creator = props.creator || '匿名';
+                this.createdAt = props.createdAt || Date.now();
+                this.yong = props.yong || { enabled: true, level: 1, usageCount: 0 };
+                this.yan = props.yan || { enabled: false, level: 0, derivativeCount: 0 };
+                this.kuo = props.kuo || { enabled: false, level: 0, platforms: [] };
+                this.yi = props.yi || { enabled: false, level: 0, totalRevenue: 0 };
+                this.shi = props.shi || 0; // 0-63, 对应64卦
+                this.parentId = props.parentId || null;
+                this.children = props.children || [];
+                this.x = props.x || 0;
+                this.y = props.y || 0;
+                this.vx = 0;
+                this.vy = 0;
+                this.radius = props.radius || (this.type === 'agent' ? 22 : 18);
+                this.color = props.color || this.getDefaultColor();
+            }
+
+            getDefaultColor() {
+                const colors = { skill: '#3b82f6', agent: '#8b5cf6', blueprint: '#f59e0b' };
+                return colors[this.type] || '#8b5cf6';
+            }
+
+            getHexagramName() {
+                return HEXAGRAMS[this.shi] || '坤';
+            }
+
+            toJSON() {
+                return {
+                    id: this.id, name: this.name, type: this.type,
+                    creator: this.creator, createdAt: this.createdAt,
+                    yong: this.yong, yan: this.yan, kuo: this.kuo, yi: this.yi,
+                    shi: this.shi, parentId: this.parentId, children: this.children,
+                    x: this.x, y: this.y, radius: this.radius, color: this.color
+                };
+            }
+
+            static fromJSON(data) {
+                return new Asset(data);
+            }
+        }
+
+        class EchoEvent {
+            constructor(props) {
+                this.id = props.id || ('E' + Math.random().toString(36).substr(2, 8));
+                this.type = props.type || 'AssetRegistered';
+                this.assetId = props.assetId || null;
+                this.timestamp = props.timestamp || Date.now();
+                this.data = props.data || {};
+                this.shiBefore = props.shiBefore || 0;
+                this.shiAfter = props.shiAfter || 0;
+            }
+
+            toJSON() {
+                return { id: this.id, type: this.type, assetId: this.assetId,
+                    timestamp: this.timestamp, data: this.data,
+                    shiBefore: this.shiBefore, shiAfter: this.shiAfter };
+            }
+        }
+
+        // ==================== 场景定义 ====================
+        const SCENARIOS = [
+            {
+                id: 'basic',
+                name: '基础生命周期',
+                desc: '单个资产从注册到使用的完整流程',
+                setup: (sim) => {
+                    sim.addAsset(new Asset({
+                        id: 'skill-001', name: '文本摘要器', type: 'skill',
+                        creator: 'Alice', x: 0.5, y: 0.5,
+                        yong: { enabled: true, level: 3, usageCount: 0 },
+                        yi: { enabled: true, level: 2, totalRevenue: 0 }
+                    }));
+                },
+                script: [
+                    { delay: 500, action: 'emit', type: 'AssetRegistered', assetId: 'skill-001', data: { message: '资产已登记到 ECHO 注册表' } },
+                    { delay: 1500, action: 'emit', type: 'UsageOccurred', assetId: 'skill-001', data: { user: 'Bob', cost: 0.01 } },
+                    { delay: 2500, action: 'emit', type: 'UsageOccurred', assetId: 'skill-001', data: { user: 'Charlie', cost: 0.01 } },
+                    { delay: 3500, action: 'emit', type: 'ShiStateChanged', assetId: 'skill-001', data: { reason: '使用频率达到阈值' }, shiShift: 1 },
+                    { delay: 4500, action: 'emit', type: 'RevenueDistributed', assetId: 'skill-001', data: { amount: 0.02, recipients: ['Alice'] } },
+                ]
+            },
+            {
+                id: 'derivation',
+                name: '衍生链式反应',
+                desc: '一个蓝图被多次衍生，形成资产谱系',
+                setup: (sim) => {
+                    sim.addAsset(new Asset({
+                        id: 'bp-001', name: '电商蓝图', type: 'blueprint',
+                        creator: 'Mallory', x: 0.5, y: 0.35,
+                        yan: { enabled: true, level: 4, derivativeCount: 0 }
+                    }));
+                },
+                script: [
+                    { delay: 500, action: 'emit', type: 'AssetRegistered', assetId: 'bp-001', data: { message: '蓝图已登记' } },
+                    { delay: 1200, action: 'createDerived', parentId: 'bp-001', asset: { id: 'agent-101', name: '服装店铺', type: 'agent', creator: 'Dave', yan: { enabled: true, level: 2 } } },
+                    { delay: 2200, action: 'emit', type: 'DerivativeCreated', assetId: 'agent-101', data: { parent: 'bp-001', generation: 1 } },
+                    { delay: 3200, action: 'createDerived', parentId: 'agent-101', asset: { id: 'agent-102', name: '童装专区', type: 'agent', creator: 'Eve', yan: { enabled: false, level: 1 } } },
+                    { delay: 4200, action: 'emit', type: 'DerivativeCreated', assetId: 'agent-102', data: { parent: 'agent-101', generation: 2 } },
+                    { delay: 5200, action: 'emit', type: 'CitationEvent', assetId: 'agent-102', data: { cited: 'bp-001', depth: 2 } },
+                    { delay: 6200, action: 'emit', type: 'RevenueDistributed', assetId: 'agent-102', data: { amount: 0.05, recipients: ['Eve', 'Dave', 'Mallory'], split: '0.5/0.3/0.2' } },
+                ]
+            },
+            {
+                id: 'network',
+                name: '多资产协作网络',
+                desc: '多个技能组成代理，形成协作网络',
+                setup: (sim) => {
+                    const skills = [
+                        { id: 'sk-01', name: '语音识别', x: 0.3, y: 0.3 },
+                        { id: 'sk-02', name: 'NLP解析', x: 0.5, y: 0.25 },
+                        { id: 'sk-03', name: '知识检索', x: 0.7, y: 0.3 },
+                        { id: 'sk-04', name: '文本生成', x: 0.5, y: 0.45 }
+                    ];
+                    skills.forEach(s => sim.addAsset(new Asset({
+                        ...s, type: 'skill', creator: 'TeamAlpha',
+                        yong: { enabled: true, level: 2, usageCount: 0 }
+                    })));
+                    sim.addAsset(new Asset({
+                        id: 'ag-01', name: '智能客服', type: 'agent',
+                        creator: 'TeamAlpha', x: 0.5, y: 0.6,
+                        children: skills.map(s => s.id),
+                        yong: { enabled: true, level: 3, usageCount: 0 },
+                        yi: { enabled: true, level: 2, totalRevenue: 0 }
+                    }));
+                },
+                script: [
+                    { delay: 400, action: 'emit', type: 'AssetRegistered', assetId: 'sk-01', data: {} },
+                    { delay: 600, action: 'emit', type: 'AssetRegistered', assetId: 'sk-02', data: {} },
+                    { delay: 800, action: 'emit', type: 'AssetRegistered', assetId: 'sk-03', data: {} },
+                    { delay: 1000, action: 'emit', type: 'AssetRegistered', assetId: 'sk-04', data: {} },
+                    { delay: 1400, action: 'emit', type: 'AssetRegistered', assetId: 'ag-01', data: { composite: true } },
+                    { delay: 2000, action: 'emit', type: 'UsageOccurred', assetId: 'ag-01', data: { user: 'Customer#4921', chain: ['sk-01','sk-02','sk-04'] } },
+                    { delay: 2800, action: 'emit', type: 'UsageOccurred', assetId: 'sk-01', data: { user: 'Customer#4921', upstream: 'ag-01' } },
+                    { delay: 3000, action: 'emit', type: 'UsageOccurred', assetId: 'sk-02', data: { user: 'Customer#4921', upstream: 'ag-01' } },
+                    { delay: 3200, action: 'emit', type: 'UsageOccurred', assetId: 'sk-04', data: { user: 'Customer#4921', upstream: 'ag-01' } },
+                    { delay: 4000, action: 'emit', type: 'RevenueDistributed', assetId: 'ag-01', data: { amount: 0.1, recipients: ['TeamAlpha'], downstream: ['sk-01','sk-02','sk-04'] } },
+                    { delay: 4800, action: 'emit', type: 'DeploymentEvent', assetId: 'ag-01', data: { target: 'Production', region: 'ap-east' } },
+                ]
+            },
+            {
+                id: 'evolution',
+                name: '势场演化',
+                desc: '展示资产势位(Shi)随事件演化的过程',
+                setup: (sim) => {
+                    sim.addAsset(new Asset({
+                        id: 'evo-01', name: '进化体Alpha', type: 'agent',
+                        creator: 'SysOp', x: 0.5, y: 0.5, shi: 0,
+                        yong: { enabled: true, level: 5, usageCount: 0 },
+                        yan: { enabled: true, level: 3, derivativeCount: 0 },
+                        kuo: { enabled: true, level: 4, platforms: ['web','mobile','api'] },
+                        yi: { enabled: true, level: 3, totalRevenue: 0 }
+                    }));
+                },
+                script: [
+                    { delay: 300, action: 'emit', type: 'AssetRegistered', assetId: 'evo-01', data: { message: '初始状态: 坤卦' }, shiShift: 0 },
+                    { delay: 800, action: 'emit', type: 'UsageOccurred', assetId: 'evo-01', data: { burst: true } },
+                    { delay: 1200, action: 'emit', type: 'UsageOccurred', assetId: 'evo-01', data: { burst: true } },
+                    { delay: 1600, action: 'emit', type: 'ShiStateChanged', assetId: 'evo-01', data: { from: '坤', to: '复', reason: '使用频率上升' }, shiShift: 1 },
+                    { delay: 2200, action: 'emit', type: 'UsageOccurred', assetId: 'evo-01', data: {} },
+                    { delay: 2600, action: 'emit', type: 'DerivativeCreated', assetId: 'evo-01', data: { child: 'evo-01b' } },
+                    { delay: 3000, action: 'emit', type: 'ShiStateChanged', assetId: 'evo-01', data: { from: '复', to: '临', reason: '衍生与扩展激活' }, shiShift: 7 },
+                    { delay: 3800, action: 'emit', type: 'PolicyAdjusted', assetId: 'evo-01', data: { field: 'yi.level', from: 3, to: 4 } },
+                    { delay: 4200, action: 'emit', type: 'DeploymentEvent', assetId: 'evo-01', data: { target: 'GlobalCDN' } },
+                    { delay: 4800, action: 'emit', type: 'UsageOccurred', assetId: 'evo-01', data: { scale: 100 } },
+                    { delay: 5200, action: 'emit', type: 'ShiStateChanged', assetId: 'evo-01', data: { from: '临', to: '泰', reason: '大规模部署与使用' }, shiShift: 8 },
+                    { delay: 6000, action: 'emit', type: 'RevenueDistributed', assetId: 'evo-01', data: { amount: 12.5, recipients: ['SysOp'] } },
+                    { delay: 6800, action: 'emit', type: 'ShiStateChanged', assetId: 'evo-01', data: { from: '泰', to: '大壮', reason: '收益积累，势位跃升' }, shiShift: 32 },
+                    { delay: 7500, action: 'emit', type: 'UsageOccurred', assetId: 'evo-01', data: { milestone: '10k' } },
+                    { delay: 8200, action: 'emit', type: 'ShiStateChanged', assetId: 'evo-01', data: { from: '大壮', to: '乾', reason: '极致状态' }, shiShift: 31 },
+                ]
+            }
+        ];
+
+        // ==================== 模拟引擎 ====================
+        class EchoSimulator {
+            constructor() {
+                this.assets = new Map();
+                this.events = [];
+                this.eventHistory = [];
+                this.currentScenario = null;
+                this.simTime = 0;
+                this.running = false;
+                this.speed = 1;
+                this.scriptIndex = 0;
+                this.scriptTimer = 0;
+                this.listeners = [];
+                this.shiMap = new Array(64).fill(0).map(() => []);
+                this.totalRevenue = 0;
+                this.usageCount = 0;
+                this.derivativeCount = 0;
+                this.platformCount = 0;
+            }
+
+            addAsset(asset) {
+                this.assets.set(asset.id, asset);
+                this.shiMap[asset.shi].push(asset.id);
+                this.notify('assetAdded', asset);
+            }
+
+            removeAsset(id) {
+                const asset = this.assets.get(id);
+                if (!asset) return;
+                const idx = this.shiMap[asset.shi].indexOf(id);
+                if (idx > -1) this.shiMap[asset.shi].splice(idx, 1);
+                this.assets.delete(id);
+                this.notify('assetRemoved', id);
+            }
+
+            emitEvent(props) {
+                const event = new EchoEvent(props);
+                this.events.push(event);
+                this.eventHistory.push(event);
+                if (this.events.length > 200) this.events.shift();
+
+                const asset = this.assets.get(event.assetId);
+                if (asset) {
+                    if (event.type === 'UsageOccurred') {
+                        asset.yong.usageCount = (asset.yong.usageCount || 0) + 1;
+                        this.usageCount++;
+                        const cost = event.data?.cost || 0.01;
+                        asset.yi.totalRevenue = (asset.yi.totalRevenue || 0) + cost;
+                        this.totalRevenue += cost;
+                    }
+                    if (event.type === 'DerivativeCreated') {
+                        asset.yan.derivativeCount = (asset.yan.derivativeCount || 0) + 1;
+                        this.derivativeCount++;
+                    }
+                    if (event.type === 'DeploymentEvent') {
+                        if (event.data?.target && !asset.kuo.platforms.includes(event.data.target)) {
+                            asset.kuo.platforms.push(event.data.target);
+                            this.platformCount++;
+                        }
+                    }
+                    if (event.type === 'ShiStateChanged' && event.shiAfter !== undefined) {
+                        const oldShi = asset.shi;
+                        const newShi = event.shiAfter;
+                        const oldIdx = this.shiMap[oldShi].indexOf(asset.id);
+                        if (oldIdx > -1) this.shiMap[oldShi].splice(oldIdx, 1);
+                        asset.shi = newShi;
+                        this.shiMap[newShi].push(asset.id);
+                    }
+                }
+
+                this.notify('event', event);
+                return event;
+            }
+
+            loadScenario(scenario) {
+                this.reset();
+                this.currentScenario = scenario;
+                this.scriptIndex = 0;
+                this.scriptTimer = 0;
+                scenario.setup(this);
+                this.notify('scenarioLoaded', scenario);
+            }
+
+            step(dt) {
+                if (!this.running || !this.currentScenario) return;
+                this.scriptTimer += dt * this.speed;
+                this.simTime += dt * this.speed;
+
+                const script = this.currentScenario.script;
+                while (this.scriptIndex < script.length) {
+                    const stepDef = script[this.scriptIndex];
+                    if (this.scriptTimer >= stepDef.delay) {
+                        this.executeScriptStep(stepDef);
+                        this.scriptIndex++;
+                    } else {
+                        break;
+                    }
+                }
+
+                if (this.scriptIndex >= script.length) {
+                    this.running = false;
+                    this.notify('scenarioComplete', this.currentScenario);
+                }
+
+                this.notify('step', { time: this.simTime, dt });
+            }
+
+            executeScriptStep(stepDef) {
+                if (stepDef.action === 'emit') {
+                    const asset = this.assets.get(stepDef.assetId);
+                    const shiBefore = asset ? asset.shi : 0;
+                    const shiAfter = stepDef.shiShift !== undefined
+                        ? Math.min(63, Math.max(0, shiBefore + stepDef.shiShift))
+                        : shiBefore;
+                    this.emitEvent({
+                        type: stepDef.type,
+                        assetId: stepDef.assetId,
+                        data: stepDef.data || {},
+                        shiBefore,
+                        shiAfter
+                    });
+                } else if (stepDef.action === 'createDerived') {
+                    const parent = this.assets.get(stepDef.parentId);
+                    if (parent) {
+                        const child = new Asset({
+                            ...stepDef.asset,
+                            parentId: stepDef.parentId,
+                            x: parent.x + (Math.random() - 0.5) * 0.3,
+                            y: parent.y + 0.15 + Math.random() * 0.1
+                        });
+                        this.addAsset(child);
+                        parent.children.push(child.id);
+                    }
+                }
+            }
+
+            reset() {
+                this.assets.clear();
+                this.events = [];
+                this.eventHistory = [];
+                this.simTime = 0;
+                this.running = false;
+                this.scriptIndex = 0;
+                this.scriptTimer = 0;
+                this.currentScenario = null;
+                this.shiMap = new Array(64).fill(0).map(() => []);
+                this.totalRevenue = 0;
+                this.usageCount = 0;
+                this.derivativeCount = 0;
+                this.platformCount = 0;
+                this.notify('reset');
+            }
+
+            exportState() {
+                return {
+                    version: '1.0',
+                    timestamp: Date.now(),
+                    simTime: this.simTime,
+                    assets: Array.from(this.assets.values()).map(a => a.toJSON()),
+                    events: this.eventHistory.map(e => e.toJSON()),
+                    stats: {
+                        totalRevenue: this.totalRevenue,
+                        usageCount: this.usageCount,
+                        derivativeCount: this.derivativeCount,
+                        platformCount: this.platformCount
+                    }
+                };
+            }
+
+            importState(state) {
+                this.reset();
+                this.simTime = state.simTime || 0;
+                this.totalRevenue = state.stats?.totalRevenue || 0;
+                this.usageCount = state.stats?.usageCount || 0;
+                this.derivativeCount = state.stats?.derivativeCount || 0;
+                this.platformCount = state.stats?.platformCount || 0;
+
+                if (state.assets) {
+                    state.assets.forEach(a => {
+                        const asset = Asset.fromJSON(a);
+                        this.assets.set(asset.id, asset);
+                        this.shiMap[asset.shi].push(asset.id);
+                    });
+                }
+                if (state.events) {
+                    this.eventHistory = state.events.map(e => new EchoEvent(e));
+                    this.events = this.eventHistory.slice(-200);
+                }
+                this.notify('imported');
+            }
+
+            on(fn) { this.listeners.push(fn); }
+            off(fn) { this.listeners = this.listeners.filter(l => l !== fn); }
+            notify(type, data) {
+                this.listeners.forEach(fn => fn(type, data));
+            }
+        }
+
+        // ==================== 渲染器 ====================
+        class CanvasRenderer {
+            constructor(canvas, sim) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.sim = sim;
+                this.width = 0;
+                this.height = 0;
+                this.dpr = Math.min(window.devicePixelRatio, 2);
+                this.camera = { x: 0, y: 0, zoom: 1 };
+                this.dragging = false;
+                this.dragStart = { x: 0, y: 0 };
+                this.hoverNode = null;
+                this.selectedNode = null;
+                this.particles = [];
+                this.view = 'simulation'; // simulation | shigraph | events
+
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+                this.setupInteraction();
+            }
+
+            resize() {
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                this.width = rect.width;
+                this.height = rect.height;
+                this.canvas.width = this.width * this.dpr;
+                this.canvas.height = this.height * this.dpr;
+                this.canvas.style.width = this.width + 'px';
+                this.canvas.style.height = this.height + 'px';
+                this.ctx.scale(this.dpr, this.dpr);
+            }
+
+            setupInteraction() {
+                let lastX = 0, lastY = 0;
+
+                this.canvas.addEventListener('mousedown', e => {
+                    const { x, y } = this.getMousePos(e);
+                    const node = this.hitTest(x, y);
+                    if (node) {
+                        this.selectedNode = node;
+                        this.sim.notify('nodeSelected', node);
+                    }
+                    this.dragging = true;
+                    this.dragStart = { x: e.clientX - this.camera.x, y: e.clientY - this.camera.y };
+                    lastX = e.clientX;
+                    lastY = e.clientY;
+                });
+
+                window.addEventListener('mousemove', e => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mx = e.clientX - rect.left;
+                    const my = e.clientY - rect.top;
+                    const { x, y } = this.screenToWorld(mx, my);
+                    this.hoverNode = this.hitTest(x, y);
+                    this.canvas.style.cursor = this.hoverNode ? 'pointer' : (this.dragging ? 'grabbing' : 'crosshair');
+
+                    if (this.dragging) {
+                        this.camera.x = e.clientX - this.dragStart.x;
+                        this.camera.y = e.clientY - this.dragStart.y;
+                    }
+                });
+
+                window.addEventListener('mouseup', () => {
+                    this.dragging = false;
+                });
+
+                this.canvas.addEventListener('wheel', e => {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mx = e.clientX - rect.left;
+                    const my = e.clientY - rect.top;
+                    const worldBefore = this.screenToWorld(mx, my);
+                    this.camera.zoom *= delta;
+                    this.camera.zoom = Math.max(0.3, Math.min(3, this.camera.zoom));
+                    const worldAfter = this.screenToWorld(mx, my);
+                    this.camera.x += (worldAfter.x - worldBefore.x) * this.camera.zoom * this.width;
+                    this.camera.y += (worldAfter.y - worldBefore.y) * this.camera.zoom * this.height;
+                }, { passive: false });
+            }
+
+            getMousePos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return this.screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+            }
+
+            screenToWorld(sx, sy) {
+                return {
+                    x: (sx - this.camera.x - this.width / 2) / (this.width * this.camera.zoom) + 0.5,
+                    y: (sy - this.camera.y - this.height / 2) / (this.height * this.camera.zoom) + 0.5
+                };
+            }
+
+            worldToScreen(wx, wy) {
+                return {
+                    x: (wx - 0.5) * this.width * this.camera.zoom + this.width / 2 + this.camera.x,
+                    y: (wy - 0.5) * this.height * this.camera.zoom + this.height / 2 + this.camera.y
+                };
+            }
+
+            hitTest(wx, wy) {
+                for (const asset of this.sim.assets.values()) {
+                    const pos = this.worldToScreen(asset.x, asset.y);
+                    const r = asset.radius * this.camera.zoom;
+                    const dx = wx - asset.x;
+                    const dy = wy - asset.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < asset.radius / this.width + 0.02) return asset;
+                }
+                return null;
+            }
+
+            addParticle(x, y, color) {
+                this.particles.push({ x, y, color, life: 1, vx: (Math.random() - 0.5) * 0.002, vy: -0.002 - Math.random() * 0.002 });
+            }
+
+            render(time) {
+                const ctx = this.ctx;
+                ctx.clearRect(0, 0, this.width, this.height);
+
+                // 背景网格
+                this.drawGrid(ctx);
+
+                if (this.view === 'shigraph') {
+                    this.drawShiGraph(ctx);
+                } else if (this.view === 'events') {
+                    this.drawEventViz(ctx);
+                } else {
+                    this.drawSimulation(ctx, time);
+                }
+
+                // 粒子
+                this.updateAndDrawParticles(ctx);
+
+                // 悬浮提示线
+                if (this.hoverNode && this.view === 'simulation') {
+                    const pos = this.worldToScreen(this.hoverNode.x, this.hoverNode.y);
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, this.hoverNode.radius * this.camera.zoom + 4, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+
+            drawGrid(ctx) {
+                const gridSize = 50 * this.camera.zoom;
+                const offsetX = this.camera.x % gridSize;
+                const offsetY = this.camera.y % gridSize;
+                ctx.strokeStyle = 'rgba(42,42,64,0.5)';
+                ctx.lineWidth = 1;
+                for (let x = offsetX; x < this.width; x += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, this.height);
+                    ctx.stroke();
+                }
+                for (let y = offsetY; y < this.height; y += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(this.width, y);
+                    ctx.stroke();
+                }
+            }
+
+            drawSimulation(ctx, time) {
+                const assets = Array.from(this.sim.assets.values());
+
+                // 连接线（父子关系）
+                ctx.strokeStyle = 'rgba(139,92,246,0.25)';
+                ctx.lineWidth = 1.5;
+                assets.forEach(asset => {
+                    if (asset.parentId) {
+                        const parent = this.sim.assets.get(asset.parentId);
+                        if (parent) {
+                            const p1 = this.worldToScreen(parent.x, parent.y);
+                            const p2 = this.worldToScreen(asset.x, asset.y);
+                            ctx.beginPath();
+                            ctx.moveTo(p1.x, p1.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+
+                            // 流动动画
+                            const t = (time * 0.001) % 1;
+                            const mx = p1.x + (p2.x - p1.x) * t;
+                            const my = p1.y + (p2.y - p1.y) * t;
+                            ctx.beginPath();
+                            ctx.arc(mx, my, 2, 0, Math.PI * 2);
+                            ctx.fillStyle = 'rgba(139,92,246,0.6)';
+                            ctx.fill();
+                        }
+                    }
+                    if (asset.children && asset.children.length > 0) {
+                        asset.children.forEach(cid => {
+                            const child = this.sim.assets.get(cid);
+                            if (child) {
+                                const p1 = this.worldToScreen(asset.x, asset.y);
+                                const p2 = this.worldToScreen(child.x, child.y);
+                                ctx.beginPath();
+                                ctx.moveTo(p1.x, p1.y);
+                                ctx.quadraticCurveTo(p1.x, (p1.y + p2.y) / 2, p2.x, p2.y);
+                                ctx.strokeStyle = 'rgba(59,130,246,0.2)';
+                                ctx.stroke();
+                            }
+                        });
+                    }
+                });
+
+                // 节点
+                assets.forEach(asset => {
+                    const pos = this.worldToScreen(asset.x, asset.y);
+                    const r = asset.radius * this.camera.zoom;
+
+                    // 脉冲光环
+                    const pulse = Math.sin(time * 0.003 + asset.id.charCodeAt(0)) * 0.15 + 0.85;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, r + 6 * pulse, 0, Math.PI * 2);
+                    ctx.fillStyle = asset.color + '18';
+                    ctx.fill();
+
+                    // 主体圆
+                    const grad = ctx.createRadialGradient(pos.x - r * 0.3, pos.y - r * 0.3, r * 0.1, pos.x, pos.y, r);
+                    grad.addColorStop(0, asset.color + 'cc');
+                    grad.addColorStop(1, asset.color + '88');
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    // 边框
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+                    ctx.strokeStyle = this.selectedNode?.id === asset.id ? '#fff' : asset.color + '66';
+                    ctx.lineWidth = this.selectedNode?.id === asset.id ? 2 : 1;
+                    ctx.stroke();
+
+                    // 类型图标
+                    if (r > 12) {
+                        ctx.font = `${Math.max(10, r * 0.6)}px sans-serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = '#fff';
+                        ctx.fillText(ASSET_ICONS[asset.type] || '◆', pos.x, pos.y - r * 0.1);
+                    }
+
+                    // 名称
+                    if (r > 10) {
+                        ctx.font = `600 ${Math.max(9, r * 0.35)}px var(--font-sans)`;
+                        ctx.textAlign = 'center';
+                        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                        ctx.fillText(asset.name, pos.x, pos.y + r + 14);
+                    }
+
+                    // Shi标记
+                    if (r > 14) {
+                        ctx.font = `10px var(--font-mono)`;
+                        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                        ctx.fillText(asset.getHexagramName(), pos.x, pos.y + r + 26);
+                    }
+                });
+            }
+
+            drawShiGraph(ctx) {
+                const cellW = this.width / 8;
+                const cellH = this.height / 8;
+                const activeSet = new Set();
+                this.sim.assets.forEach(a => activeSet.add(a.shi));
+
+                for (let i = 0; i < 64; i++) {
+                    const col = i % 8;
+                    const row = Math.floor(i / 8);
+                    const x = col * cellW;
+                    const y = row * cellH;
+                    const count = this.sim.shiMap[i].length;
+                    const isActive = activeSet.has(i);
+                    const intensity = Math.min(1, count * 0.3 + (isActive ? 0.2 : 0));
+
+                    // 背景
+                    ctx.fillStyle = isActive
+                        ? `rgba(139,92,246,${0.1 + intensity * 0.4})`
+                        : 'rgba(18,18,26,0.8)';
+                    ctx.fillRect(x + 1, y + 1, cellW - 2, cellH - 2);
+
+                    // 文字
+                    ctx.fillStyle = isActive ? '#e8e8f0' : '#5a5a70';
+                    ctx.font = `bold ${Math.max(12, cellH * 0.25)}px var(--font-mono)`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(HEXAGRAMS[i], x + cellW / 2, y + cellH / 2 - 4);
+
+                    if (count > 0) {
+                        ctx.font = `${Math.max(9, cellH * 0.15)}px var(--font-mono)`;
+                        ctx.fillStyle = 'rgba(139,92,246,0.8)';
+                        ctx.fillText(count.toString(), x + cellW / 2, y + cellH / 2 + 10);
+                    }
+
+                    // 边框高亮
+                    if (isActive) {
+                        ctx.strokeStyle = 'rgba(139,92,246,0.4)';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(x + 1, y + 1, cellW - 2, cellH - 2);
+                    }
+                }
+
+                // 标题
+                ctx.fillStyle = '#8a8aa0';
+                ctx.font = '12px var(--font-sans)';
+                ctx.textAlign = 'left';
+                ctx.fillText('ShiGraph · 64卦势场分布', 12, 20);
+            }
+
+            drawEventViz(ctx) {
+                const events = this.sim.eventHistory.slice(-100);
+                const barW = Math.max(2, this.width / events.length - 1);
+                const maxH = this.height * 0.8;
+
+                events.forEach((ev, i) => {
+                    const color = EVENT_COLORS[ev.type] || '#8b5cf6';
+                    const h = 20 + Math.random() * maxH * 0.5;
+                    const x = i * (barW + 1);
+                    const y = this.height - h - 20;
+
+                    ctx.fillStyle = color + '88';
+                    ctx.fillRect(x, y, barW, h);
+                });
+
+                ctx.fillStyle = '#8a8aa0';
+                ctx.font = '12px var(--font-sans)';
+                ctx.textAlign = 'left';
+                ctx.fillText('事件流可视化 · 最近' + events.length + '条', 12, 20);
+            }
+
+            updateAndDrawParticles(ctx) {
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.life -= 0.02;
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.life <= 0) {
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+                    const pos = this.worldToScreen(p.x, p.y);
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, 3 * p.life, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color + Math.floor(p.life * 255).toString(16).padStart(2, '0');
+                    ctx.fill();
+                }
+            }
+
+            setView(view) { this.view = view; }
+        }
+
+        // ==================== UI 控制器 ====================
+        class UIController {
+            constructor(sim, renderer) {
+                this.sim = sim;
+                this.renderer = renderer;
+                this.logLimit = 150;
+                this.setupListeners();
+                this.bindControls();
+                this.renderScenarios();
+            }
+
+            setupListeners() {
+                this.sim.on((type, data) => {
+                    switch (type) {
+                        case 'assetAdded': this.renderAssets(); break;
+                        case 'assetRemoved': this.renderAssets(); break;
+                        case 'event': this.onEvent(data); break;
+                        case 'scenarioLoaded': this.onScenarioLoaded(data); break;
+                        case 'scenarioComplete': this.onScenarioComplete(); break;
+                        case 'reset': this.onReset(); break;
+                        case 'imported': this.onImported(); break;
+                        case 'step': this.onStep(); break;
+                    }
+                });
+            }
+
+            onEvent(event) {
+                this.addLogEntry(event);
+                this.updateStats();
+                this.updateOverlay();
+
+                const asset = this.sim.assets.get(event.assetId);
+                if (asset) {
+                    this.renderer.addParticle(asset.x, asset.y, EVENT_COLORS[event.type] || '#8b5cf6');
+                }
+            }
+
+            addLogEntry(event) {
+                const container = document.getElementById('log-container');
+                const entry = document.createElement('div');
+                entry.className = `log-entry event-${event.type} fade-in`;
+                const time = new Date(event.timestamp).toLocaleTimeString('zh-CN', { hour12: false });
+                const typeName = {
+                    AssetRegistered: '登记', UsageOccurred: '使用', DeploymentEvent: '部署',
+                    DerivativeCreated: '衍生', CitationEvent: '引用', ShiStateChanged: '势变',
+                    PolicyAdjusted: '策略', RevenueDistributed: '收益'
+                }[event.type] || event.type;
+                const asset = this.sim.assets.get(event.assetId);
+                const assetName = asset ? asset.name : event.assetId;
+                entry.innerHTML = `<span class="log-time">${time}</span><span class="log-type">[${typeName}]</span>${assetName}: ${event.data?.message || event.data?.user || event.data?.target || ''}`;
+                container.appendChild(entry);
+                container.scrollTop = container.scrollHeight;
+
+                while (container.children.length > this.logLimit) {
+                    container.removeChild(container.firstChild);
+                }
+            }
+
+            onScenarioLoaded(scenario) {
+                document.getElementById('overlay-scenario').textContent = scenario.name;
+                document.getElementById('sim-status-text').textContent = '运行中';
+                document.getElementById('sim-status-dot').className = 'status-dot';
+                document.getElementById('footer-status').textContent = `场景: ${scenario.name}`;
+                this.renderAssets();
+                this.updateStats();
+                this.updateOverlay();
+                this.clearLogs();
+
+                // 更新场景列表选中状态
+                document.querySelectorAll('.scenario-item').forEach(el => {
+                    el.classList.toggle('active', el.dataset.id === scenario.id);
+                });
+            }
+
+            onScenarioComplete() {
+                document.getElementById('sim-status-text').textContent = '已完成';
+                document.getElementById('sim-status-dot').className = 'status-dot paused';
+                document.getElementById('footer-status').textContent = '场景播放完毕';
+            }
+
+            onReset() {
+                this.renderAssets();
+                this.updateStats();
+                this.updateOverlay();
+                this.clearLogs();
+                document.getElementById('overlay-scenario').textContent = '-';
+                document.getElementById('sim-status-text').textContent = '就绪';
+                document.getElementById('sim-status-dot').className = 'status-dot paused';
+                document.getElementById('footer-status').textContent = '就绪';
+                document.querySelectorAll('.scenario-item').forEach(el => el.classList.remove('active'));
+            }
+
+            onImported() {
+                this.renderAssets();
+                this.updateStats();
+                this.updateOverlay();
+                this.clearLogs();
+                this.sim.eventHistory.forEach(e => this.addLogEntry(e));
+                document.getElementById('footer-status').textContent = '状态已导入';
+            }
+
+            onStep() {
+                this.updateOverlay();
+                const progress = this.sim.currentScenario
+                    ? (this.sim.scriptIndex / this.sim.currentScenario.script.length * 100)
+                    : 0;
+                document.getElementById('timeline-progress').style.width = progress + '%';
+                document.getElementById('timeline-current').textContent = 'T' + Math.floor(this.sim.simTime / 1000);
+            }
+
+            renderScenarios() {
+                const list = document.getElementById('scenario-list');
+                list.innerHTML = '';
+                SCENARIOS.forEach(sc => {
+                    const item = document.createElement('div');
+                    item.className = 'scenario-item';
+                    item.dataset.id = sc.id;
+                    item.innerHTML = `<div class="scenario-name">${sc.name}</div><div class="scenario-desc">${sc.desc}</div>`;
+                    item.addEventListener('click', () => {
+                        this.sim.loadScenario(sc);
+                        this.sim.running = true;
+                    });
+                    list.appendChild(item);
+                });
+            }
+
+            renderAssets() {
+                const list = document.getElementById('asset-list');
+                list.innerHTML = '';
+                if (this.sim.assets.size === 0) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">暂无资产，加载场景开始模拟</div></div>';
+                    return;
+                }
+                this.sim.assets.forEach(asset => {
+                    const item = document.createElement('div');
+                    item.className = 'asset-item';
+                    item.dataset.id = asset.id;
+                    item.innerHTML = `
+                        <div class="asset-icon ${asset.type}">${ASSET_ICONS[asset.type]}</div>
+                        <div class="asset-info">
+                            <div class="asset-name">${asset.name}</div>
+                            <div class="asset-meta">${asset.creator} · ${ASSET_TYPES[asset.type]}</div>
+                        </div>
+                        <div class="asset-shi">${asset.getHexagramName()}</div>
+                    `;
+                    item.addEventListener('click', () => {
+                        document.querySelectorAll('.asset-item').forEach(el => el.classList.remove('selected'));
+                        item.classList.add('selected');
+                        this.renderer.selectedNode = asset;
+                    });
+                    list.appendChild(item);
+                });
+            }
+
+            updateStats() {
+                document.getElementById('stat-yong').textContent = this.sim.usageCount;
+                document.getElementById('stat-yan').textContent = this.sim.derivativeCount;
+                document.getElementById('stat-kuo').textContent = this.sim.platformCount;
+                document.getElementById('stat-yi').textContent = this.sim.totalRevenue.toFixed(3);
+            }
+
+            updateOverlay() {
+                document.getElementById('overlay-events').textContent = this.sim.eventHistory.length;
+                document.getElementById('overlay-assets').textContent = this.sim.assets.size;
+                document.getElementById('overlay-time').textContent = Math.floor(this.sim.simTime);
+
+                // 计算主导Shi
+                let maxCount = 0, dominantShi = 0;
+                this.sim.shiMap.forEach((ids, shi) => {
+                    if (ids.length > maxCount) { maxCount = ids.length; dominantShi = shi; }
+                });
+                document.getElementById('overlay-shi').textContent = HEXAGRAMS[dominantShi] || '坤';
+            }
+
+            clearLogs() {
+                document.getElementById('log-container').innerHTML = '';
+            }
+
+            bindControls() {
+                // 播放控制
+                document.getElementById('btn-play').addEventListener('click', () => {
+                    this.sim.running = true;
+                    document.getElementById('sim-status-text').textContent = '运行中';
+                    document.getElementById('sim-status-dot').className = 'status-dot';
+                });
+                document.getElementById('btn-pause').addEventListener('click', () => {
+                    this.sim.running = false;
+                    document.getElementById('sim-status-text').textContent = '已暂停';
+                    document.getElementById('sim-status-dot').className = 'status-dot paused';
+                });
+                document.getElementById('btn-step').addEventListener('click', () => {
+                    if (this.sim.currentScenario && !this.sim.running) {
+                        const stepDef = this.sim.currentScenario.script[this.sim.scriptIndex];
+                        if (stepDef) {
+                            this.sim.executeScriptStep(stepDef);
+                            this.sim.scriptIndex++;
+                            this.sim.scriptTimer = stepDef.delay;
+                            this.sim.simTime = stepDef.delay;
+                            this.onStep();
+                        }
+                    }
+                });
+                document.getElementById('btn-reset').addEventListener('click', () => this.sim.reset());
+
+                // 视图切换
+                document.querySelectorAll('.nav-btn[data-view]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.nav-btn[data-view]').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.renderer.setView(btn.dataset.view);
+                    });
+                });
+
+                // 导出
+                document.getElementById('btn-export').addEventListener('click', () => {
+                    const state = this.sim.exportState();
+                    const json = JSON.stringify(state, null, 2);
+                    document.getElementById('io-textarea').value = json;
+                    document.getElementById('io-export-group').style.display = 'block';
+                    document.getElementById('io-import-group').style.display = 'none';
+                    document.getElementById('modal-io-title').textContent = '导出状态';
+                    document.getElementById('btn-io-action').textContent = '复制到剪贴板';
+                    document.getElementById('modal-io').classList.add('active');
+                });
+
+                // 导入
+                document.getElementById('btn-import').addEventListener('click', () => {
+                    document.getElementById('io-export-group').style.display = 'none';
+                    document.getElementById('io-import-group').style.display = 'block';
+                    document.getElementById('modal-io-title').textContent = '导入状态';
+                    document.getElementById('btn-io-action').textContent = '导入';
+                    document.getElementById('modal-io').classList.add('active');
+                });
+
+                // IO模态框动作
+                document.getElementById('btn-io-action').addEventListener('click', () => {
+                    const title = document.getElementById('modal-io-title').textContent;
+                    if (title === '导出状态') {
+                        const textarea = document.getElementById('io-textarea');
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.getElementById('btn-io-action').textContent = '已复制!';
+                        setTimeout(() => document.getElementById('btn-io-action').textContent = '复制到剪贴板', 1500);
+                    } else {
+                        try {
+                            const json = document.getElementById('io-import-textarea').value;
+                            const state = JSON.parse(json);
+                            this.sim.importState(state);
+                            document.getElementById('modal-io').classList.remove('active');
+                            document.getElementById('io-import-textarea').value = '';
+                        } catch (e) {
+                            alert('JSON解析失败: ' + e.message);
+                        }
+                    }
+                });
+
+                document.getElementById('btn-io-cancel').addEventListener('click', () => {
+                    document.getElementById('modal-io').classList.remove('active');
+                });
+                document.getElementById('modal-io-close').addEventListener('click', () => {
+                    document.getElementById('modal-io').classList.remove('active');
+                });
+
+                // 帮助
+                document.getElementById('btn-help').addEventListener('click', () => {
+                    document.getElementById('modal-help').classList.add('active');
+                });
+                document.getElementById('modal-help-close').addEventListener('click', () => {
+                    document.getElementById('modal-help').classList.remove('active');
+                });
+                document.getElementById('btn-help-close').addEventListener('click', () => {
+                    document.getElementById('modal-help').classList.remove('active');
+                });
+
+                // 快捷键
+                document.addEventListener('keydown', e => {
+                    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        this.sim.running = !this.sim.running;
+                        document.getElementById('sim-status-text').textContent = this.sim.running ? '运行中' : '已暂停';
+                        document.getElementById('sim-status-dot').className = this.sim.running ? 'status-dot' : 'status-dot paused';
+                    }
+                    if (e.code === 'ArrowRight') {
+                        document.getElementById('btn-step').click();
+                    }
+                    if (e.code === 'KeyR') {
+                        this.sim.reset();
+                    }
+                });
+
+                // 面板折叠
+                document.querySelectorAll('.section-header').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const section = header.dataset.section;
+                        const body = document.getElementById('section-' + section);
+                        const toggle = header.querySelector('.section-toggle');
+                        body.classList.toggle('collapsed');
+                        toggle.classList.toggle('collapsed');
+                    });
+                });
+            }
+        }
+
+        // ==================== 性能监控 ====================
+        class PerformanceMonitor {
+            constructor() {
+                this.fps = 60;
+                this.frameTime = 16.7;
+                this.lastTime = performance.now();
+                this.frameCount = 0;
+                this.lastFpsUpdate = performance.now();
+            }
+
+            update() {
+                const now = performance.now();
+                this.frameCount++;
+                this.frameTime = now - this.lastTime;
+                this.lastTime = now;
+
+                if (now - this.lastFpsUpdate >= 1000) {
+                    this.fps = this.frameCount;
+                    this.frameCount = 0;
+                    this.lastFpsUpdate = now;
+                }
+            }
+
+            render() {
+                document.getElementById('perf-fps').textContent = this.fps;
+                document.getElementById('perf-frame').textContent = this.frameTime.toFixed(1);
+                const fpsEl = document.getElementById('perf-fps');
+                const frameEl = document.getElementById('perf-frame');
+                fpsEl.className = 'value ' + (this.fps >= 50 ? 'good' : this.fps >= 30 ? 'warn' : 'bad');
+                frameEl.className = 'value ' + (this.frameTime <= 20 ? 'good' : this.frameTime <= 33 ? 'warn' : 'bad');
+
+                document.getElementById('overlay-fps').textContent = this.fps;
+                document.getElementById('overlay-latency').textContent = this.frameTime.toFixed(1);
+            }
+        }
+
+        // ==================== 主程序 ====================
+        const sim = new EchoSimulator();
+        const canvas = document.getElementById('sim-canvas');
+        const renderer = new CanvasRenderer(canvas, sim);
+        const ui = new UIController(sim, renderer);
+        const perf = new PerformanceMonitor();
+
+        let animId;
+        function loop(time) {
+            perf.update();
+            perf.render();
+
+            const dt = 16; // 固定步长，简化处理
+            sim.step(dt);
+            renderer.render(time);
+
+            animId = requestAnimationFrame(loop);
+        }
+
+        // 启动
+        animId = requestAnimationFrame(loop);
+
+        // 加载第一个场景作为默认展示
+        sim.loadScenario(SCENARIOS[0]);
+        sim.running = true;
+
+        // 暴露到全局供调试
+        window.echoSim = sim;
+        window.echoRenderer = renderer;
+
+    })();
+    </script>
+</body>
+</html>

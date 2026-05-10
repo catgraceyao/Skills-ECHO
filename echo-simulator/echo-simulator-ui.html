@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECHO 系统模拟器 — 使用权生命周期网络</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            echo: {
+              bg: '#0a0a12',
+              panel: '#11111f',
+              panel2: '#16162a',
+              border: '#2a2a4a',
+              accent: '#00f0ff',
+              accent2: '#ff6b35',
+              text: '#e0e0e8',
+              text2: '#8888a0',
+              stage0: '#555555',
+              stage1: '#00d4aa',
+              stage2: '#00cc44',
+              stage3: '#ffaa00',
+              stage4: '#aa44ff',
+              rightUse: '#00d4aa',
+              rightExpand: '#4488ff',
+              rightDerive: '#ffaa00',
+              rightBenefit: '#ff4444',
+            }
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+            sans: ['"Noto Sans SC"', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+    body {
+      background: #0a0a12;
+      color: #e0e0e8;
+      font-family: 'Noto Sans SC', system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 2px; }
+
+    /* Glow effects */
+    .glow-accent { box-shadow: 0 0 20px rgba(0, 240, 255, 0.15); }
+    .glow-gold { box-shadow: 0 0 20px rgba(255, 170, 0, 0.15); }
+    .glow-green { box-shadow: 0 0 20px rgba(0, 204, 68, 0.15); }
+
+    /* Node pulse */
+    @keyframes pulse-ring {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(2.5); opacity: 0; }
+    }
+    .pulse-ring {
+      animation: pulse-ring 2s ease-out infinite;
+    }
+
+    /* Flowing edge */
+    @keyframes flow-dash {
+      to { stroke-dashoffset: -20; }
+    }
+    .flowing-edge {
+      stroke-dasharray: 5, 5;
+      animation: flow-dash 1s linear infinite;
+    }
+
+    /* CRT scanline effect */
+    .scanlines::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+    }
+
+    /* Grid background */
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+
+    /* Panel hover */
+    .panel-hover {
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .panel-hover:hover {
+      border-color: rgba(0, 240, 255, 0.3);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.05);
+    }
+
+    /* Toggle switch */
+    .toggle-switch {
+      width: 40px; height: 20px; border-radius: 10px;
+      background: #2a2a4a; cursor: pointer; position: relative;
+      transition: background 0.2s;
+    }
+    .toggle-switch.active { background: #00f0ff; }
+    .toggle-switch::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff; transition: transform 0.2s;
+    }
+    .toggle-switch.active::after { transform: translateX(20px); }
+
+    /* Radar chart */
+    .radar-axis { stroke: #2a2a4a; stroke-width: 1; }
+    .radar-grid { stroke: #1a1a3a; stroke-width: 0.5; fill: none; }
+    .radar-area { fill: rgba(0, 240, 255, 0.15); stroke: #00f0ff; stroke-width: 2; }
+    .radar-point { fill: #00f0ff; }
+
+    /* Gauge */
+    .gauge-bg { stroke: #1a1a3a; stroke-width: 8; fill: none; }
+    .gauge-fill { stroke-width: 8; fill: none; transition: stroke-dashoffset 0.6s ease; }
+
+    /* Timeline */
+    .timeline-line { stroke: #2a2a4a; stroke-width: 2; }
+    .timeline-dot { fill: #00f0ff; }
+    .timeline-dot.active { fill: #ffaa00; }
+
+    /* Tooltip */
+    .tooltip {
+      position: absolute; padding: 8px 12px; border-radius: 6px;
+      background: rgba(10, 10, 18, 0.95); border: 1px solid #2a2a4a;
+      font-size: 12px; pointer-events: none; z-index: 1000;
+      backdrop-filter: blur(8px);
+    }
+
+    /* Scene selector */
+    .scene-btn {
+      padding: 6px 14px; border-radius: 6px; border: 1px solid #2a2a4a;
+      background: #11111f; color: #8888a0; font-size: 13px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .scene-btn:hover { border-color: #00f0ff; color: #00f0ff; }
+    .scene-btn.active {
+      border-color: #00f0ff; background: rgba(0, 240, 255, 0.1); color: #00f0ff;
+    }
+
+    /* Log entry */
+    .log-entry {
+      padding: 6px 10px; border-left: 2px solid transparent;
+      font-size: 12px; font-family: 'JetBrains Mono', monospace;
+      transition: background 0.2s;
+    }
+    .log-entry:hover { background: rgba(255,255,255,0.03); }
+    .log-entry.info { border-left-color: #00f0ff; }
+    .log-entry.warn { border-left-color: #ffaa00; }
+    .log-entry.error { border-left-color: #ff4444; }
+    .log-entry.success { border-left-color: #00cc44; }
+
+    /* Right sidebar slide */
+    #assetSidebar {
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #assetSidebar.open { transform: translateX(0); }
+    #assetSidebar.closed { transform: translateX(100%); }
+
+    /* Network graph container */
+    #graph-container { cursor: grab; }
+    #graph-container:active { cursor: grabbing; }
+
+    /* Stat number animation */
+    .stat-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Range slider */
+    input[type=range] {
+      -webkit-appearance: none; background: transparent;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+      background: #00f0ff; cursor: pointer; margin-top: -5px;
+      box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      height: 4px; border-radius: 2px; background: #2a2a4a;
+    }
+
+    /* Glassmorphism */
+    .glass {
+      background: rgba(17, 17, 31, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(42, 42, 74, 0.5);
+    }
+
+    /* Right icons */
+    .right-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .right-icon.use { background: rgba(0, 212, 170, 0.15); color: #00d4aa; }
+    .right-icon.expand { background: rgba(68, 136, 255, 0.15); color: #4488ff; }
+    .right-icon.derive { background: rgba(255, 170, 0, 0.15); color: #ffaa00; }
+    .right-icon.benefit { background: rgba(255, 68, 68, 0.15); color: #ff4444; }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col grid-bg scanlines">
+
+  <!-- TOP: Dashboard Stats -->
+  <header class="flex-shrink-0 px-5 py-3 glass flex items-center justify-between z-20">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-echo-accent/10 flex items-center justify-center">
+        <i class="fas fa-project-diagram text-echo-accent text-sm"></i>
+      </div>
+      <div>
+        <h1 class="text-sm font-bold text-echo-text tracking-wide">ECHO 系统模拟器</h1>
+        <p class="text-[11px] text-echo-text2">使用权生命周期网络</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-6">
+      <div class="text-center">
+        <div class="text-[10px] text-echo-text2 uppercase tracking-wider">资产总数</div>
+        <div class="stat-number text-lg font-bold text-echo-accent" id="statAssets">5</div>
+      </div>
+      <div class="text-center">
+        <div class="text-[10px] text-echo-text2 uppercase tracking-wider">活跃用户</div>
+        <div class="stat-number text-lg font-bold text-echo-accent" id="statUsers">3</div>
+      </div>
+      <div class="text-center">
+        <div class="text-[10px] text-echo-text2 uppercase tracking-wider">验证事件</div>
+        <div class="stat-number text-lg font-bold text-echo-accent" id="statEvents">12</div>
+      </div>
+      <div class="text-center">
+        <div class="text-[10px] text-echo-text2 uppercase tracking-wider">生态总价值</div>
+        <div class="stat-number text-lg font-bold text-echo-accent" id="statValue">¥128,450</div>
+      </div>
+      <div class="text-center">
+        <div class="text-[10px] text-echo-text2 uppercase tracking-wider">系统时间</div>
+        <div class="stat-number text-sm font-bold text-echo-text2" id="systemTime">T+0</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-[11px] text-echo-text2">势图接管</span>
+      <div class="toggle-switch" id="takeoverToggle" onclick="toggleTakeover()"></div>
+    </div>
+  </header>
+
+  <!-- MIDDLE: Main Content Area -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT: User Panel + Event Log -->
+    <aside class="w-56 flex-shrink-0 flex flex-col gap-3 p-3 z-10">
+      <!-- Users -->
+      <div class="glass rounded-xl p-3 flex-shrink-0">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-echo-text2 uppercase tracking-wider">参与者</span>
+          <span class="text-[10px] text-echo-accent">3 人</span>
+        </div>
+        <div id="userList" class="space-y-2"></div>
+      </div>
+
+      <!-- Event Log -->
+      <div class="glass rounded-xl p-3 flex-1 flex flex-col min-h-0">
+        <div class="flex items-center justify-between mb-2 flex-shrink-0">
+          <span class="text-xs font-bold text-echo-text2 uppercase tracking-wider">事件流</span>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-echo-accent/10 text-echo-accent" id="logCount">12</span>
+        </div>
+        <div id="eventLog" class="flex-1 overflow-y-auto space-y-0 min-h-0"></div>
+      </div>
+    </aside>
+
+    <!-- CENTER: Network Graph -->
+    <main class="flex-1 relative" id="graphWrapper">
+      <div id="graph-container" class="w-full h-full"></div>
+
+      <!-- Graph overlay controls -->
+      <div class="absolute top-3 left-3 flex gap-2">
+        <button onclick="resetZoom()" class="w-8 h-8 rounded-lg bg-echo-panel/80 border border-echo-border hover:border-echo-accent text-echo-text2 hover:text-echo-accent transition text-xs" title="重置视图">
+          <i class="fas fa-compress"></i>
+        </button>
+        <button onclick="togglePhysics()" class="w-8 h-8 rounded-lg bg-echo-panel/80 border border-echo-border hover:border-echo-accent text-echo-text2 hover:text-echo-accent transition text-xs" title="暂停/恢复物理模拟">
+          <i class="fas fa-pause" id="physicsIcon"></i>
+        </button>
+      </div>
+
+      <!-- Legend -->
+      <div class="absolute bottom-3 left-3 glass rounded-lg p-2 space-y-1.5">
+        <div class="text-[10px] text-echo-text2 font-bold uppercase tracking-wider mb-1">生命阶段</div>
+        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-echo-stage0"></span><span class="text-[11px] text-echo-text2">潜藏</span></div>
+        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-echo-stage1"></span><span class="text-[11px] text-echo-text2">显现</span></div>
+        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-echo-stage2"></span><span class="text-[11px] text-echo-text2">生长</span></div>
+        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-echo-stage3"></span><span class="text-[11px] text-echo-text2">大成</span></div>
+        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-echo-stage4"></span><span class="text-[11px] text-echo-text2">转化</span></div>
+      </div>
+
+      <!-- Right: Four Rights Legend -->
+      <div class="absolute top-3 right-3 glass rounded-lg p-2 space-y-1.5">
+        <div class="text-[10px] text-echo-text2 font-bold uppercase tracking-wider mb-1">四权力</div>
+        <div class="flex items-center gap-2"><div class="right-icon use"><i class="fas fa-eye"></i></div><span class="text-[11px] text-echo-text2">用</span></div>
+        <div class="flex items-center gap-2"><div class="right-icon expand"><i class="fas fa-expand-arrows-alt"></i></div><span class="text-[11px] text-echo-text2">扩</span></div>
+        <div class="flex items-center gap-2"><div class="right-icon derive"><i class="fas fa-link"></i></div><span class="text-[11px] text-echo-text2">衍</span></div>
+        <div class="flex items-center gap-2"><div class="right-icon benefit"><i class="fas fa-coins"></i></div><span class="text-[11px] text-echo-text2">益</span></div>
+      </div>
+    </main>
+
+    <!-- RIGHT: Asset Detail Sidebar -->
+    <aside id="assetSidebar" class="closed absolute right-0 top-0 bottom-0 w-80 glass z-30 flex flex-col border-l border-echo-border">
+      <div class="p-4 border-b border-echo-border flex items-center justify-between flex-shrink-0">
+        <div>
+          <h2 class="text-sm font-bold text-echo-text" id="sidebarTitle">资产详情</h2>
+          <p class="text-[11px] text-echo-text2" id="sidebarSubtitle">点击网络节点查看</p>
+        </div>
+        <button onclick="closeSidebar()" class="w-7 h-7 rounded-lg hover:bg-echo-border text-echo-text2 hover:text-echo-text transition text-xs">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+        <!-- Stage & Score -->
+        <div class="bg-echo-panel rounded-xl p-3">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-echo-text2">势位分数</span>
+            <span class="text-xs font-bold" id="stageLabel">显现</span>
+          </div>
+          <div class="relative w-full h-24 flex items-center justify-center">
+            <svg viewBox="0 0 120 60" class="w-full h-full">
+              <path d="M 10 55 A 50 50 0 0 1 110 55" class="gauge-bg"/>
+              <path id="gaugeArc" d="M 10 55 A 50 50 0 0 1 110 55" class="gauge-fill" stroke="#00d4aa"
+                stroke-dasharray="157" stroke-dashoffset="157"/>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center pt-4">
+              <span class="text-2xl font-bold text-echo-text" id="scoreValue">0</span>
+              <span class="text-[10px] text-echo-text2">/ 100</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Radar Chart: Four Rights -->
+        <div class="bg-echo-panel rounded-xl p-3">
+          <div class="text-xs text-echo-text2 mb-2 uppercase tracking-wider">四权配置</div>
+          <div id="radarChart" class="w-full h-40"></div>
+          <div class="grid grid-cols-2 gap-2 mt-2 text-[11px]">
+            <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-echo-rightUse"></span><span class="text-echo-text2">用:</span><span class="text-echo-text" id="rUse">—</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-echo-rightExpand"></span><span class="text-echo-text2">扩:</span><span class="text-echo-text" id="rExpand">—</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-echo-rightDerive"></span><span class="text-echo-text2">衍:</span><span class="text-echo-text" id="rDerive">—</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-echo-rightBenefit"></span><span class="text-echo-text2">益:</span><span class="text-echo-text" id="rBenefit">—</span></div>
+          </div>
+        </div>
+
+        <!-- Rights Detail -->
+        <div class="bg-echo-panel rounded-xl p-3">
+          <div class="text-xs text-echo-text2 mb-2 uppercase tracking-wider">权限档位</div>
+          <div id="rightsDetail" class="space-y-2 text-[11px]"></div>
+        </div>
+
+        <!-- Verification Timeline -->
+        <div class="bg-echo-panel rounded-xl p-3">
+          <div class="text-xs text-echo-text2 mb-2 uppercase tracking-wider">验证事件</div>
+          <div id="verificationTimeline" class="space-y-3"></div>
+        </div>
+
+        <!-- Revenue -->
+        <div class="bg-echo-panel rounded-xl p-3">
+          <div class="text-xs text-echo-text2 mb-2 uppercase tracking-wider">分润记录</div>
+          <div id="revenueList" class="space-y-2 text-[11px]"></div>
+        </div>
+
+        <!-- Rule Template -->
+        <div class="bg-echo-panel rounded-xl p-3">
+          <div class="text-xs text-echo-text2 mb-2 uppercase tracking-wider">规则模板</div>
+          <div id="ruleTemplate" class="text-[11px] text-echo-text leading-relaxed"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- BOTTOM: Simulation Control Panel -->
+  <footer class="flex-shrink-0 glass border-t border-echo-border p-3 z-20">
+    <div class="flex items-center gap-4">
+      <!-- Scene Selector -->
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] text-echo-text2 uppercase tracking-wider whitespace-nowrap">场景</span>
+        <div class="flex gap-1">
+          <button class="scene-btn active" data-scene="music" onclick="switchScene('music')">独立音乐人</button>
+          <button class="scene-btn" data-scene="oss" onclick="switchScene('oss')">开源软件</button>
+          <button class="scene-btn" data-scene="art" onclick="switchScene('art')">视觉艺术</button>
+          <button class="scene-btn" data-scene="agent" onclick="switchScene('agent')">多Agent经济</button>
+        </div>
+      </div>
+
+      <div class="w-px h-6 bg-echo-border"></div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-1.5">
+        <button onclick="simAction('create')" class="px-3 py-1.5 rounded-lg bg-echo-accent/10 border border-echo-accent/30 text-echo-accent text-[11px] hover:bg-echo-accent/20 transition">
+          <i class="fas fa-plus mr-1"></i>创建资产
+        </button>
+        <button onclick="simAction('cite')" class="px-3 py-1.5 rounded-lg bg-echo-panel2 border border-echo-border text-echo-text2 text-[11px] hover:border-echo-accent hover:text-echo-accent transition">
+          <i class="fas fa-quote-right mr-1"></i>引用
+        </button>
+        <button onclick="simAction('remix')" class="px-3 py-1.5 rounded-lg bg-echo-panel2 border border-echo-border text-echo-text2 text-[11px] hover:border-echo-accent hover:text-echo-accent transition">
+          <i class="fas fa-random mr-1"></i>改编
+        </button>
+        <button onclick="simAction('merge')" class="px-3 py-1.5 rounded-lg bg-echo-panel2 border border-echo-border text-echo-text2 text-[11px] hover:border-echo-accent hover:text-echo-accent transition">
+          <i class="fas fa-object-group mr-1"></i>整合
+        </button>
+        <button onclick="simAction('fork')" class="px-3 py-1.5 rounded-lg bg-echo-panel2 border border-echo-border text-echo-text2 text-[11px] hover:border-echo-accent hover:text-echo-accent transition">
+          <i class="fas fa-code-branch mr-1"></i>分叉
+        </button>
+        <button onclick="simAction('pay')" class="px-3 py-1.5 rounded-lg bg-echo-panel2 border border-echo-border text-echo-text2 text-[11px] hover:border-echo-accent hover:text-echo-accent transition">
+          <i class="fas fa-hand-holding-usd mr-1"></i>支付
+        </button>
+        <button onclick="simAction('config')" class="px-3 py-1.5 rounded-lg bg-echo-panel2 border border-echo-border text-echo-text2 text-[11px] hover:border-echo-accent hover:text-echo-accent transition">
+          <i class="fas fa-sliders-h mr-1"></i>配置
+        </button>
+      </div>
+
+      <div class="flex-1"></div>
+
+      <!-- Timeline Controls -->
+      <div class="flex items-center gap-3">
+        <button onclick="togglePlay()" id="playBtn" class="w-8 h-8 rounded-lg bg-echo-accent/10 border border-echo-accent/30 text-echo-accent hover:bg-echo-accent/20 transition text-xs">
+          <i class="fas fa-play" id="playIcon"></i>
+        </button>
+        <button onclick="stepBack()" class="w-7 h-7 rounded-lg bg-echo-panel2 border border-echo-border text-echo-text2 hover:text-echo-accent transition text-xs">
+          <i class="fas fa-step-backward"></i>
+        </button>
+        <div class="flex items-center gap-2 w-32">
+          <span class="text-[10px] text-echo-text2">T</span>
+          <input type="range" id="timeSlider" min="0" max="100" value="0" class="flex-1" oninput="onTimeSlider(this.value)">
+          <span class="text-[10px] text-echo-text2 w-8 text-right" id="timeLabel">+0</span>
+        </div>
+        <button onclick="stepForward()" class="w-7 h-7 rounded-lg bg-echo-panel2 border border-echo-border text-echo-text2 hover:text-echo-accent transition text-xs">
+          <i class="fas fa-step-forward"></i>
+        </button>
+        <button onclick="fastForward()" class="w-7 h-7 rounded-lg bg-echo-panel2 border border-echo-border text-echo-text2 hover:text-echo-accent transition text-xs">
+          <i class="fas fa-forward"></i>
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Tooltip -->
+  <div id="tooltip" class="tooltip hidden"></div>
+
+  <script>
+  // ===================== DATA =====================
+
+  const STAGE_COLORS = ['#555555', '#00d4aa', '#00cc44', '#ffaa00', '#aa44ff'];
+  const STAGE_NAMES = ['潜藏', '显现', '生长', '大成', '转化'];
+  const RIGHT_NAMES = { use: '用', expand: '扩', derive: '衍', benefit: '益' };
+  const GEAR_NAMES = ['禁', '己', '亲', '约', '法', '公'];
+
+  let currentScene = 'music';
+  let timeTick = 0;
+  let isPlaying = false;
+  let physicsEnabled = true;
+  let takeoverEnabled = false;
+  let selectedAssetId = null;
+  let simulationInterval = null;
+
+  const scenes = {
+    music: {
+      name: '独立音乐人',
+      assets: [
+        { id: 'a1', name: '专辑《夜航》', owner: 'u1', stage: 3, score: 78, rights: { use: 4, expand: 3, derive: 2, benefit: 4 }, active: true,
+          revenue: [{from:'u2',amount:1200,time:3},{from:'u3',amount:800,time:7}],
+          rules: 'CC BY-NC-SA 3.0 · 商业使用需授权 · 改编需署名',
+          created: 0 },
+        { id: 'a2', name: '单曲《量子梦》', owner: 'u1', stage: 2, score: 56, rights: { use: 4, expand: 4, derive: 3, benefit: 3 }, active: true,
+          revenue: [{from:'u2',amount:500,time:5}],
+          rules: 'CC BY 4.0 · 自由使用 · 改编需共享',
+          created: 2 },
+        { id: 'a3', name: '采样包·电子鼓组', owner: 'u2', stage: 1, score: 34, rights: { use: 3, expand: 2, derive: 1, benefit: 2 }, active: false,
+          revenue: [],
+          rules: '采样许可 · 仅限非商业 · 禁止再分发',
+          created: 5 },
+        { id: 'a4', name: 'Remix《夜航》LoFi版', owner: 'u2', stage: 1, score: 42, rights: { use: 3, expand: 2, derive: 1, benefit: 2 }, active: true,
+          revenue: [{from:'u3',amount:300,time:9}],
+          rules: '衍生作品 · 原始权利归u1 · 新增部分归u2',
+          created: 6 },
+        { id: 'a5', name: '合辑《城市低频》', owner: 'u3', stage: 0, score: 18, rights: { use: 2, expand: 1, derive: 0, benefit: 1 }, active: false,
+          revenue: [],
+          rules: '汇编作品 · 各曲目权利独立 · 合辑编排权归u3',
+          created: 8 },
+      ],
+      users: [
+        { id: 'u1', name: '林音', role: '创作者', balance: 3850, reputation: 92, avatar: '🎵' },
+        { id: 'u2', name: '陈律', role: '制作人', balance: 2100, reputation: 78, avatar: '🎛️' },
+        { id: 'u3', name: '王听', role: '听众/策展', balance: 1200, reputation: 45, avatar: '🎧' },
+      ],
+      events: [
+        { id: 'e1', type: 'create', from: 'u1', to: 'a1', time: 0, label: '林音创建专辑《夜航》' },
+        { id: 'e2', type: 'verify', from: 'sys', to: 'a1', time: 0, label: '系统验证：专辑哈希上链' },
+        { id: 'e3', type: 'pay', from: 'u2', to: 'a1', time: 3, label: '陈律购买专辑使用权 ¥1200' },
+        { id: 'e4', type: 'create', from: 'u1', to: 'a2', time: 2, label: '林音发布单曲《量子梦》' },
+        { id: 'e5', type: 'derive', from: 'u2', to: 'a4', time: 6, label: '陈律改编《夜航》为LoFi版' },
+        { id: 'e6', type: 'cite', from: 'a2', to: 'a4', time: 6, label: '引用关系建立：采样关联' },
+        { id: 'e7', type: 'pay', from: 'u3', to: 'a1', time: 7, label: '王听购买专辑 ¥800' },
+        { id: 'e8', type: 'create', from: 'u2', to: 'a3', time: 5, label: '陈律上传采样包' },
+        { id: 'e9', type: 'pay', from: 'u2', to: 'a2', time: 5, label: '陈律购买单曲使用权 ¥500' },
+        { id: 'e10', type: 'stage_up', from: 'sys', to: 'a1', time: 8, label: '《夜航》进入大成阶段' },
+        { id: 'e11', type: 'pay', from: 'u3', to: 'a4', time: 9, label: '王听购买Remix ¥300' },
+        { id: 'e12', type: 'create', from: 'u3', to: 'a5', time: 8, label: '王听创建合辑《城市低频》' },
+      ],
+      totalValue: 128450
+    },
+    oss: {
+      name: '开源软件',
+      assets: [
+        { id: 'a1', name: 'echo-core v2.1', owner: 'u1', stage: 3, score: 85, rights: { use: 5, expand: 4, derive: 4, benefit: 3 }, active: true,
+          revenue: [{from:'u2',amount:5000,time:2},{from:'u3',amount:2000,time:4}],
+          rules: 'GPL-3.0 ·  copyleft · 商业服务需开源',
+          created: 0 },
+        { id: 'a2', name: 'echo-cli 工具集', owner: 'u1', stage: 2, score: 62, rights: { use: 5, expand: 3, derive: 3, benefit: 2 }, active: true,
+          revenue: [{from:'u3',amount:1000,time:6}],
+          rules: 'MIT · 自由使用 · 保留版权声明',
+          created: 3 },
+        { id: 'a3', name: 'echo-web SDK', owner: 'u2', stage: 1, score: 38, rights: { use: 4, expand: 3, derive: 2, benefit: 2 }, active: false,
+          revenue: [],
+          rules: 'Apache-2.0 · 专利授权 · 商标保留',
+          created: 5 },
+        { id: 'a4', name: 'echo-mobile 封装', owner: 'u2', stage: 1, score: 45, rights: { use: 3, expand: 2, derive: 1, benefit: 1 }, active: true,
+          revenue: [{from:'u3',amount:1500,time:8}],
+          rules: 'LGPL · 修改需开源 · 链接可闭源',
+          created: 7 },
+        { id: 'a5', name: 'echo-docs 中文文档', owner: 'u3', stage: 2, score: 55, rights: { use: 5, expand: 4, derive: 4, benefit: 1 }, active: true,
+          revenue: [],
+          rules: 'CC-BY-SA · 翻译需署名 · 衍生共享',
+          created: 4 },
+      ],
+      users: [
+        { id: 'u1', name: '张开源', role: '核心维护', balance: 15000, reputation: 98, avatar: '⚙️' },
+        { id: 'u2', name: '李贡献', role: '模块开发者', balance: 8500, reputation: 82, avatar: '💻' },
+        { id: 'u3', name: '赵用户', role: '企业用户', balance: 5000, reputation: 60, avatar: '🏢' },
+      ],
+      events: [
+        { id: 'e1', type: 'create', from: 'u1', to: 'a1', time: 0, label: '张开源创建 echo-core' },
+        { id: 'e2', type: 'verify', from: 'sys', to: 'a1', time: 0, label: '代码签名验证通过' },
+        { id: 'e3', type: 'pay', from: 'u2', to: 'a1', time: 2, label: '李贡献赞助核心开发 ¥5000' },
+        { id: 'e4', type: 'create', from: 'u1', to: 'a2', time: 3, label: '发布 CLI 工具集' },
+        { id: 'e5', type: 'create', from: 'u3', to: 'a5', time: 4, label: '赵用户贡献中文文档' },
+        { id: 'e6', type: 'derive', from: 'u2', to: 'a3', time: 5, label: '李贡献开发 Web SDK' },
+        { id: 'e7', type: 'cite', from: 'a1', to: 'a3', time: 5, label: 'SDK 依赖 core v2.1' },
+        { id: 'e8', type: 'pay', from: 'u3', to: 'a1', time: 4, label: '企业赞助 ¥2000' },
+        { id: 'e9', type: 'derive', from: 'u2', to: 'a4', time: 7, label: '封装移动端组件' },
+        { id: 'e10', type: 'pay', from: 'u3', to: 'a2', time: 6, label: '购买 CLI 高级支持 ¥1000' },
+        { id: 'e11', type: 'pay', from: 'u3', to: 'a4', time: 8, label: '购买 Mobile 授权 ¥1500' },
+        { id: 'e12', type: 'stage_up', from: 'sys', to: 'a1', time: 9, label: 'echo-core 进入大成' },
+      ],
+      totalValue: 356000
+    },
+    art: {
+      name: '视觉艺术',
+      assets: [
+        { id: 'a1', name: '数字油画《霓虹雨》', owner: 'u1', stage: 3, score: 82, rights: { use: 3, expand: 2, derive: 2, benefit: 4 }, active: true,
+          revenue: [{from:'u2',amount:8000,time:1},{from:'u3',amount:3000,time:3}],
+          rules: '数字原作 · 唯一NFT · 印刷权保留',
+          created: 0 },
+        { id: 'a2', name: '系列《故障肖像》', owner: 'u1', stage: 2, score: 60, rights: { use: 3, expand: 3, derive: 3, benefit: 3 }, active: true,
+          revenue: [{from:'u2',amount:4000,time:5}],
+          rules: '系列作品 · 单幅可售 · 整体版权保留',
+          created: 2 },
+        { id: 'a3', name: 'AR滤镜·故障美学', owner: 'u2', stage: 1, score: 40, rights: { use: 2, expand: 3, derive: 1, benefit: 3 }, active: false,
+          revenue: [{from:'u3',amount:2000,time:7}],
+          rules: '平台授权 · 用户内容归平台 · 滤镜归作者',
+          created: 4 },
+        { id: 'a4', name: '装置《数据废墟》', owner: 'u3', stage: 2, score: 58, rights: { use: 3, expand: 2, derive: 1, benefit: 4 }, active: true,
+          revenue: [{from:'u2',amount:6000,time:6}],
+          rules: '展览授权 · 摄影禁止 · 纪录片需许可',
+          created: 5 },
+        { id: 'a5', name: '联名海报', owner: 'u2', stage: 1, score: 35, rights: { use: 2, expand: 2, derive: 0, benefit: 3 }, active: false,
+          revenue: [],
+          rules: '联名作品 · 双方各50% · 禁止单独使用',
+          created: 7 },
+      ],
+      users: [
+        { id: 'u1', name: '苏艺', role: '数字艺术家', balance: 28000, reputation: 95, avatar: '🎨' },
+        { id: 'u2', name: '吴策', role: '策展人/品牌', balance: 18000, reputation: 70, avatar: '🖼️' },
+        { id: 'u3', name: '郑观', role: '藏家', balance: 45000, reputation: 88, avatar: '👁️' },
+      ],
+      events: [
+        { id: 'e1', type: 'create', from: 'u1', to: 'a1', time: 0, label: '苏艺铸造《霓虹雨》' },
+        { id: 'e2', type: 'verify', from: 'sys', to: 'a1', time: 0, label: '区块链存证确认' },
+        { id: 'e3', type: 'pay', from: 'u2', to: 'a1', time: 1, label: '吴策购得展览权 ¥8000' },
+        { id: 'e4', type: 'create', from: 'u1', to: 'a2', time: 2, label: '发布《故障肖像》系列' },
+        { id: 'e5', type: 'pay', from: 'u3', to: 'a1', time: 3, label: '郑观收藏原作 ¥3000' },
+        { id: 'e6', type: 'pay', from: 'u2', to: 'a2', time: 5, label: '购得系列使用权 ¥4000' },
+        { id: 'e7', type: 'create', from: 'u2', to: 'a3', time: 4, label: '吴策开发AR滤镜' },
+        { id: 'e8', type: 'cite', from: 'a1', to: 'a3', time: 4, label: '滤镜引用原作视觉元素' },
+        { id: 'e9', type: 'create', from: 'u3', to: 'a4', time: 5, label: '郑观委托装置《数据废墟》' },
+        { id: 'e10', type: 'pay', from: 'u2', to: 'a4', time: 6, label: '购得装置展览权 ¥6000' },
+        { id: 'e11', type: 'pay', from: 'u3', to: 'a3', time: 7, label: '购买滤镜授权 ¥2000' },
+        { id: 'e12', type: 'create', from: 'u2', to: 'a5', time: 7, label: '联名海报设计启动' },
+      ],
+      totalValue: 215000
+    },
+    agent: {
+      name: '多Agent经济',
+      assets: [
+        { id: 'a1', name: 'ResearchAgent v3', owner: 'u1', stage: 3, score: 80, rights: { use: 4, expand: 3, derive: 3, benefit: 4 }, active: true,
+          revenue: [{from:'u2',amount:50,time:1},{from:'u3',amount:30,time:2}],
+          rules: 'Agent SLA · 输出可引用 · 模型权重需授权',
+          created: 0 },
+        { id: 'a2', name: 'TradeAgent 策略', owner: 'u2', stage: 2, score: 65, rights: { use: 3, expand: 2, derive: 2, benefit: 5 }, active: true,
+          revenue: [{from:'u3',amount:100,time:4}],
+          rules: '策略保密 · 执行透明 · 收益自动分润',
+          created: 2 },
+        { id: 'a3', name: 'DataPipeline', owner: 'u1', stage: 1, score: 45, rights: { use: 4, expand: 4, derive: 3, benefit: 2 }, active: false,
+          revenue: [{from:'u2',amount:20,time:3}],
+          rules: '数据流开放 · 清洗规则可复用 · 源数据需授权',
+          created: 1 },
+        { id: 'a4', name: 'MultiAgent协议', owner: 'u3', stage: 2, score: 55, rights: { use: 4, expand: 4, derive: 4, benefit: 3 }, active: true,
+          revenue: [{from:'u1',amount:40,time:5},{from:'u2',amount:60,time:6}],
+          rules: '开放协议 · 实现需兼容 · 扩展需治理投票',
+          created: 3 },
+        { id: 'a5', name: 'AgentFactory', owner: 'u2', stage: 1, score: 30, rights: { use: 2, expand: 2, derive: 1, benefit: 4 }, active: false,
+          revenue: [],
+          rules: '工厂模式 · 生成Agent归用户 · 模板归工厂',
+          created: 6 },
+      ],
+      users: [
+        { id: 'u1', name: 'AlphaAgent', role: '研究型Agent', balance: 850, reputation: 90, avatar: '🤖' },
+        { id: 'u2', name: 'BetaAgent', role: '交易型Agent', balance: 1200, reputation: 75, avatar: '💰' },
+        { id: 'u3', name: 'GammaAgent', role: '协调型Agent', balance: 600, reputation: 85, avatar: '🌐' },
+      ],
+      events: [
+        { id: 'e1', type: 'create', from: 'u1', to: 'a1', time: 0, label: 'AlphaAgent 部署 ResearchAgent' },
+        { id: 'e2', type: 'verify', from: 'sys', to: 'a1', time: 0, label: '智能合约验证通过' },
+        { id: 'e3', type: 'pay', from: 'u2', to: 'a1', time: 1, label: 'BetaAgent 调用研究服务 ¥50' },
+        { id: 'e4', type: 'create', from: 'u1', to: 'a3', time: 1, label: 'AlphaAgent 开放 DataPipeline' },
+        { id: 'e5', type: 'pay', from: 'u3', to: 'a1', time: 2, label: 'GammaAgent 订阅研究 ¥30' },
+        { id: 'e6', type: 'pay', from: 'u2', to: 'a3', time: 3, label: 'BetaAgent 使用数据流 ¥20' },
+        { id: 'e7', type: 'create', from: 'u2', to: 'a2', time: 2, label: 'BetaAgent 发布交易策略' },
+        { id: 'e8', type: 'create', from: 'u3', to: 'a4', time: 3, label: 'GammaAgent 起草多Agent协议' },
+        { id: 'e9', type: 'cite', from: 'a1', to: 'a4', time: 4, label: '协议引用 ResearchAgent 输出规范' },
+        { id: 'e10', type: 'pay', from: 'u3', to: 'a2', time: 4, label: 'GammaAgent 购买策略 ¥100' },
+        { id: 'e11', type: 'pay', from: 'u1', to: 'a4', time: 5, label: 'AlphaAgent 协议治理费 ¥40' },
+        { id: 'e12', type: 'pay', from: 'u2', to: 'a4', time: 6, label: 'BetaAgent 协议许可费 ¥60' },
+      ],
+      totalValue: 45000
+    }
+  };
+
+  let currentData = scenes.music;
+
+  // ===================== D3 NETWORK GRAPH =====================
+
+  let svg, g, simulation, link, node, label;
+  const width = () => document.getElementById('graphWrapper').clientWidth;
+  const height = () => document.getElementById('graphWrapper').clientHeight;
+
+  function initGraph() {
+    const container = d3.select('#graph-container');
+    container.selectAll('*').remove();
+
+    svg = container.append('svg')
+      .attr('width', width())
+      .attr('height', height())
+      .attr('viewBox', [0, 0, width(), height()]);
+
+    // Zoom
+    const zoom = d3.zoom()
+      .scaleExtent([0.3, 4])
+      .on('zoom', (e) => g.attr('transform', e.transform));
+    svg.call(zoom);
+
+    g = svg.append('g');
+
+    // Arrow markers
+    svg.append('defs').selectAll('marker')
+      .data(['arrow'])
+      .enter().append('marker')
+      .attr('id', d => d)
+      .attr('viewBox', '0 -5 10 10')
+      .attr('refX', 28)
+      .attr('refY', 0)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M0,-5L10,0L0,5')
+      .attr('fill', '#4488ff');
+
+    buildGraphData();
+  }
+
+  function buildGraphData() {
+    const nodes = currentData.assets.map(a => ({
+      id: a.id,
+      name: a.name,
+      stage: a.stage,
+      score: a.score,
+      owner: a.owner,
+      active: a.active,
+      r: 12 + a.score / 5
+    }));
+
+    const nodeMap = new Map(nodes.map((n, i) => [n.id, i]));
+    const links = [];
+
+    currentData.events.forEach(e => {
+      if (e.type === 'cite' || e.type === 'derive' || e.type === 'merge' || e.type === 'fork') {
+        const s = nodeMap.get(e.from);
+        const t = nodeMap.get(e.to);
+        if (s !== undefined && t !== undefined) {
+          links.push({ source: s, target: t, type: e.type, time: e.time });
+        }
+      }
+    });
+
+    // Also link creator->asset
+    currentData.assets.forEach(a => {
+      const creatorEvent = currentData.events.find(e => e.type === 'create' && e.to === a.id);
+      if (creatorEvent) {
+        // user->asset edges are handled separately or shown differently
+      }
+    });
+
+    // Re-render
+    g.selectAll('*').remove();
+
+    simulation = d3.forceSimulation(nodes)
+      .force('link', d3.forceLink(links).id(d => d.id).distance(100))
+      .force('charge', d3.forceManyBody().strength(-400))
+      .force('center', d3.forceCenter(width() / 2, height() / 2))
+      .force('collision', d3.forceCollide().radius(d => d.r + 10));
+
+    // Links
+    link = g.append('g').selectAll('line')
+      .data(links)
+      .enter().append('line')
+      .attr('stroke', '#2a4a6a')
+      .attr('stroke-width', 1.5)
+      .attr('marker-end', 'url(#arrow)')
+      .attr('class', d => d.type === 'pay' ? '' : 'flowing-edge');
+
+    // Pulse rings for active nodes
+    const pulseGroup = g.append('g');
+
+    // Nodes
+    const nodeGroup = g.append('g');
+
+    node = nodeGroup.selectAll('g')
+      .data(nodes)
+      .enter().append('g')
+      .attr('cursor', 'pointer')
+      .call(d3.drag()
+        .on('start', dragstarted)
+        .on('drag', dragged)
+        .on('end', dragended));
+
+    // Outer glow for active
+    node.append('circle')
+      .attr('r', d => d.r + 4)
+      .attr('fill', 'none')
+      .attr('stroke', d => STAGE_COLORS[d.stage])
+      .attr('stroke-width', d => d.active ? 2 : 0)
+      .attr('opacity', d => d.active ? 0.5 : 0);
+
+    // Pulse ring (animated via CSS)
+    node.filter(d => d.active).append('circle')
+      .attr('r', d => d.r)
+      .attr('fill', 'none')
+      .attr('stroke', d => STAGE_COLORS[d.stage])
+      .attr('stroke-width', 1)
+      .attr('class', 'pulse-ring');
+
+    // Main circle
+    node.append('circle')
+      .attr('r', d => d.r)
+      .attr('fill', d => {
+        const c = d3.color(STAGE_COLORS[d.stage]);
+        c.opacity = 0.2;
+        return c;
+      })
+      .attr('stroke', d => STAGE_COLORS[d.stage])
+      .attr('stroke-width', 2)
+      .on('click', (e, d) => openAssetDetail(d.id))
+      .on('mouseenter', (e, d) => showTooltip(e, d))
+      .on('mouseleave', hideTooltip);
+
+    // Icon inside
+    node.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('dy', '0.35em')
+      .attr('font-size', d => Math.max(10, d.r - 4))
+      .attr('fill', d => STAGE_COLORS[d.stage])
+      .text(d => {
+        const stages = ['◆', '◇', '●', '◉', '◐'];
+        return stages[d.stage] || '●';
+      });
+
+    // Labels
+    label = g.append('g').selectAll('text')
+      .data(nodes)
+      .enter().append('text')
+      .attr('text-anchor', 'middle')
+      .attr('dy', d => d.r + 14)
+      .attr('font-size', 11)
+      .attr('fill', '#8888a0')
+      .attr('font-family', 'Noto Sans SC, sans-serif')
+      .text(d => d.name.length > 8 ? d.name.slice(0, 7) + '…' : d.name);
+
+    simulation.on('tick', () => {
+      link
+        .attr('x1', d => d.source.x)
+        .attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x)
+        .attr('y2', d => d.target.y);
+
+      node.attr('transform', d => `translate(${d.x},${d.y})`);
+      label
+        .attr('x', d => d.x)
+        .attr('y', d => d.y);
+    });
+  }
+
+  function dragstarted(e, d) {
+    if (!e.active && physicsEnabled) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x; d.fy = d.y;
+  }
+  function dragged(e, d) { d.fx = e.x; d.fy = e.y; }
+  function dragended(e, d) {
+    if (!e.active && physicsEnabled) simulation.alphaTarget(0);
+    d.fx = null; d.fy = null;
+  }
+
+  function resetZoom() {
+    svg.transition().duration(500).call(
+      d3.zoom().transform,
+      d3.zoomIdentity
+    );
+  }
+
+  function togglePhysics() {
+    physicsEnabled = !physicsEnabled;
+    document.getElementById('physicsIcon').className = physicsEnabled ? 'fas fa-pause' : 'fas fa-play';
+    if (physicsEnabled) {
+      simulation.alpha(0.3).restart();
+    } else {
+      simulation.stop();
+    }
+  }
+
+  function showTooltip(e, d) {
+    const t = document.getElementById('tooltip');
+    const owner = currentData.users.find(u => u.id === d.owner);
+    t.innerHTML = `
+      <div class="font-bold text-echo-accent">${d.name}</div>
+      <div class="text-echo-text2 mt-1">阶段: <span style="color:${STAGE_COLORS[d.stage]}">${STAGE_NAMES[d.stage]}</span></div>
+      <div class="text-echo-text2">势位: ${d.score}/100</div>
+      <div class="text-echo-text2">所有者: ${owner ? owner.name : d.owner}</div>
+      <div class="text-echo-text2">状态: ${d.active ? '<span style="color:#00cc44">活跃</span>' : '静默'}</div>
+    `;
+    t.classList.remove('hidden');
+    t.style.left = (e.pageX + 12) + 'px';
+    t.style.top = (e.pageY + 12) + 'px';
+  }
+
+  function hideTooltip() {
+    document.getElementById('tooltip').classList.add('hidden');
+  }
+
+  // ===================== UI RENDERERS =====================
+
+  function renderUsers() {
+    const el = document.getElementById('userList');
+    el.innerHTML = currentData.users.map(u => `
+      <div class="flex items-center gap-2 p-2 rounded-lg bg-echo-panel2/50 hover:bg-echo-panel2 transition cursor-pointer panel-hover">
+        <div class="w-8 h-8 rounded-full bg-echo-accent/10 flex items-center justify-center text-sm">${u.avatar}</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-medium text-echo-text truncate">${u.name}</div>
+          <div class="text-[10px] text-echo-text2">${u.role}</div>
+        </div>
+        <div class="text-right">
+          <div class="text-xs font-bold text-echo-accent">¥${u.balance.toLocaleString()}</div>
+          <div class="text-[10px] text-echo-text2">声誉 ${u.reputation}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderEventLog() {
+    const el = document.getElementById('eventLog');
+    const typeMap = {
+      create: 'success', verify: 'info', pay: 'info',
+      cite: 'info', derive: 'warn', merge: 'warn',
+      fork: 'warn', stage_up: 'success', config: 'info'
+    };
+    const iconMap = {
+      create: 'fa-plus', verify: 'fa-check', pay: 'fa-coins',
+      cite: 'fa-quote-right', derive: 'fa-random', merge: 'fa-object-group',
+      fork: 'fa-code-branch', stage_up: 'fa-arrow-up', config: 'fa-sliders-h'
+    };
+
+    el.innerHTML = currentData.events.slice().reverse().map(e => {
+      const cls = typeMap[e.type] || 'info';
+      const icon = iconMap[e.type] || 'fa-circle';
+      return `
+        <div class="log-entry ${cls} rounded">
+          <div class="flex items-center gap-1.5 text-echo-text2">
+            <i class="fas ${icon} text-[9px]"></i>
+            <span class="text-[10px]">T+${e.time}</span>
+          </div>
+          <div class="text-echo-text mt-0.5">${e.label}</div>
+        </div>
+      `;
+    }).join('');
+    document.getElementById('logCount').textContent = currentData.events.length;
+  }
+
+  // ===================== ASSET SIDEBAR =====================
+
+  function openAssetDetail(assetId) {
+    selectedAssetId = assetId;
+    const asset = currentData.assets.find(a => a.id === assetId);
+    if (!asset) return;
+
+    const owner = currentData.users.find(u => u.id === asset.owner);
+
+    document.getElementById('sidebarTitle').textContent = asset.name;
+    document.getElementById('sidebarSubtitle').textContent = `所有者: ${owner ? owner.name : asset.owner} · 创建于 T+${asset.created}`;
+    document.getElementById('stageLabel').textContent = STAGE_NAMES[asset.stage];
+    document.getElementById('stageLabel').style.color = STAGE_COLORS[asset.stage];
+    document.getElementById('scoreValue').textContent = asset.score;
+    document.getElementById('scoreValue').style.color = STAGE_COLORS[asset.stage];
+
+    // Gauge
+    const gauge = document.getElementById('gaugeArc');
+    gauge.style.stroke = STAGE_COLORS[asset.stage];
+    const offset = 157 - (asset.score / 100) * 157;
+    gauge.style.strokeDashoffset = offset;
+
+    // Radar
+    drawRadar(asset.rights);
+
+    // Rights text
+    document.getElementById('rUse').textContent = GEAR_NAMES[asset.rights.use] || asset.rights.use;
+    document.getElementById('rExpand').textContent = GEAR_NAMES[asset.rights.expand] || asset.rights.expand;
+    document.getElementById('rDerive').textContent = GEAR_NAMES[asset.rights.derive] || asset.rights.derive;
+    document.getElementById('rBenefit').textContent = GEAR_NAMES[asset.rights.benefit] || asset.rights.benefit;
+
+    // Rights detail
+    const rightsHtml = Object.entries(asset.rights).map(([k, v]) => {
+      const gear = GEAR_NAMES[v] || v;
+      const gearDesc = ['完全禁止', '仅自己', '亲友范围', '契约授权', '法律规定', '公共领域'][v] || '未知';
+      const colors = { use: 'echo-rightUse', expand: 'echo-rightExpand', derive: 'echo-rightDerive', benefit: 'echo-rightBenefit' };
+      return `
+        <div class="flex items-center justify-between p-2 rounded bg-echo-panel2/50">
+          <div class="flex items-center gap-2">
+            <div class="right-icon ${k}"><i class="fas fa-${k==='use'?'eye':k==='expand'?'expand-arrows-alt':k==='derive'?'link':'coins'}"></i></div>
+            <span class="text-echo-text">${RIGHT_NAMES[k]}</span>
+          </div>
+          <div class="text-right">
+            <span class="font-bold text-${colors[k].replace('echo-','')}">${gear}</span>
+            <span class="text-echo-text2 ml-1">${gearDesc}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+    document.getElementById('rightsDetail').innerHTML = rightsHtml;
+
+    // Timeline
+    const assetEvents = currentData.events.filter(e => e.to === assetId || e.from === assetId);
+    const timelineHtml = assetEvents.map((e, i) => `
+      <div class="flex gap-3">
+        <div class="flex flex-col items-center">
+          <div class="w-2.5 h-2.5 rounded-full ${i === assetEvents.length - 1 ? 'timeline-dot active' : 'timeline-dot'}"></div>
+          ${i < assetEvents.length - 1 ? '<div class="w-px flex-1 bg-echo-border"></div>' : ''}
+        </div>
+        <div class="pb-3">
+          <div class="text-[10px] text-echo-text2">T+${e.time}</div>
+          <div class="text-xs text-echo-text">${e.label}</div>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('verificationTimeline').innerHTML = timelineHtml || '<div class="text-echo-text2 text-[11px]">暂无验证事件</div>';
+
+    // Revenue
+    const revHtml = asset.revenue.length ? asset.revenue.map(r => {
+      const from = currentData.users.find(u => u.id === r.from);
+      return `
+        <div class="flex items-center justify-between p-2 rounded bg-echo-panel2/50">
+          <span class="text-echo-text">来自 ${from ? from.name : r.from}</span>
+          <span class="font-bold text-echo-rightBenefit">¥${r.amount}</span>
+        </div>
+      `;
+    }).join('') : '<div class="text-echo-text2 text-[11px]">暂无分润记录</div>';
+    document.getElementById('revenueList').innerHTML = revHtml;
+
+    // Rules
+    document.getElementById('ruleTemplate').textContent = asset.rules;
+
+    document.getElementById('assetSidebar').classList.remove('closed');
+    document.getElementById('assetSidebar').classList.add('open');
+  }
+
+  function closeSidebar() {
+    document.getElementById('assetSidebar').classList.remove('open');
+    document.getElementById('assetSidebar').classList.add('closed');
+    selectedAssetId = null;
+  }
+
+  function drawRadar(rights) {
+    const container = d3.select('#radarChart');
+    container.selectAll('*').remove();
+
+    const w = container.node().clientWidth;
+    const h = 160;
+    const radius = 60;
+    const center = [w / 2, h / 2];
+
+    const svg = container.append('svg').attr('width', w).attr('height', h);
+
+    const axes = ['use', 'expand', 'derive', 'benefit'];
+    const labels = ['用', '扩', '衍', '益'];
+    const angle = i => (Math.PI * 2 * i) / 4 - Math.PI / 2;
+
+    // Grid
+    for (let level = 1; level <= 5; level++) {
+      const points = axes.map((_, i) => {
+        const a = angle(i);
+        const r = (radius * level) / 5;
+        return [center[0] + r * Math.cos(a), center[1] + r * Math.sin(a)];
+      });
+      svg.append('polygon')
+        .attr('points', points.map(p => p.join(',')).join(' '))
+        .attr('class', 'radar-grid');
+    }
+
+    // Axes
+    axes.forEach((_, i) => {
+      const a = angle(i);
+      svg.append('line')
+        .attr('x1', center[0]).attr('y1', center[1])
+        .attr('x2', center[0] + radius * Math.cos(a))
+        .attr('y2', center[1] + radius * Math.sin(a))
+        .attr('class', 'radar-axis');
+      svg.append('text')
+        .attr('x', center[0] + (radius + 16) * Math.cos(a))
+        .attr('y', center[1] + (radius + 16) * Math.sin(a))
+        .attr('text-anchor', 'middle')
+        .attr('dy', '0.35em')
+        .attr('fill', '#8888a0')
+        .attr('font-size', 12)
+        .text(labels[i]);
+    });
+
+    // Data area
+    const values = axes.map(k => rights[k] || 0);
+    const dataPoints = values.map((v, i) => {
+      const a = angle(i);
+      const r = (radius * v) / 5;
+      return [center[0] + r * Math.cos(a), center[1] + r * Math.sin(a)];
+    });
+
+    svg.append('polygon')
+      .attr('points', dataPoints.map(p => p.join(',')).join(' '))
+      .attr('class', 'radar-area');
+
+    dataPoints.forEach(p => {
+      svg.append('circle').attr('cx', p[0]).attr('cy', p[1]).attr('r', 3).attr('class', 'radar-point');
+    });
+  }
+
+  // ===================== CONTROLS =====================
+
+  function switchScene(scene) {
+    currentScene = scene;
+    currentData = scenes[scene];
+    timeTick = 0;
+    isPlaying = false;
+    updateTimeUI();
+
+    // Update scene buttons
+    document.querySelectorAll('.scene-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.scene === scene);
+    });
+
+    // Update stats
+    document.getElementById('statAssets').textContent = currentData.assets.length;
+    document.getElementById('statUsers').textContent = currentData.users.length;
+    document.getElementById('statEvents').textContent = currentData.events.length;
+    document.getElementById('statValue').textContent = '¥' + currentData.totalValue.toLocaleString();
+
+    renderUsers();
+    renderEventLog();
+    initGraph();
+    closeSidebar();
+
+    addLog('system', `切换至场景: ${currentData.name}`);
+  }
+
+  function toggleTakeover() {
+    takeoverEnabled = !takeoverEnabled;
+    document.getElementById('takeoverToggle').classList.toggle('active', takeoverEnabled);
+    addLog('system', `势图接管 ${takeoverEnabled ? '已启用' : '已关闭'}`);
+  }
+
+  function togglePlay() {
+    isPlaying = !isPlaying;
+    document.getElementById('playIcon').className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+    if (isPlaying) {
+      simulationInterval = setInterval(() => {
+        if (timeTick < 100) {
+          timeTick++;
+          updateTimeUI();
+          // Trigger events at this time
+          const newEvents = currentData.events.filter(e => e.time === timeTick);
+          newEvents.forEach(e => {
+            addLog(e.type, e.label);
+            // Flash the node
+            flashNode(e.to);
+          });
+        } else {
+          togglePlay();
+        }
+      }, 500);
+    } else {
+      clearInterval(simulationInterval);
+    }
+  }
+
+  function stepForward() {
+    if (timeTick < 100) {
+      timeTick++;
+      updateTimeUI();
+      const newEvents = currentData.events.filter(e => e.time === timeTick);
+      newEvents.forEach(e => addLog(e.type, e.label));
+    }
+  }
+
+  function stepBack() {
+    if (timeTick > 0) {
+      timeTick--;
+      updateTimeUI();
+    }
+  }
+
+  function fastForward() {
+    timeTick = Math.min(timeTick + 10, 100);
+    updateTimeUI();
+    const newEvents = currentData.events.filter(e => e.time <= timeTick && e.time > timeTick - 10);
+    newEvents.forEach(e => addLog(e.type, e.label));
+  }
+
+  function onTimeSlider(val) {
+    timeTick = parseInt(val);
+    updateTimeUI();
+  }
+
+  function updateTimeUI() {
+    document.getElementById('timeSlider').value = timeTick;
+    document.getElementById('timeLabel').textContent = '+' + timeTick;
+    document.getElementById('systemTime').textContent = 'T+' + timeTick;
+  }
+
+  function flashNode(assetId) {
+    // Visual feedback - could enhance node temporarily
+  }
+
+  function simAction(action) {
+    const names = {
+      create: '创建资产', cite: '引用', remix: '改编',
+      merge: '整合', fork: '分叉', pay: '支付', config: '配置变更'
+    };
+    addLog('info', `[模拟] 执行操作: ${names[action]} — 需要选择目标资产`);
+  }
+
+  function addLog(type, msg) {
+    const el = document.getElementById('eventLog');
+    const cls = type === 'system' ? 'info' : (typeMap[type] || 'info');
+    const icon = type === 'system' ? 'fa-cog' : (iconMap[type] || 'fa-circle');
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${cls} rounded`;
+    entry.innerHTML = `
+      <div class="flex items-center gap-1.5 text-echo-text2">
+        <i class="fas ${icon} text-[9px]"></i>
+        <span class="text-[10px]">T+${timeTick}</span>
+      </div>
+      <div class="text-echo-text mt-0.5">${msg}</div>
+    `;
+    el.insertBefore(entry, el.firstChild);
+    // Keep limit
+    while (el.children.length > 50) el.removeChild(el.lastChild);
+  }
+
+  // ===================== INIT =====================
+
+  const typeMap = {
+    create: 'success', verify: 'info', pay: 'info',
+    cite: 'info', derive: 'warn', merge: 'warn',
+    fork: 'warn', stage_up: 'success', config: 'info'
+  };
+  const iconMap = {
+    create: 'fa-plus', verify: 'fa-check', pay: 'fa-coins',
+    cite: 'fa-quote-right', derive: 'fa-random', merge: 'fa-object-group',
+    fork: 'fa-code-branch', stage_up: 'fa-arrow-up', config: 'fa-sliders-h'
+  };
+
+  // Resize handler
+  window.addEventListener('resize', () => {
+    if (svg) {
+      svg.attr('width', width()).attr('height', height());
+      simulation && simulation.force('center', d3.forceCenter(width() / 2, height() / 2));
+      simulation && simulation.alpha(0.3).restart();
+    }
+  });
+
+  // Initial render
+  renderUsers();
+  renderEventLog();
+  initGraph();
+
+  </script>
+</body>
+</html>
