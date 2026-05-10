@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECHO — 使用权生命周期网络</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ===== ECHO GLOBAL ===== */
+:root {
+  --e0: #0c0c0e; --e1: #1a1a1e; --e2: #2a2a30; --e3: #4a4a52;
+  --e4: #6a6a72; --e5: #8a8a90; --e6: #f0f0e8; --e7: #d0d0c8;
+  --cr: #c45c48; --az: #4a90a4; --ma: #5a9a6e; --or: #c8a84c;
+  --st: #9a8a7a;
+  --font-serif: 'Noto Serif SC', 'SimSun', serif;
+  --font-body: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--e0);
+  color: var(--e6);
+  font-family: var(--font-body);
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+}
+
+/* 宣纸纹理 */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* ===== SPA FRAMEWORK ===== */
+#echo-layout {
+  position: relative; z-index: 1;
+  width: 100vw; height: 100vh;
+  display: flex;
+}
+
+#echo-nav {
+  width: 220px; height: 100vh;
+  background: linear-gradient(180deg, var(--e1) 0%, var(--e0) 100%);
+  border-right: 1px solid var(--e2);
+  display: flex; flex-direction: column;
+  flex-shrink: 0; overflow-y: auto;
+}
+
+#echo-nav .logo {
+  padding: 24px; text-align: center;
+  border-bottom: 1px solid var(--e2);
+}
+
+#echo-nav .logo h1 {
+  font-family: var(--font-serif);
+  font-size: 2rem; font-weight: 700;
+  letter-spacing: 0.3em; color: var(--e6);
+  text-shadow: 0 0 20px rgba(74,144,164,0.3);
+  margin: 0;
+}
+
+#echo-nav .logo p {
+  font-size: 0.7rem; color: var(--e5);
+  margin-top: 4px; letter-spacing: 0.15em;
+}
+
+#echo-nav .logo .seal {
+  width: 32px; height: 32px;
+  background: var(--cr); color: var(--e6);
+  border-radius: 4px; display: inline-flex;
+  align-items: center; justify-content: center;
+  font-family: var(--font-serif); font-size: 14px;
+  margin-top: 8px; opacity: 0.8;
+}
+
+.nav-group-label {
+  padding: 8px 24px;
+  font-size: 0.65rem; color: var(--e4);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 24px; color: var(--e5);
+  text-decoration: none; transition: all 0.3s;
+  font-size: 0.9rem; letter-spacing: 0.05em;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+}
+
+.nav-item:hover { background: rgba(74,144,164,0.1); color: var(--e6); }
+
+.nav-item.active {
+  background: rgba(74,144,164,0.15) !important;
+  border-left: 2px solid var(--az) !important;
+  color: var(--e6) !important;
+}
+
+#echo-main {
+  flex: 1; height: 100vh; overflow: hidden;
+  position: relative;
+}
+
+.echo-page { display: none; width: 100%; height: 100%; overflow-y: auto; padding: 32px; }
+
+.echo-page.active { display: block; }
+
+/* ===== HOME PAGE ===== */
+#home { position: relative; }
+
+#home .hero {
+  text-align: center; padding: 60px 20px 40px;
+  position: relative; z-index: 2;
+}
+
+#home .hero h2 {
+  font-family: var(--font-serif); font-size: 3rem;
+  font-weight: 700; color: var(--e6);
+  margin: 0 0 12px; letter-spacing: 0.2em;
+}
+
+#home .hero .subtitle {
+  font-size: 1.1rem; color: var(--e4);
+  letter-spacing: 0.1em; margin-bottom: 40px;
+}
+
+#home .seal-big {
+  width: 80px; height: 80px;
+  background: var(--cr); color: var(--e6);
+  border-radius: 8px; margin: 0 auto 40px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-serif); font-size: 28px;
+  text-shadow: 0 0 10px rgba(0,0,0,0.3);
+  box-shadow: 0 0 30px rgba(196,92,72,0.3);
+}
+
+#home .architecture {
+  display: flex; justify-content: center; gap: 20px;
+  flex-wrap: wrap; padding: 0 40px;
+}
+
+#home .arch-card {
+  width: 200px; padding: 24px;
+  background: rgba(26,26,30,0.8);
+  border: 1px solid var(--e2);
+  border-radius: 12px; text-align: center;
+  cursor: pointer; transition: all 0.3s;
+}
+
+#home .arch-card:hover {
+  border-color: var(--az);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(74,144,164,0.2);
+}
+
+#home .arch-card .icon {
+  font-size: 2rem; margin-bottom: 12px;
+}
+
+#home .arch-card h3 {
+  font-family: var(--font-serif);
+  font-size: 1.1rem; margin: 0 0 8px;
+  color: var(--e6);
+}
+
+#home .arch-card p {
+  font-size: 0.8rem; color: var(--e4);
+  line-height: 1.5;
+}
+
+#home .flow-diagram {
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; margin-top: 40px; flex-wrap: wrap;
+}
+
+#home .flow-node {
+  padding: 8px 16px; background: var(--e1);
+  border: 1px solid var(--e2); border-radius: 20px;
+  font-size: 0.85rem; color: var(--e5);
+}
+
+#home .flow-arrow { color: var(--az); font-size: 1.2rem; }
+
+#particle-canvas {
+  position: fixed; top: 0; left: 220px;
+  width: calc(100vw - 220px); height: 100vh;
+  pointer-events: none; z-index: 0;
+}
+
+/* ===== RIGHTS PAGE ===== */
+#rights .rights-container {
+  max-width: 900px; margin: 0 auto;
+}
+
+#rights h2 {
+  font-family: var(--font-serif); font-size: 2rem;
+  text-align: center; margin-bottom: 32px;
+}
+
+#rights .radar-wrap {
+  display: flex; gap: 40px; align-items: flex-start;
+  flex-wrap: wrap; justify-content: center;
+}
+
+#rights .radar-chart {
+  width: 320px; height: 320px;
+}
+
+#rights .sliders-panel {
+  flex: 1; min-width: 280px; max-width: 400px;
+}
+
+#rights .slider-group {
+  margin-bottom: 24px;
+}
+
+#rights .slider-label {
+  display: flex; justify-content: space-between;
+  margin-bottom: 8px; font-size: 0.9rem;
+}
+
+#rights .slider-label .name { color: var(--e6); }
+
+#rights .slider-label .level-name {
+  color: var(--cr); font-family: var(--font-serif);
+  font-size: 1rem;
+}
+
+#rights input[type=range] {
+  width: 100%; -webkit-appearance: none;
+  height: 6px; background: var(--e2);
+  border-radius: 3px; outline: none;
+}
+
+#rights input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px;
+  background: var(--az); border-radius: 50%;
+  cursor: pointer; border: 2px solid var(--e6);
+}
+
+#rights .meaning-panel {
+  margin-top: 32px;
+  padding: 20px; background: rgba(26,26,30,0.6);
+  border: 1px solid var(--e2); border-radius: 12px;
+}
+
+#rights .meaning-panel h3 {
+  font-family: var(--font-serif); margin-top: 0;
+}
+
+#rights .allow-list { color: var(--ma); }
+#rights .deny-list { color: var(--cr); }
+
+/* ===== ASSETS PAGE ===== */
+#assets .assets-container { max-width: 1000px; margin: 0 auto; }
+
+#assets h2 { font-family: var(--font-serif); font-size: 2rem; text-align: center; margin-bottom: 32px; }
+
+#assets .create-form {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 24px; padding: 20px;
+  background: rgba(26,26,30,0.6); border: 1px solid var(--e2);
+  border-radius: 12px;
+}
+
+#assets .create-form input, #assets .create-form select {
+  padding: 8px 12px; background: var(--e1); color: var(--e6);
+  border: 1px solid var(--e2); border-radius: 6px;
+  font-family: inherit;
+}
+
+#assets .create-form button {
+  padding: 8px 20px; background: var(--az); color: var(--e0);
+  border: none; border-radius: 6px; cursor: pointer;
+  font-family: inherit; transition: all 0.2s;
+}
+
+#assets .create-form button:hover { background: #5aa0b4; }
+
+#assets .asset-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+#assets .asset-card {
+  background: rgba(26,26,30,0.8); border: 1px solid var(--e2);
+  border-radius: 12px; padding: 20px; cursor: pointer;
+  transition: all 0.3s;
+}
+
+#assets .asset-card:hover { border-color: var(--az); }
+
+#assets .asset-card .asset-type {
+  font-size: 0.75rem; color: var(--az);
+  margin-bottom: 8px; letter-spacing: 0.1em;
+}
+
+#assets .asset-card h4 {
+  font-family: var(--font-serif); margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+
+#assets .asset-card .power-badges {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+
+#assets .asset-card .badge {
+  padding: 2px 8px; border-radius: 4px;
+  font-size: 0.7rem; border: 1px solid;
+}
+
+#assets .asset-card .stage-tag {
+  margin-top: 12px; font-size: 0.8rem;
+  color: var(--or); font-family: var(--font-serif);
+}
+
+#assets .asset-detail {
+  margin-top: 16px; padding: 16px;
+  background: var(--e1); border-radius: 8px;
+  display: none;
+}
+
+#assets .asset-detail.open { display: block; }
+
+#assets .event-buttons {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;
+}
+
+#assets .event-buttons button {
+  padding: 6px 12px; background: var(--e2); color: var(--e6);
+  border: 1px solid var(--e3); border-radius: 4px;
+  cursor: pointer; font-size: 0.8rem;
+}
+
+#assets .event-buttons button:hover { background: var(--az); color: var(--e0); }
+
+/* ===== GRAPH PAGE ===== */
+#graph .graph-container { max-width: 1000px; margin: 0 auto; text-align: center; }
+
+#graph h2 { font-family: var(--font-serif); font-size: 2rem; margin-bottom: 16px; }
+
+#graph .graph-subtitle { color: var(--e4); margin-bottom: 24px; }
+
+#graph-canvas {
+  width: 100%; height: 500px;
+  background: rgba(26,26,30,0.4);
+  border: 1px solid var(--e2); border-radius: 12px;
+}
+
+#graph .legend {
+  display: flex; gap: 20px; justify-content: center;
+  margin-top: 16px; font-size: 0.8rem;
+}
+
+#graph .legend-item { display: flex; align-items: center; gap: 6px; }
+
+#graph .legend-line {
+  width: 24px; height: 2px;
+}
+
+/* ===== SHI PAGE ===== */
+#shi .shi-container { max-width: 800px; margin: 0 auto; }
+
+#shi h2 { font-family: var(--font-serif); font-size: 2rem; text-align: center; margin-bottom: 32px; }
+
+#shi .stage-ladder {
+  display: flex; gap: 8px; justify-content: center;
+  margin-bottom: 40px;
+}
+
+#shi .stage-step {
+  flex: 1; padding: 20px 12px;
+  background: var(--e1); border: 2px solid var(--e2);
+  border-radius: 8px; text-align: center;
+  transition: all 0.3s;
+}
+
+#shi .stage-step.active {
+  border-color: var(--az);
+  background: rgba(74,144,164,0.15);
+  box-shadow: 0 0 16px rgba(74,144,164,0.2);
+}
+
+#shi .stage-step .stage-num {
+  font-size: 1.5rem; font-weight: 700; color: var(--az);
+  font-family: var(--font-serif);
+}
+
+#shi .stage-step .stage-name {
+  font-size: 1rem; color: var(--e6); margin: 8px 0;
+  font-family: var(--font-serif);
+}
+
+#shi .stage-step .stage-meaning {
+  font-size: 0.75rem; color: var(--e4);
+}
+
+#shi .formula-box {
+  padding: 24px; background: rgba(26,26,30,0.6);
+  border: 1px solid var(--e2); border-radius: 12px;
+  margin-bottom: 32px;
+}
+
+#shi .formula-box .formula {
+  font-family: var(--font-serif); font-size: 1.3rem;
+  text-align: center; color: var(--e6); margin-bottom: 20px;
+}
+
+#shi .metric-bar {
+  margin-bottom: 16px;
+}
+
+#shi .metric-bar label {
+  display: flex; justify-content: space-between;
+  font-size: 0.85rem; margin-bottom: 4px;
+}
+
+#shi .metric-bar .bar {
+  height: 8px; background: var(--e2); border-radius: 4px;
+  overflow: hidden;
+}
+
+#shi .metric-bar .bar-fill {
+  height: 100%; border-radius: 4px; transition: width 0.5s;
+}
+
+#shi .takeover-panel {
+  padding: 20px; background: var(--e1);
+  border: 1px solid var(--e2); border-radius: 12px;
+}
+
+#shi .takeover-panel h3 { font-family: var(--font-serif); margin-top: 0; }
+
+#shi .toggle-row {
+  display: flex; align-items: center; gap: 12px; margin: 12px 0;
+}
+
+#shi .toggle-switch {
+  width: 44px; height: 24px; background: var(--e2);
+  border-radius: 12px; position: relative; cursor: pointer;
+  transition: background 0.3s;
+}
+
+#shi .toggle-switch.on { background: var(--az); }
+
+#shi .toggle-switch::after {
+  content:''; position: absolute; top: 2px; left: 2px;
+  width: 20px; height: 20px; background: var(--e6);
+  border-radius: 50%; transition: transform 0.3s;
+}
+
+#shi .toggle-switch.on::after { transform: translateX(20px); }
+
+/* ===== Simulate & Market (placeholder) ===== */
+#simulate, #market { text-align: center; padding-top: 40px; }
+
+#simulate h2, #market h2 {
+  font-family: var(--font-serif); font-size: 2rem; margin-bottom: 16px;
+}
+
+#simulate p, #market p { color: var(--e4); }
+</style>
+</head>
+<body>
+<div id="echo-layout">
+  <nav id="echo-nav">
+    <div class="logo">
+      <h1>ECHO</h1>
+      <p>使用权生命周期网络</p>
+      <div class="seal">印</div>
+    </div>
+    <div class="nav-group-label">核心概念</div>
+    <a class="nav-item active" data-page="home" onclick="navTo('home')">☯ 首页</a>
+    <a class="nav-item" data-page="rights" onclick="navTo('rights')">◉ 四权六档</a>
+    <a class="nav-item" data-page="assets" onclick="navTo('assets')">◈ 资产生命</a>
+    <a class="nav-item" data-page="graph" onclick="navTo('graph')">◉ 验证图</a>
+    <a class="nav-item" data-page="shi" onclick="navTo('shi')">◉ 势体系</a>
+    <div class="nav-group-label">模拟演示</div>
+    <a class="nav-item" data-page="simulate" onclick="navTo('simulate')">▶ 场景模拟</a>
+    <a class="nav-item" data-page="market" onclick="navTo('market')">◇ 规则市场</a>
+  </nav>
+
+  <main id="echo-main">
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- ===== HOME ===== -->
+    <div class="echo-page active" id="home">
+      <div class="hero">
+        <div class="seal-big">ECHO</div>
+        <h2>万物有灵 皆可生长</h2>
+        <p class="subtitle">使用权生命周期网络 · 四权六档 · 势体系 · 规则市场</p>
+      </div>
+      <div class="architecture">
+        <div class="arch-card" onclick="navTo('rights')">
+          <div class="icon">◉</div>
+          <h3>四权六档</h3>
+          <p>用·扩·衍·益<br>禁·己·亲·约·法·公</p>
+        </div>
+        <div class="arch-card" onclick="navTo('assets')">
+          <div class="icon">◈</div>
+          <h3>资产生命</h3>
+          <p>铸造 · 使用 · 衍生 · 扩展<br>全生命周期追踪</p>
+        </div>
+        <div class="arch-card" onclick="navTo('graph')">
+          <div class="icon">◉</div>
+          <h3>验证图</h3>
+          <p>引用 · 改编 · 整合 · 分叉<br>关系网络拓扑</p>
+        </div>
+        <div class="arch-card" onclick="navTo('shi')">
+          <div class="icon">◉</div>
+          <h3>势体系</h3>
+          <p>潜藏 · 显现 · 生长 · 大成 · 转化<br>生态免疫系统</p>
+        </div>
+      </div>
+      <div class="flow-diagram">
+        <span class="flow-node">铸造资产</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-node">四权配置</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-node">验证事件</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-node">势位计算</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-node">生态演化</span>
+      </div>
+    </div>
+
+    <!-- ===== RIGHTS ===== -->
+    <div class="echo-page" id="rights">
+      <div class="rights-container">
+        <h2>四权六档 · 配置器</h2>
+        <div class="radar-wrap">
+          <svg class="radar-chart" viewBox="0 0 320 320">
+            <g transform="translate(160,160)">
+              <!-- Grid -->
+              <circle cx="0" cy="0" r="20" fill="none" stroke="var(--e3)" stroke-width="0.5"/>
+              <circle cx="0" cy="0" r="40" fill="none" stroke="var(--e3)" stroke-width="0.5"/>
+              <circle cx="0" cy="0" r="60" fill="none" stroke="var(--e3)" stroke-width="0.5"/>
+              <circle cx="0" cy="0" r="80" fill="none" stroke="var(--e3)" stroke-width="0.5"/>
+              <circle cx="0" cy="0" r="100" fill="none" stroke="var(--e3)" stroke-width="0.5"/>
+              <!-- Axes -->
+              <line x1="0" y1="-100" x2="0" y2="100" stroke="var(--e3)" stroke-width="0.5"/>
+              <line x1="-100" y1="0" x2="100" y2="0" stroke="var(--e3)" stroke-width="0.5"/>
+              <!-- Labels -->
+              <text x="0" y="-120" text-anchor="middle" fill="var(--e6)" font-size="14" font-family="var(--font-serif)">用</text>
+              <text x="120" y="5" text-anchor="middle" fill="var(--e6)" font-size="14" font-family="var(--font-serif)">扩</text>
+              <text x="0" y="125" text-anchor="middle" fill="var(--e6)" font-size="14" font-family="var(--font-serif)">衍</text>
+              <text x="-120" y="5" text-anchor="middle" fill="var(--e6)" font-size="14" font-family="var(--font-serif)">益</text>
+              <!-- Data poly -->
+              <polygon id="radar-poly" points="0,-60 60,0 0,60 -40,0" fill="rgba(196,92,72,0.2)" stroke="var(--cr)" stroke-width="2"/>
+              <!-- Dots -->
+              <g id="radar-dots">
+                <circle cx="0" cy="-60" r="5" fill="var(--cr)" stroke="var(--e6)" stroke-width="2"/>
+                <circle cx="60" cy="0" r="5" fill="var(--cr)" stroke="var(--e6)" stroke-width="2"/>
+                <circle cx="0" cy="60" r="5" fill="var(--cr)" stroke="var(--e6)" stroke-width="2"/>
+                <circle cx="-40" cy="0" r="5" fill="var(--cr)" stroke="var(--e6)" stroke-width="2"/>
+              </g>
+            </g>
+          </svg>
+          <div class="sliders-panel">
+            <div class="slider-group">
+              <div class="slider-label"><span class="name">用 · 谁能接触</span><span class="level-name" id="val-use">约</span></div>
+              <input type="range" id="slider-use" min="0" max="5" value="3">
+            </div>
+            <div class="slider-group">
+              <div class="slider-label"><span class="name">扩 · 传播范围</span><span class="level-name" id="val-spread">亲</span></div>
+              <input type="range" id="slider-spread" min="0" max="5" value="2">
+            </div>
+            <div class="slider-group">
+              <div class="slider-label"><span class="name">衍 · 改造权限</span><span class="level-name" id="val-derive">约</span></div>
+              <input type="range" id="slider-derive" min="0" max="5" value="3">
+            </div>
+            <div class="slider-group">
+              <div class="slider-label"><span class="name">益 · 收益分配</span><span class="level-name" id="val-benefit">己</span></div>
+              <input type="range" id="slider-benefit" min="0" max="5" value="1">
+            </div>
+          </div>
+        </div>
+        <div class="meaning-panel">
+          <h3>配置含义</h3>
+          <div style="display:flex; gap:40px;">
+            <div style="flex:1;">
+              <h4 style="color:var(--ma); font-family:var(--font-serif);">✓ 允许场景</h4>
+              <ul class="allow-list" id="allow-list"></ul>
+            </div>
+            <div style="flex:1;">
+              <h4 style="color:var(--cr); font-family:var(--font-serif);">✗ 禁止场景</h4>
+              <ul class="deny-list" id="deny-list"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ASSETS ===== -->
+    <div class="echo-page" id="assets">
+      <div class="assets-container">
+        <h2>资产生命周期</h2>
+        <div class="create-form">
+          <input type="text" id="asset-name" placeholder="资产名称">
+          <select id="asset-type">
+            <option value="音乐">音乐</option>
+            <option value="图像">图像</option>
+            <option value="文字">文字</option>
+            <option value="代码">代码</option>
+          </select>
+          <button onclick="createAsset()">铸造资产</button>
+        </div>
+        <div class="asset-grid" id="asset-grid"></div>
+      </div>
+    </div>
+
+    <!-- ===== GRAPH ===== -->
+    <div class="echo-page" id="graph">
+      <div class="graph-container">
+        <h2>验证图拓扑</h2>
+        <p class="graph-subtitle">节点=资产 · 边=验证事件 · 颜色=生命阶段</p>
+        <canvas id="graph-canvas"></canvas>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-line" style="background:var(--e5); height:1px;"></div> 引用</div>
+          <div class="legend-item"><div class="legend-line" style="background:var(--az); border-top:2px dashed;"></div> 改编</div>
+          <div class="legend-item"><div class="legend-line" style="background:var(--or); height:3px;"></div> 整合</div>
+          <div class="legend-item"><div class="legend-line" style="background:var(--ma);"></div> 分叉</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SHI ===== -->
+    <div class="echo-page" id="shi">
+      <div class="shi-container">
+        <h2>势体系 · 生态免疫系统</h2>
+        <div class="stage-ladder" id="stage-ladder">
+          <div class="stage-step" data-stage="0">
+            <div class="stage-num">0</div>
+            <div class="stage-name">潜藏</div>
+            <div class="stage-meaning">种子在土<br>等待发芽</div>
+          </div>
+          <div class="stage-step" data-stage="1">
+            <div class="stage-num">1</div>
+            <div class="stage-name">显现</div>
+            <div class="stage-meaning">嫩芽破土<br>初见阳光</div>
+          </div>
+          <div class="stage-step active" data-stage="2">
+            <div class="stage-num">2</div>
+            <div class="stage-name">生长</div>
+            <div class="stage-meaning">枝叶伸展<br>根系蔓延</div>
+          </div>
+          <div class="stage-step" data-stage="3">
+            <div class="stage-num">3</div>
+            <div class="stage-name">大成</div>
+            <div class="stage-meaning">大树成荫<br>庇护万物</div>
+          </div>
+          <div class="stage-step" data-stage="4">
+            <div class="stage-num">4</div>
+            <div class="stage-name">转化</div>
+            <div class="stage-meaning">落叶归根<br>孕育来年</div>
+          </div>
+        </div>
+        <div class="formula-box">
+          <div class="formula">P = 0.4 × T + 0.4 × S + 0.2 × C</div>
+          <div class="metric-bar">
+            <label><span>时间密度 T（验证事件频率）</span><span id="val-t">35%</span></label>
+            <div class="bar"><div class="bar-fill" id="bar-t" style="width:35%; background:var(--az);"></div></div>
+          </div>
+          <div class="metric-bar">
+            <label><span>空间中心性 S（网络位置）</span><span id="val-s">42%</span></label>
+            <div class="bar"><div class="bar-fill" id="bar-s" style="width:42%; background:var(--ma);"></div></div>
+          </div>
+          <div class="metric-bar">
+            <label><span>语义跨越 C（领域广度）</span><span id="val-c">15%</span></label>
+            <div class="bar"><div class="bar-fill" id="bar-c" style="width:15%; background:var(--or);"></div></div>
+          </div>
+          <div style="text-align:center; margin-top:20px; font-family:var(--font-serif); font-size:1.1rem; color:var(--e6);">
+            势位分数 <span id="shi-score" style="color:var(--az); font-size:1.3rem; font-weight:700;">35.3</span> / 100
+            <span style="margin-left:20px; color:var(--or);">阶段: 生长</span>
+          </div>
+        </div>
+        <div class="takeover-panel">
+          <h3>势图接管设置</h3>
+          <p style="color:var(--e4); font-size:0.85rem; margin-bottom:16px;">系统自动根据资产势位调整四权配置 · 只开放，不收紧 · 每次最多升1档</p>
+          <div class="toggle-row">
+            <div class="toggle-switch on" id="tog-enable" onclick="toggleShi('enable')"></div>
+            <span>启用势图接管</span>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-switch" id="tog-auto" onclick="toggleShi('auto')"></div>
+            <span>自动模式（非建议模式）</span>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-switch on" id="tog-protect" onclick="toggleShi('protect')"></div>
+            <span>保护已有授权不降级</span>
+          </div>
+          <div style="margin-top:16px; padding:12px; background:var(--e0); border-radius:6px; font-size:0.8rem; color:var(--e5);">
+            <strong style="color:var(--e6);">当前约束:</strong> 生长阶段 · 用/扩/衍 最低档 ≥ 1 · 每次最多升1档 · 禁止收紧
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SIMULATE ===== -->
+    <div class="echo-page" id="simulate">
+      <h2>场景模拟</h2>
+      <p>多Agent社会经济活动模拟 · 时间轴推进 · 分润可视化</p>
+      <p style="color:var(--e3); margin-top:40px;">◉ 此模块由Agent 3构建 ◉</p>
+    </div>
+
+    <!-- ===== MARKET ===== -->
+    <div class="echo-page" id="market">
+      <h2>规则市场</h2>
+      <p>规则模板超市 · 浏览 · 搜索 · 应用 · 评价</p>
+      <p style="color:var(--e3); margin-top:40px;">◉ 此模块由Agent 3构建 ◉</p>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ===== ROUTER ===== */
+const pageMap = {home:1, rights:1, assets:1, graph:1, shi:1, simulate:1, market:1};
+let currentPage = 'home';
+
+function navTo(page) {
+  if (page === currentPage) return false;
+  document.querySelectorAll('.echo-page').forEach(p => p.classList.remove('active'));
+  const t = document.getElementById(page);
+  if (t) t.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.page === page);
+  });
+  currentPage = page;
+  window.location.hash = page;
+  if (page === 'graph') startGraphSim();
+  if (page === 'home') startParticles();
+  return false;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.echo-page').forEach(p => p.classList.remove('active'));
+  const hash = window.location.hash.slice(1) || 'home';
+  const t = document.getElementById(hash);
+  if (t && pageMap[hash]) { t.classList.add('active'); currentPage = hash; }
+  else { document.getElementById('home').classList.add('active'); }
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.page === currentPage);
+  });
+  startParticles();
+  initRights();
+  initAssets();
+  startGraphSim();
+});
+
+/* ===== PARTICLES ===== */
+let particlesCtx, particlesArr = [];
+function startParticles() {
+  const c = document.getElementById('particle-canvas');
+  if (!c) return;
+  c.width = c.offsetWidth; c.height = c.offsetHeight;
+  particlesCtx = c.getContext('2d');
+  particlesArr = [];
+  for (let i = 0; i < 60; i++) {
+    particlesArr.push({
+      x: Math.random() * c.width, y: Math.random() * c.height,
+      vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 - 0.2,
+      r: Math.random() * 2 + 0.5, alpha: Math.random() * 0.5 + 0.2,
+      life: Math.random() * 200
+    });
+  }
+  animateParticles();
+}
+
+function animateParticles() {
+  if (currentPage !== 'home') return;
+  const c = document.getElementById('particle-canvas');
+  if (!c) return;
+  const ctx = particlesCtx;
+  ctx.clearRect(0, 0, c.width, c.height);
+  particlesArr.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.life--;
+    if (p.life <= 0 || p.y < -10) {
+      p.x = Math.random() * c.width; p.y = c.height + 10;
+      p.life = Math.random() * 200 + 100;
+      p.alpha = Math.random() * 0.5 + 0.2;
+    }
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(240,240,232,${p.alpha})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(animateParticles);
+}
+
+/* ===== RIGHTS ===== */
+const LEVEL_NAMES = ['禁','己','亲','约','法','公'];
+const LEVEL_COLORS = ['#0c0c0e','#3a3a42','#6a6a72','#9a8a7a','#b86a5a','#c45c48'];
+
+function initRights() {
+  ['use','spread','derive','benefit'].forEach(r => {
+    const s = document.getElementById('slider-'+r);
+    if (!s) return;
+    s.addEventListener('input', () => updateRights());
+  });
+  updateRights();
+}
+
+function updateRights() {
+  const vals = {};
+  ['use','spread','derive','benefit'].forEach(r => {
+    vals[r] = parseInt(document.getElementById('slider-'+r).value);
+    document.getElementById('val-'+r).textContent = LEVEL_NAMES[vals[r]];
+    document.getElementById('val-'+r).style.color = LEVEL_COLORS[vals[r]];
+  });
+
+  // Update radar
+  const cx = 160, cy = 160, R = 100;
+  const pts = [];
+  [vals.use, vals.spread, vals.derive, vals.benefit].forEach((v, i) => {
+    const a = (Math.PI/2) * i - Math.PI/2;
+    pts.push([cx + (v/5)*R*Math.cos(a), cy + (v/5)*R*Math.sin(a)]);
+  });
+  document.getElementById('radar-poly').setAttribute('points', pts.map(p => p.join(',')).join(' '));
+  document.getElementById('radar-dots').innerHTML = pts.map(p =>
+    `<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="var(--cr)" stroke="var(--e6)" stroke-width="2"/>`
+  ).join('');
+
+  // Update meaning
+  const scenarios = {
+    use: { allow: [[],['仅自己'],['信任圈'],['试听免费商用授权'],['社区自动'],['无条件']], deny: [['一切'],['他人'],['陌生人'],['无契约商用'],['禁止'],['无'] },
+    spread: { allow: [[],['设备同步'],['信任圈'],['跨场景授权'],['规则自动'],['全网']], deny: [['一切复制'],['跨设备'],['跨圈传播'],['无授权传播'],['禁止'],['无'] },
+    derive: { allow: [[],['仅自己'],['非商用改编'],['授权改编'],['规则自动'],['自由改编']], deny: [['一切修改'],['他人修改'],['商用改编'],['无授权改编'],['禁止'],['无'] },
+    benefit: { allow: [['拒绝货币'],['100%归己'],['创作者为主'],['契约比例'],['社区规则'],['归公共']], deny: [['货币化'],['分润'],['使用者收益'],['无契约'],['禁止'],['无'] }
+  };
+
+  const allowItems = [], denyItems = [];
+  ['use','spread','derive','benefit'].forEach(r => {
+    const v = vals[r];
+    const rn = {use:'用',spread:'扩',derive:'衍',benefit:'益'}[r];
+    scenarios[r].allow[v].forEach(s => allowItems.push(`【${rn}·${LEVEL_NAMES[v]}】${s}`));
+    scenarios[r].deny[v].forEach(s => denyItems.push(`【${rn}·${LEVEL_NAMES[v]}】${s}`));
+  });
+  document.getElementById('allow-list').innerHTML = allowItems.map(i => `<li>${i}</li>`).join('');
+  document.getElementById('deny-list').innerHTML = denyItems.map(i => `<li>${i}</li>`).join('');
+}
+
+/* ===== ASSETS ===== */
+let assets = [
+  {id:'a1', name:'夜曲', type:'音乐', powers:{use:3,spread:2,derive:3,benefit:1}, stage:2, score:35},
+  {id:'a2', name:'星夜Remix', type:'图像', powers:{use:4,spread:3,derive:4,benefit:2}, stage:1, score:28},
+  {id:'a3', name:'共识论文', type:'文字', powers:{use:5,spread:5,derive:4,benefit:3}, stage:3, score:55},
+  {id:'a4', name:'ECHO合约', type:'代码', powers:{use:4,spread:4,derive:5,benefit:4}, stage:2, score:42}
+];
+let edges = [
+  {from:'a1', to:'a2', type:'remix'},
+  {from:'a3', to:'a4', type:'integrate'},
+  {from:'a1', to:'a3', type:'reference'},
+  {from:'a4', to:'a2', type:'fork'}
+];
+
+function initAssets() { renderAssets(); }
+
+function renderAssets() {
+  const g = document.getElementById('asset-grid');
+  if (!g) return;
+  g.innerHTML = assets.map(a => `
+    <div class="asset-card" onclick="toggleDetail('${a.id}')">
+      <div class="asset-type">${a.type}</div>
+      <h4>${a.name}</h4>
+      <div class="power-badges">
+        <span class="badge" style="border-color:var(--az);color:var(--az)">用${LEVEL_NAMES[a.powers.use]}</span>
+        <span class="badge" style="border-color:var(--ma);color:var(--ma)">扩${LEVEL_NAMES[a.powers.spread]}</span>
+        <span class="badge" style="border-color:var(--or);color:var(--or)">衍${LEVEL_NAMES[a.powers.derive]}</span>
+        <span class="badge" style="border-color:var(--cr);color:var(--cr)">益${LEVEL_NAMES[a.powers.benefit]}</span>
+      </div>
+      <div class="stage-tag">${['潜藏','显现','生长','大成','转化'][a.stage]} · 势位 ${a.score}</div>
+      <div class="asset-detail" id="detail-${a.id}">
+        <p>四权配置: 用${LEVEL_NAMES[a.powers.use]} / 扩${LEVEL_NAMES[a.powers.spread]} / 衍${LEVEL_NAMES[a.powers.derive]} / 益${LEVEL_NAMES[a.powers.benefit]}</p>
+        <p>当前阶段: ${['潜藏','显现','生长','大成','转化'][a.stage]} (阶段${a.stage})</p>
+        <div class="event-buttons">
+          <button onclick="eventStop(event); addEvent('${a.id}','reference')">被引用</button>
+          <button onclick="eventStop(event); addEvent('${a.id}','remix')">被改编</button>
+          <button onclick="eventStop(event); addEvent('${a.id}','integrate')">被整合</button>
+          <button onclick="eventStop(event); addEvent('${a.id}','fork')">被分叉</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function eventStop(e) { e.stopPropagation(); }
+
+function toggleDetail(id) {
+  const d = document.getElementById('detail-'+id);
+  if (d) d.classList.toggle('open');
+}
+
+function addEvent(assetId, type) {
+  const a = assets.find(x => x.id === assetId);
+  if (!a) return;
+  // Update score
+  const weights = {reference:3, remix:8, integrate:12, fork:2};
+  a.score = Math.min(100, a.score + weights[type]);
+  a.stage = a.score < 20 ? 0 : a.score < 40 ? 1 : a.score < 60 ? 2 : a.score < 80 ? 3 : 4;
+  renderAssets();
+  updateShiDisplay(a);
+}
+
+function createAsset() {
+  const name = document.getElementById('asset-name').value;
+  const type = document.getElementById('asset-type').value;
+  if (!name) return;
+  assets.push({
+    id: 'a'+Date.now(), name, type,
+    powers: {use:3, spread:2, derive:3, benefit:1},
+    stage: 0, score: 0
+  });
+  document.getElementById('asset-name').value = '';
+  renderAssets();
+}
+
+function updateShiDisplay(a) {
+  // Update stage highlight
+  document.querySelectorAll('#stage-ladder .stage-step').forEach(s => {
+    s.classList.toggle('active', parseInt(s.dataset.stage) === a.stage);
+  });
+  // Update bars
+  const t = Math.min(100, a.score * 0.8 + Math.random()*10);
+  const s = Math.min(100, a.score * 0.9 + Math.random()*5);
+  const c = Math.min(100, a.score * 0.3 + Math.random()*20);
+  const p = (0.4 * t + 0.4 * s + 0.2 * c).toFixed(1);
+  document.getElementById('bar-t').style.width = t+'%'; document.getElementById('val-t').textContent = Math.round(t)+'%';
+  document.getElementById('bar-s').style.width = s+'%'; document.getElementById('val-s').textContent = Math.round(s)+'%';
+  document.getElementById('bar-c').style.width = c+'%'; document.getElementById('val-c').textContent = Math.round(c)+'%';
+  document.getElementById('shi-score').textContent = p;
+}
+
+/* ===== GRAPH ===== */
+let graphRunning = false;
+function startGraphSim() {
+  if (graphRunning) return;
+  graphRunning = true;
+  const c = document.getElementById('graph-canvas');
+  if (!c) return;
+  c.width = c.offsetWidth; c.height = c.offsetHeight;
+  const ctx = c.getContext('2d');
+
+  // Init nodes
+  const nodes = assets.map((a, i) => ({
+    id: a.id, name: a.name, stage: a.stage, score: a.score,
+    x: c.width/2 + (Math.random()-0.5)*200,
+    y: c.height/2 + (Math.random()-0.5)*200,
+    vx: 0, vy: 0
+  }));
+
+  const edgeList = edges.map(e => {
+    const n1 = nodes.find(n => n.id === e.from);
+    const n2 = nodes.find(n => n.id === e.to);
+    return {n1, n2, type: e.type};
+  }).filter(e => e.n1 && e.n2);
+
+  function animate() {
+    if (currentPage !== 'graph') { graphRunning = false; return; }
+    ctx.clearRect(0, 0, c.width, c.height);
+
+    // Physics
+    nodes.forEach(n => {
+      n.vx *= 0.95; n.vy *= 0.95;
+      // Center pull
+      n.vx += (c.width/2 - n.x) * 0.001;
+      n.vy += (c.height/2 - n.y) * 0.001;
+    });
+    // Repulsion
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i+1; j < nodes.length; j++) {
+        const dx = nodes[j].x - nodes[i].x;
+        const dy = nodes[j].y - nodes[i].y;
+        const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+        const f = 800 / (dist * dist);
+        const fx = (dx/dist) * f, fy = (dy/dist) * f;
+        nodes[i].vx -= fx; nodes[i].vy -= fy;
+        nodes[j].vx += fx; nodes[j].vy += fy;
+      }
+    }
+    // Spring
+    edgeList.forEach(e => {
+      const dx = e.n2.x - e.n1.x;
+      const dy = e.n2.y - e.n1.y;
+      const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+      const f = (dist - 120) * 0.01;
+      const fx = (dx/dist) * f, fy = (dy/dist) * f;
+      e.n1.vx += fx; e.n1.vy += fy;
+      e.n2.vx -= fx; e.n2.vy -= fy;
+    });
+
+    nodes.forEach(n => { n.x += n.vx; n.y += n.vy; });
+
+    // Draw edges
+    edgeList.forEach(e => {
+      ctx.beginPath();
+      ctx.moveTo(e.n1.x, e.n1.y);
+      ctx.lineTo(e.n2.x, e.n2.y);
+      const colors = {reference:'#8a8a90', remix:'#4a90a4', integrate:'#c8a84c', fork:'#5a9a6e'};
+      const widths = {reference:1, remix:1.5, integrate:3, fork:1};
+      ctx.strokeStyle = colors[e.type] || '#8a8a90';
+      ctx.lineWidth = widths[e.type] || 1;
+      if (e.type === 'remix') ctx.setLineDash([6, 4]);
+      else ctx.setLineDash([]);
+      ctx.stroke();
+    });
+
+    // Draw nodes
+    const stageColors = ['#0c0c0e','#3a3a42','#4a90a4','#c8a84c','#c45c48'];
+    nodes.forEach(n => {
+      const r = 15 + n.score / 5;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r, 0, Math.PI*2);
+      ctx.fillStyle = stageColors[n.stage] || '#4a4a52';
+      ctx.fill();
+      ctx.strokeStyle = '#f0f0e8';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#f0f0e8';
+      ctx.font = '12px "Noto Sans SC"';
+      ctx.textAlign = 'center';
+      ctx.fillText(n.name, n.x, n.y + r + 16);
+    });
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ===== SHI TOGGLE ===== */
+const shiState = {enable:true, auto:false, protect:true};
+function toggleShi(key) {
+  shiState[key] = !shiState[key];
+  document.getElementById('tog-'+key).classList.toggle('on', shiState[key]);
+}
+
+/* ===== KEYBOARD NAV ===== */
+document.addEventListener('keydown', e => {
+  const pages = ['home','rights','assets','graph','shi','simulate','market'];
+  const idx = pages.indexOf(currentPage);
+  if (e.key === 'ArrowDown' || e.key === 'ArrowRight') navTo(pages[(idx+1)%pages.length]);
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') navTo(pages[(idx-1+pages.length)%pages.length]);
+});
+</script>
+</body>
+</html>
