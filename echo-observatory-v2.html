@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECHO 观澜 · 流动模式</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  /* ===== 基础重置 ===== */
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Noto Serif SC','STSong',serif;
+    background:#fdfcf8;
+    overflow-x:hidden;
+    color:var(--ink-dark);
+  }
+
+  /* ===== 水墨色板 ===== */
+  :root{
+    --paper:#fdfcf8;
+    --ink-dark:#2c2c2c;
+    --ink-medium:#6b6b6b;
+    --ink-light:#a8a8a8;
+    --ink-faint:#d4d4d4;
+    --vermilion:#c45c48;
+    --gold:#c9a959;
+    --cerulean:#5a8a9f;
+    --mountain:#7a8b6e;
+    --water:#7a9aaa;
+    --sprout:#8fb996;
+    --leaf:#c17f59;
+    --cloud:#8a8a8a;
+  }
+
+  /* ===== 水墨滤镜 ===== */
+  .ink-wash{
+    filter:url(#ink-filter);
+  }
+
+  /* ===== 页眉 ===== */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:200;
+    background:rgba(253,252,248,.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--ink-faint);
+    padding:12px 24px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .logo{
+    font-size:20px;font-weight:700;color:var(--ink-dark);
+    letter-spacing:4px;
+  }
+  .logo span{color:var(--vermilion)}
+  .mode-switch{
+    display:flex;gap:8px;align-items:center;
+    font-size:13px;color:var(--ink-medium);
+  }
+  .mode-switch button{
+    background:none;border:1px solid var(--ink-faint);
+    padding:4px 12px;border-radius:4px;cursor:pointer;
+    font-family:inherit;font-size:13px;
+    transition:all .2s;
+  }
+  .mode-switch button:hover{border-color:var(--ink-medium);}
+  .mode-switch button.active{
+    background:var(--ink-dark);color:var(--paper);border-color:var(--ink-dark);
+  }
+
+  /* ===== 主画布 ===== */
+  #observatory{
+    position:fixed;top:56px;left:0;right:0;bottom:120px;
+    overflow:hidden;
+  }
+  #landscape-svg{
+    width:100%;height:100%;
+    cursor:grab;
+  }
+  #landscape-svg:active{cursor:grabbing}
+
+  /* ===== 资产节点 ===== */
+  .asset-node{cursor:pointer;transition:opacity .3s}
+  .asset-node:hover{opacity:.85}
+  .asset-pavilion{fill:var(--ink-light);stroke:var(--ink-dark);stroke-width:1.2}
+  .asset-guqin{fill:var(--mountain);stroke:var(--ink-dark);stroke-width:1.2}
+  .asset-scroll{fill:var(--gold);stroke:var(--ink-dark);stroke-width:1.2}
+  .asset-stele{fill:var(--ink-faint);stroke:var(--ink-dark);stroke-width:1.2}
+  .asset-garden{fill:var(--sprout);stroke:var(--ink-dark);stroke-width:1.2}
+  .asset-label{
+    font-size:11px;fill:var(--ink-dark);text-anchor:middle;
+    font-family:'Noto Serif SC',serif;opacity:.8;
+  }
+
+  /* ===== 生灵（流动角色） ===== */
+  .creature{
+    cursor:pointer;
+    transition:transform .2s;
+  }
+  .creature-avatar{
+    fill:var(--vermilion);
+    stroke:var(--paper);
+    stroke-width:2;
+  }
+  .creature-trail{
+    fill:none;
+    stroke:var(--vermilion);
+    stroke-width:1.5;
+    stroke-dasharray:4 6;
+    opacity:.4;
+    animation:flowDash 2s linear infinite;
+  }
+  @keyframes flowDash{
+    to{stroke-dashoffset:-20}
+  }
+  .creature-label{
+    font-size:10px;fill:var(--ink-medium);text-anchor:middle;
+    pointer-events:none;
+  }
+
+  /* ===== 物候标记 ===== */
+  .event-mark{opacity:0;animation:fadeInOut 2.5s ease-in-out forwards;pointer-events:none;}
+  @keyframes fadeInOut{
+    0%{opacity:0;transform:translateY(10px) scale(.7)}
+    30%{opacity:1;transform:translateY(0) scale(1)}
+    70%{opacity:1;transform:translateY(0) scale(1)}
+    100%{opacity:0;transform:translateY(-10px) scale(.8)}
+  }
+  .event-butterfly path{fill:var(--cerulean)}
+  .event-leaf path{fill:var(--leaf)}
+  .event-sprout line{stroke:var(--sprout);stroke-width:1.5}
+  .event-sprout ellipse{fill:var(--sprout)}
+  .event-coin circle{fill:var(--gold)}
+  .event-ripple circle{fill:none;stroke:var(--water);stroke-width:1.2;animation:ripple 2s ease-out infinite}
+  @keyframes ripple{
+    0%{r:2;opacity:1}
+    100%{r:16;opacity:0}
+  }
+  .event-cloud circle{fill:var(--cloud);opacity:.7}
+
+  /* ===== 流动路径 ===== */
+  .flow-path{
+    fill:none;
+    stroke:var(--vermilion);
+    stroke-width:1.2;
+    stroke-dasharray:8 4;
+    opacity:.25;
+    animation:flow 3s linear infinite;
+  }
+  @keyframes flow{
+    to{stroke-dashoffset:-24}
+  }
+
+  /* ===== 时间轴控制 ===== */
+  #time-control{
+    position:fixed;bottom:0;left:0;right:0;z-index:200;
+    background:rgba(253,252,248,.95);
+    backdrop-filter:blur(8px);
+    border-top:1px solid var(--ink-faint);
+    padding:12px 24px;
+    display:flex;align-items:center;gap:16px;
+  }
+  #play-btn{
+    width:36px;height:36px;border-radius:50%;
+    border:1px solid var(--ink-dark);background:transparent;
+    cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;
+    transition:all .2s;
+  }
+  #play-btn:hover{background:var(--ink-dark);color:var(--paper)}
+  #day-label{font-size:14px;color:var(--ink-dark);min-width:56px}
+  #time-slider{flex:1;height:4px;-webkit-appearance:none;background:var(--ink-faint);border-radius:2px;cursor:pointer}
+  #time-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--vermilion);cursor:pointer}
+  #time-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--vermilion);cursor:pointer;border:none}
+  .speed-control{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-medium)}
+  #speed-slider{width:60px}
+  #speed-label{font-size:11px;min-width:24px}
+
+  /* ===== 节气显示 ===== */
+  #solar-term{
+    position:fixed;top:68px;right:16px;z-index:150;
+    background:rgba(253,252,248,.85);padding:8px 14px;border-radius:4px;
+    border:1px solid var(--ink-faint);font-size:13px;color:var(--ink-medium);
+    backdrop-filter:blur(4px);
+  }
+  #term-name{color:var(--vermilion);font-weight:600}
+  #term-date{font-size:11px;color:var(--ink-light);margin-top:2px}
+
+  /* ===== 统计浮层 ===== */
+  #stats-float{
+    position:fixed;top:68px;left:16px;z-index:150;
+    background:rgba(253,252,248,.9);padding:10px 14px;border-radius:4px;
+    border:1px solid var(--ink-faint);font-size:12px;color:var(--ink-medium);
+    backdrop-filter:blur(4px);max-width:180px;
+  }
+  #stats-float .stat-row{display:flex;justify-content:space-between;gap:12px;margin:3px 0}
+  #stats-float .stat-val{color:var(--ink-dark);font-weight:500}
+
+  /* ===== Tooltip ===== */
+  #tooltip{
+    position:fixed;z-index:300;
+    background:rgba(44,44,44,.92);color:var(--paper);
+    padding:8px 12px;border-radius:4px;font-size:12px;
+    pointer-events:none;opacity:0;transition:opacity .2s;
+    max-width:220px;line-height:1.5;
+    box-shadow:0 4px 12px rgba(0,0,0,.2);
+  }
+  #tooltip.show{opacity:1}
+  #tooltip strong{color:var(--gold);display:block;margin-bottom:4px;font-size:13px}
+
+  /* ===== 侧边面板（工程面板） ===== */
+  #panel-overlay{
+    position:fixed;top:0;left:0;right:0;bottom:0;z-index:250;
+    background:rgba(0,0,0,.35);
+    opacity:0;pointer-events:none;
+    transition:opacity .3s;
+  }
+  #panel-overlay.open{opacity:1;pointer-events:auto}
+  #side-panel{
+    position:fixed;top:0;right:0;bottom:0;width:420px;max-width:90vw;
+    background:var(--paper);z-index:260;
+    transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);
+    border-left:1px solid var(--ink-faint);
+    display:flex;flex-direction:column;
+  }
+  #side-panel.open{transform:translateX(0)}
+  .panel-header{
+    padding:16px 20px;border-bottom:1px solid var(--ink-faint);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .panel-title{font-size:16px;font-weight:600;color:var(--ink-dark)}
+  .panel-close{
+    width:28px;height:28px;border-radius:50%;
+    border:1px solid var(--ink-faint);background:transparent;
+    cursor:pointer;font-size:16px;color:var(--ink-medium);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .panel-body{padding:16px 20px;flex:1;overflow-y:auto}
+  .panel-section{margin-bottom:20px}
+  .panel-section-title{font-size:13px;color:var(--ink-medium);margin-bottom:8px;font-weight:500}
+  .panel-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.04);font-size:13px}
+  .panel-row:last-child{border-bottom:none}
+  .panel-row span:first-child{color:var(--ink-medium)}
+  .panel-row span:last-child{color:var(--ink-dark);font-weight:500}
+
+  /* ===== 响应式 ===== */
+  @media(max-width:768px){
+    #side-panel{width:100%;max-width:100vw}
+    #stats-float{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- SVG滤镜:水墨晕染 -->
+<svg style="position:absolute;width:0;height:0;">
+  <defs>
+    <filter id="ink-filter" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <linearGradient id="sky-gradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8e4df"/>
+      <stop offset="100%" stop-color="#d4cec5"/>
+    </linearGradient>
+    <linearGradient id="mist-gradient" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="rgba(255,255,255,0)"/>
+      <stop offset="50%" stop-color="rgba(255,255,255,.6)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<!-- 页眉 -->
+<header>
+  <div class="logo">观<span>澜</span></div>
+  <div class="mode-switch">
+    <span>模式:</span>
+    <button id="mode-observatory" class="active">观象台</button>
+    <button id="mode-engineering">工程面板</button>
+  </div>
+</header>
+
+<!-- 观象台画布 -->
+<div id="observatory">
+  <svg id="landscape-svg"></svg>
+</div>
+
+<!-- 统计浮层 -->
+<div id="stats-float">
+  <div class="stat-row"><span>生灵</span><span class="stat-val" id="stat-creatures">0</span></div>
+  <div class="stat-row"><span>资产</span><span class="stat-val" id="stat-assets">0</span></div>
+  <div class="stat-row"><span>今日物候</span><span class="stat-val" id="stat-events">0</span></div>
+  <div class="stat-row"><span>流动</span><span class="stat-val" id="stat-flows">0</span></div>
+</div>
+
+<!-- 节气 -->
+<div id="solar-term">
+  <div id="term-name">立春</div>
+  <div id="term-date">第1天 · 甲子</div>
+</div>
+
+<!-- 时间轴 -->
+<div id="time-control">
+  <button id="play-btn">▶</button>
+  <span id="day-label">第 1 天</span>
+  <input type="range" id="time-slider" min="1" max="30" value="1">
+  <div class="speed-control">
+    <span>速度</span>
+    <input type="range" id="speed-slider" min="1" max="3" value="2">
+    <span id="speed-label">中</span>
+  </div>
+</div>
+
+<!-- 工程面板 -->
+<div id="panel-overlay"></div>
+<div id="side-panel">
+  <div class="panel-header">
+    <span class="panel-title">工程面板</span>
+    <button class="panel-close" id="panel-close">×</button>
+  </div>
+  <div class="panel-body" id="panel-body">
+    <div class="panel-section">
+      <div class="panel-section-title">全局统计</div>
+      <div id="panel-stats"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">资产列表</div>
+      <div id="panel-assets"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">生灵轨迹</div>
+      <div id="panel-creatures"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div id="tooltip"></div>
+
+<!-- ===== 数据 ===== -->
+<script src="./js/data.js"></script>
+
+<script>
+// ========================
+// 全局状态
+// ========================
+let currentDay = 1;
+const maxDay = 30;
+let isPlaying = false;
+let playSpeed = 2; // 1慢2中3快
+let playInterval = null;
+let mode = 'observatory'; // 'observatory' | 'engineering'
+let creaturePositions = new Map(); // creatureId -> {x, y, targetAssetId, path}
+
+// 节气
+const SOLAR_TERMS = [
+  '立春','雨水','惊蛰','春分','清明','谷雨',
+  '立夏','小满','芒种','夏至','小暑','大暑',
+  '立秋','处暑','白露','秋分','寒露','霜降',
+  '立冬','小雪','大雪','冬至','小寒','大寒'
+];
+const GANZHI = Array.from({length:60},(_,i)=>{
+  const gan=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  const zhi=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  return gan[i%10]+zhi[i%12];
+});
+
+// ========================
+// 初始化
+// ========================
+function init(){
+  const svg = d3.select('#landscape-svg');
+  const width = document.getElementById('observatory').clientWidth;
+  const height = document.getElementById('observatory').clientHeight;
+  svg.attr('width', width).attr('height', height);
+
+  // 检查数据加载
+  if(typeof USERS === 'undefined'){
+    console.warn('data.js未加载，使用mock数据');
+    loadMockData();
+  }
+
+  // 初始化生灵位置
+  initCreatures();
+
+  // 绘制
+  drawLandscape(width, height);
+  drawFlowPaths();
+  renderAssets(width, height);
+  renderCreatures(width, height);
+  renderEvents(currentDay);
+  updateSolarTerm(currentDay);
+  updateStats();
+
+  // 绑定事件
+  bindEvents();
+
+  // 启动流动动画
+  startCreatureAnimation();
+
+  document.getElementById('loading')?.remove();
+}
+
+function loadMockData(){
+  USERS = [
+    {id:'u1',name:'雅婷',role:'creator'},
+    {id:'u2',name:'雨娃',role:'agent'},
+    {id:'u3',name:'Talus',role:'agent'},
+    {id:'u4',name:'访客甲',role:'visitor'},
+    {id:'u5',name:'访客乙',role:'visitor'},
+  ];
+  ASSETS = [
+    {id:'a1',name:'松风阁',type:'pavilion',creatorId:'u1',views:120,downloads:45,price:0.1,permissions:{use:0b10111,expand:0b10011,derive:0b10101,benefit:0b11111}},
+    {id:'a2',name:'流水引',type:'guqin',creatorId:'u2',views:89,downloads:23,price:0.05,permissions:{use:0b11111,expand:0b10001,derive:0b10111,benefit:0b11111}},
+    {id:'a3',name:'春山卷',type:'scroll',creatorId:'u1',views:200,downloads:67,price:0.15,permissions:{use:0b10111,expand:0b10111,derive:0b10001,benefit:0b11111}},
+    {id:'a4',name:'石鼓文',type:'stele',creatorId:'u3',views:56,downloads:12,price:0.2,permissions:{use:0b10011,expand:0b10011,derive:0b10011,benefit:0b11111}},
+    {id:'a5',name:'听竹园',type:'garden',creatorId:'u2',views:150,downloads:34,price:0.08,permissions:{use:0b10111,expand:0b10101,derive:0b10111,benefit:0b11111}},
+    {id:'a6',name:'墨池亭',type:'pavilion',creatorId:'u1',views:78,downloads:19,price:0.12,permissions:{use:0b10111,expand:0b10011,derive:0b10101,benefit:0b11111}},
+  ];
+  EVENTS = [
+    // day 1
+    {day:1,assetId:'a1',userId:'u4',type:'browse'},
+    {day:1,assetId:'a2',userId:'u5',type:'cite'},
+    {day:1,assetId:'a1',userId:'u4',type:'pay',amount:0.1},
+    // day 2
+    {day:2,assetId:'a3',userId:'u2',type:'remix'},
+    {day:2,assetId:'a2',userId:'u4',type:'browse'},
+    {day:2,assetId:'a5',userId:'u5',type:'spread'},
+    // day 5
+    {day:5,assetId:'a4',userId:'u1',type:'create'},
+    {day:5,assetId:'a1',userId:'u3',type:'dispute'},
+    // ... 更多事件由generateDailyEvents填充
+  ];
+  // 填充剩余天数的事件
+  for(let d=3; d<=30; d++){
+    if(d===5) continue; // 已有
+    const numEvents = Math.floor(Math.random()*4);
+    for(let i=0;i<numEvents;i++){
+      const types=['browse','cite','remix','pay','spread','create','dispute'];
+      EVENTS.push({
+        day:d,
+        assetId:ASSETS[Math.floor(Math.random()*ASSETS.length)].id,
+        userId:USERS[Math.floor(Math.random()*USERS.length)].id,
+        type:types[Math.floor(Math.random()*types.length)],
+        amount:Math.random()>0.7?parseFloat((Math.random()*0.5).toFixed(3)):0
+      });
+    }
+  }
+}
+
+// ========================
+// 生灵初始化
+// ========================
+function initCreatures(){
+  // 为每个活跃用户分配初始位置和移动路径
+  const assetSpacing = 1/(ASSETS.length+1);
+  USERS.forEach((user, ui)=>{
+    const startAsset = ASSETS[ui % ASSETS.length];
+    creaturePositions.set(user.id, {
+      userId: user.id,
+      currentAssetId: startAsset.id,
+      targetAssetId: null,
+      progress: 0,
+      x: 0, y: 0,
+      path: [],
+      moving: false,
+    });
+  });
+}
+
+// ========================
+// 山水绘制
+// ========================
+function drawLandscape(width, height){
+  const svg = d3.select('#landscape-svg');
+  svg.selectAll('.landscape-layer').remove();
+
+  const sky = svg.append('rect').attr('class','landscape-layer').attr('width',width).attr('height',height).attr('fill','url(#sky-gradient)');
+
+  // 远山
+  const farMountains = d3.range(0, width+100, 80).map(x=>{
+    const y = 120 + Math.sin(x*0.003)*40 + Math.cos(x*0.007)*30;
+    return [x, y];
+  });
+  svg.append('path')
+    .attr('class','landscape-layer ink-wash')
+    .attr('d', d3.line().curve(d3.curveBasis)(farMountains) + `L${width},300 L0,300 Z`)
+    .attr('fill','#b8b0a4').attr('opacity',.5);
+
+  // 中景山峦
+  const midMountains = d3.range(0, width+100, 60).map(x=>{
+    const y = 180 + Math.sin(x*0.005)*50 + Math.cos(x*0.012)*25;
+    return [x, y];
+  });
+  svg.append('path')
+    .attr('class','landscape-layer ink-wash')
+    .attr('d', d3.line().curve(d3.curveBasis)(midMountains) + `L${width},400 L0,400 Z`)
+    .attr('fill','#9a9488').attr('opacity',.6);
+
+  // 近景山峦
+  const nearMountains = d3.range(0, width+100, 50).map(x=>{
+    const y = 260 + Math.sin(x*0.008)*35 + Math.cos(x*0.015)*20;
+    return [x, y];
+  });
+  svg.append('path')
+    .attr('class','landscape-layer ink-wash')
+    .attr('d', d3.line().curve(d3.curveBasis)(nearMountains) + `L${width},500 L0,500 Z`)
+    .attr('fill','var(--mountain)').attr('opacity',.4);
+
+  // 水面
+  svg.append('rect')
+    .attr('class','landscape-layer')
+    .attr('x',0).attr('y',height*0.55).attr('width',width).attr('height',height*0.45)
+    .attr('fill','var(--water)').attr('opacity',.15);
+
+  // 水波纹线
+  for(let i=0;i<5;i++){
+    const y = height*0.6 + i*30 + Math.random()*10;
+    const wave = d3.range(0, width, 20).map(x=>[x, y+Math.sin(x*0.02+i)*3]);
+    svg.append('path')
+      .attr('class','landscape-layer')
+      .attr('d', d3.line().curve(d3.curveBasis)(wave))
+      .attr('fill','none').attr('stroke','var(--water)').attr('stroke-width',.8).attr('opacity',.3);
+  }
+
+  // 雾气
+  drawMist(svg, width);
+
+  // 定义层
+  svg.append('g').attr('id','flow-paths');
+  svg.append('g').attr('id','asset-layer');
+  svg.append('g').attr('id','creature-layer');
+  svg.append('g').attr('id','event-layer');
+}
+
+function drawMist(selection, width){
+  for(let i=0;i<8;i++){
+    selection.append('ellipse')
+      .attr('class','landscape-layer')
+      .attr('cx', Math.random()*width)
+      .attr('cy', 200+Math.random()*200)
+      .attr('rx', 80+Math.random()*120)
+      .attr('ry', 30+Math.random()*40)
+      .attr('fill','url(#mist-gradient)')
+      .attr('opacity',.25);
+  }
+}
+
+// ========================
+// 资产节点渲染
+// ========================
+function renderAssets(width, height){
+  const layer = d3.select('#asset-layer');
+  layer.selectAll('*').remove();
+
+  const assetSpacing = width/(ASSETS.length+1);
+
+  ASSETS.forEach((asset, i)=>{
+    const x = assetSpacing*(i+1);
+    const y = height*0.55 + Math.sin(i*1.5)*40;
+
+    const group = layer.append('g')
+      .attr('class','asset-node')
+      .attr('data-asset-id', asset.id)
+      .attr('transform', `translate(${x},${y})`);
+
+    // 资产图标
+    switch(asset.type){
+      case 'guqin': drawGuqin(group, asset); break;
+      case 'scroll': drawScroll(group, asset); break;
+      case 'stele': drawStele(group, asset); break;
+      case 'garden': drawGarden(group, asset); break;
+      default: drawPavilion(group, asset);
+    }
+
+    // 标签
+    group.append('text')
+      .attr('class','asset-label')
+      .attr('y', 35)
+      .text(asset.name);
+  });
+}
+
+function drawGarden(group, asset){
+  group.append('rect').attr('x',-20).attr('y',-15).attr('width',40).attr('height',30).attr('rx',8).attr('class','asset-garden');
+  group.append('circle').attr('cx',-8).attr('cy',-5).attr('r',4).attr('fill','var(--ink-medium)');
+  group.append('circle').attr('cx',8).attr('cy',-5).attr('r',4).attr('fill','var(--ink-medium)');
+}
+function drawGuqin(group, asset){
+  group.append('rect').attr('x',-28).attr('y',-8).attr('width',56).attr('height',16).attr('rx',4).attr('class','asset-guqin');
+  for(let i=0;i<3;i++){
+    group.append('line').attr('x1',-20+i*20).attr('y1',-6).attr('x2',-20+i*20).attr('y2',6).attr('stroke','var(--ink-dark)').attr('stroke-width',.8);
+  }
+}
+function drawScroll(group, asset){
+  group.append('rect').attr('x',-25).attr('y',-20).attr('width',50).attr('height',40).attr('rx',2).attr('class','asset-scroll');
+  group.append('circle').attr('cx',-28).attr('cy',0).attr('r',6).attr('fill','#8b6914');
+  group.append('circle').attr('cx',28).attr('cy',0).attr('r',6).attr('fill','#8b6914');
+}
+function drawStele(group, asset){
+  group.append('rect').attr('x',-20).attr('y',-25).attr('width',40).attr('height',50).attr('rx',3).attr('class','asset-stele');
+  for(let i=0;i<4;i++){
+    group.append('line').attr('x1',-12).attr('y1',-15+i*10).attr('x2',12).attr('y2',-15+i*10).attr('stroke','#666').attr('stroke-width',1);
+  }
+}
+function drawPavilion(group, asset){
+  group.append('path').attr('d','M-25,-10 L0,-25 L25,-10').attr('fill','var(--ink-medium)').attr('stroke','var(--ink-dark)').attr('stroke-width',1.5);
+  group.append('rect').attr('x',-20).attr('y',-10).attr('width',40).attr('height',25).attr('class','asset-pavilion');
+}
+
+// ========================
+// 生灵渲染与流动
+// ========================
+function renderCreatures(width, height){
+  const layer = d3.select('#creature-layer');
+  layer.selectAll('*').remove();
+
+  const assetSpacing = width/(ASSETS.length+1);
+  const assetMap = new Map(ASSETS.map((a,i)=>[a.id, {
+    x: assetSpacing*(i+1),
+    y: height*0.55 + Math.sin(i*1.5)*40
+  }]));
+
+  USERS.forEach(user=>{
+    const pos = creaturePositions.get(user.id);
+    if(!pos) return;
+
+    const assetPos = assetMap.get(pos.currentAssetId);
+    if(!assetPos) return;
+
+    const group = layer.append('g')
+      .attr('class','creature')
+      .attr('data-user-id', user.id)
+      .attr('transform', `translate(${assetPos.x},${assetPos.y-55})`);
+
+    // 轨迹（如果在移动）
+    if(pos.moving && pos.path.length>0){
+      const pathStr = pos.path.map((p,pi)=>`${pi===0?'M':'L'}${p.x},${p.y}`).join(' ');
+      layer.insert('path',':first-child')
+        .attr('class','creature-trail')
+        .attr('d', pathStr);
+    }
+
+    // 头像圆圈
+    group.append('circle')
+      .attr('class','creature-avatar')
+      .attr('r', 10);
+
+    // 名字首字
+    group.append('text')
+      .attr('text-anchor','middle')
+      .attr('dy','.35em')
+      .attr('fill','var(--paper)')
+      .attr('font-size','10px')
+      .attr('font-weight','600')
+      .text(user.name.charAt(0));
+
+    // 名字标签
+    group.append('text')
+      .attr('class','creature-label')
+      .attr('y', -16)
+      .text(user.name);
+  });
+}
+
+// 生灵移动动画
+function startCreatureAnimation(){
+  // 每隔一段时间更新生灵位置
+  setInterval(()=>{
+    if(mode !== 'observatory') return;
+    updateCreatureMovement();
+    d3.selectAll('.creature').attr('transform', function(){
+      const userId = d3.select(this).attr('data-user-id');
+      const pos = creaturePositions.get(userId);
+      if(!pos) return d3.select(this).attr('transform');
+      return `translate(${pos.x},${pos.y-55})`;
+    });
+  }, 100);
+}
+
+function updateCreatureMovement(){
+  const width = document.getElementById('observatory').clientWidth;
+  const height = document.getElementById('observatory').clientHeight;
+  const assetSpacing = width/(ASSETS.length+1);
+  const assetMap = new Map(ASSETS.map((a,i)=>[a.id, {
+    x: assetSpacing*(i+1),
+    y: height*0.55 + Math.sin(i*1.5)*40
+  }]));
+
+  // 根据今日事件驱动生灵移动
+  const todayEvents = EVENTS.filter(e=>e.day===currentDay);
+  const activeAssetIds = new Set(todayEvents.map(e=>e.assetId));
+
+  creaturePositions.forEach((pos, userId)=>{
+    // 如果生灵还没移动目标，或者被今日事件吸引
+    if(!pos.moving){
+      // 随机选择下一个目标资产
+      const targetAsset = ASSETS[Math.floor(Math.random()*ASSETS.length)];
+      if(targetAsset.id !== pos.currentAssetId){
+        const start = assetMap.get(pos.currentAssetId);
+        const end = assetMap.get(targetAsset.id);
+        if(start && end){
+          // 生成曲线路径点
+          const steps = 20;
+          pos.path = [];
+          for(let i=0;i<=steps;i++){
+            const t = i/steps;
+            const x = start.x + (end.x-start.x)*t;
+            const y = start.y + (end.y-start.y)*t - Math.sin(t*Math.PI)*40; // 弧线
+            pos.path.push({x, y});
+          }
+          pos.targetAssetId = targetAsset.id;
+          pos.progress = 0;
+          pos.moving = true;
+        }
+      }
+    }
+
+    // 推进移动
+    if(pos.moving && pos.path.length>0){
+      pos.progress += 0.03; // 速度
+      if(pos.progress >= 1){
+        pos.progress = 1;
+        pos.currentAssetId = pos.targetAssetId;
+        pos.moving = false;
+        pos.path = [];
+      }
+      const idx = Math.min(Math.floor(pos.progress*pos.path.length), pos.path.length-1);
+      const p = pos.path[idx];
+      pos.x = p.x;
+      pos.y = p.y;
+    } else {
+      // 静止时保持在当前资产位置
+      const ap = assetMap.get(pos.currentAssetId);
+      if(ap){ pos.x = ap.x; pos.y = ap.y; }
+    }
+  });
+
+  // 重绘轨迹和生灵
+  renderCreatures(width, height);
+}
+
+// ========================
+// 物候标记渲染
+// ========================
+function renderEvents(day){
+  const layer = d3.select('#event-layer');
+  layer.selectAll('*').remove();
+
+  const width = document.getElementById('observatory').clientWidth;
+  const height = document.getElementById('observatory').clientHeight;
+  const assetSpacing = width/(ASSETS.length+1);
+
+  const dailyEvents = EVENTS.filter(e=>e.day===day);
+
+  dailyEvents.forEach((event, index)=>{
+    const assetIndex = ASSETS.findIndex(a=>a.id===event.assetId);
+    if(assetIndex<0) return;
+
+    const baseX = assetSpacing*(assetIndex+1);
+    const baseY = height*0.55 + Math.sin(assetIndex*1.5)*40;
+    const offsetX = (Math.random()-.5)*80;
+    const offsetY = -30 - Math.random()*50;
+
+    const group = layer.append('g')
+      .attr('class','event-mark')
+      .attr('transform', `translate(${baseX+offsetX},${baseY+offsetY})`)
+      .style('animation-delay', `${index*0.3}s`);
+
+    switch(event.type){
+      case 'browse': // 蝴蝶
+        group.append('path').attr('d','M-5,-3 Q-8,-8 -3,-8 Q0,-5 0,-3 Q0,-5 3,-8 Q8,-8 5,-3 Q0,0 -5,-3').attr('fill','var(--cerulean)');
+        break;
+      case 'cite': // 红叶
+        group.append('path').attr('d','M0,-8 Q-5,-3 0,5 Q5,-3 0,-8').attr('fill','var(--leaf)');
+        break;
+      case 'remix': // 新芽
+        group.append('line').attr('x1',0).attr('y1',5).attr('x2',0).attr('y2',-5).attr('stroke','var(--sprout)').attr('stroke-width',2);
+        group.append('ellipse').attr('cx',-3).attr('cy',-5).attr('rx',3).attr('ry',5).attr('fill','var(--sprout)');
+        group.append('ellipse').attr('cx',3).attr('cy',-3).attr('rx',2).attr('ry',4).attr('fill','var(--sprout)');
+        break;
+      case 'pay': // 金币
+        group.append('circle').attr('cx',0).attr('cy',0).attr('r',4).attr('fill','var(--gold)');
+        break;
+      case 'spread': // 涟漪
+        group.append('circle').attr('class','event-ripple').attr('cx',0).attr('cy',0).attr('r',2).attr('fill','none').attr('stroke','var(--water)').attr('stroke-width',1.2);
+        break;
+      case 'create': // 绽放
+        for(let i=0;i<6;i++){
+          const angle=(i/6)*Math.PI*2;
+          group.append('line').attr('x1',0).attr('y1',0).attr('x2',Math.cos(angle)*8).attr('y2',Math.sin(angle)*8).attr('stroke','var(--gold)').attr('stroke-width',1.5);
+        }
+        break;
+      case 'dispute': // 乌云
+        group.append('circle').attr('cx',-5).attr('cy',0).attr('r',6).attr('fill','var(--cloud)');
+        group.append('circle').attr('cx',5).attr('cy',-2).attr('r',5).attr('fill','var(--cloud)');
+        group.append('circle').attr('cx',0).attr('cy',2).attr('r',5).attr('fill','var(--cloud)');
+        break;
+      default:
+        group.append('circle').attr('r',3).attr('fill','var(--ink-light)');
+    }
+  });
+}
+
+// ========================
+// 流动路径
+// ========================
+function drawFlowPaths(){
+  const layer = d3.select('#flow-paths');
+  const width = document.getElementById('observatory').clientWidth;
+  const height = document.getElementById('observatory').clientHeight;
+  const assetSpacing = width/(ASSETS.length+1);
+
+  // 资产间引用关系连线
+  for(let i=0;i<ASSETS.length-1;i++){
+    const x1 = assetSpacing*(i+1);
+    const x2 = assetSpacing*(i+2);
+    const y1 = height*0.55 + Math.sin(i*1.5)*40;
+    const y2 = height*0.55 + Math.sin((i+1)*1.5)*40;
+
+    const path = d3.path();
+    path.moveTo(x1, y1);
+    path.quadraticCurveTo((x1+x2)/2, Math.min(y1,y2)-50, x2, y2);
+
+    layer.append('path')
+      .attr('d', path.toString())
+      .attr('class','flow-path');
+  }
+}
+
+// ========================
+// 节气更新
+// ========================
+function updateSolarTerm(day){
+  const termIndex = Math.floor((day-1)/30*24)%24;
+  const term = SOLAR_TERMS[termIndex];
+  const ganzhi = GANZHI[(day-1)%60];
+  document.getElementById('term-name').textContent = term;
+  document.getElementById('term-date').textContent = `第 ${day} 天 · ${ganzhi}`;
+}
+
+// ========================
+// 统计更新
+// ========================
+function updateStats(){
+  document.getElementById('stat-creatures').textContent = USERS.length;
+  document.getElementById('stat-assets').textContent = ASSETS.length;
+  document.getElementById('stat-events').textContent = EVENTS.filter(e=>e.day===currentDay).length;
+  document.getElementById('stat-flows').textContent = creaturePositions.size;
+}
+
+// ========================
+// 面板内容
+// ========================
+function updatePanel(){
+  const dailyEvents = EVENTS.filter(e=>e.day===currentDay);
+  const eventCounts = {};
+  dailyEvents.forEach(e=>{ eventCounts[e.type]=(eventCounts[e.type]||0)+1; });
+  const totalRevenue = dailyEvents.reduce((sum,e)=>sum+(e.amount||0),0);
+
+  const statsHtml = `
+    <div class="panel-row"><span>事件总数</span><span>${dailyEvents.length}</span></div>
+    <div class="panel-row"><span>总收益</span><span>${totalRevenue.toFixed(3)} ETH</span></div>
+    <div class="panel-row"><span>生灵数</span><span>${USERS.length}</span></div>
+    <div class="panel-row"><span>资产数</span><span>${ASSETS.length}</span></div>
+  `;
+  document.getElementById('panel-stats').innerHTML = statsHtml;
+
+  const assetHtml = ASSETS.map(a=>{
+    const creator = USERS.find(u=>u.id===a.creatorId);
+    const events = dailyEvents.filter(e=>e.assetId===a.id);
+    return `
+      <div class="panel-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:8px 0;">
+        <span style="font-weight:500;color:var(--ink-dark)">${a.name}</span>
+        <span style="font-size:11px">${creator?.name||'未知'} · ${events.length}个事件</span>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('panel-assets').innerHTML = assetHtml;
+
+  const creatureHtml = USERS.map(u=>{
+    const pos = creaturePositions.get(u.id);
+    const asset = ASSETS.find(a=>a.id===pos?.currentAssetId);
+    return `
+      <div class="panel-row" style="flex-direction:column;align-items:flex-start;gap:2px;padding:6px 0;">
+        <span style="font-weight:500;color:var(--ink-dark)">${u.name}</span>
+        <span style="font-size:11px">@${asset?.name||'游走中'} · ${pos?.moving?'移动中':'驻足'}</span>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('panel-creatures').innerHTML = creatureHtml;
+}
+
+// ========================
+// 显示更新
+// ========================
+function updateDisplay(){
+  document.getElementById('day-label').textContent = `第 ${currentDay} 天`;
+  updateSolarTerm(currentDay);
+  renderEvents(currentDay);
+  updateStats();
+  if(mode==='engineering') updatePanel();
+}
+
+// ========================
+// 播放控制
+// ========================
+function togglePlay(){
+  const btn = document.getElementById('play-btn');
+  if(isPlaying){
+    isPlaying = false; btn.textContent = '▶'; clearInterval(playInterval);
+  } else {
+    isPlaying = true; btn.textContent = '⏸'; startPlayback();
+  }
+}
+function startPlayback(){
+  const speeds = [1200, 600, 250];
+  playInterval = setInterval(()=>{
+    if(currentDay>=maxDay){ currentDay = 1; }
+    else { currentDay++; }
+    document.getElementById('time-slider').value = currentDay;
+    updateDisplay();
+  }, speeds[playSpeed-1]);
+}
+
+// ========================
+// 模式切换
+// ========================
+function switchMode(newMode){
+  mode = newMode;
+  document.getElementById('mode-observatory').classList.toggle('active', mode==='observatory');
+  document.getElementById('mode-engineering').classList.toggle('active', mode==='engineering');
+
+  if(mode==='engineering'){
+    document.getElementById('panel-overlay').classList.add('open');
+    document.getElementById('side-panel').classList.add('open');
+    updatePanel();
+  } else {
+    document.getElementById('panel-overlay').classList.remove('open');
+    document.getElementById('side-panel').classList.remove('open');
+  }
+}
+
+// ========================
+// 事件绑定
+// ========================
+function bindEvents(){
+  // 时间滑块
+  document.getElementById('time-slider').addEventListener('input', (e)=>{
+    currentDay = parseInt(e.target.value);
+    updateDisplay();
+  });
+
+  // 播放
+  document.getElementById('play-btn').addEventListener('click', togglePlay);
+
+  // 速度
+  document.getElementById('speed-slider').addEventListener('input', (e)=>{
+    playSpeed = parseInt(e.target.value);
+    const labels = ['慢','中','快'];
+    document.getElementById('speed-label').textContent = labels[playSpeed-1];
+    if(isPlaying){ clearInterval(playInterval); startPlayback(); }
+  });
+
+  // 模式切换
+  document.getElementById('mode-observatory').addEventListener('click', ()=>switchMode('observatory'));
+  document.getElementById('mode-engineering').addEventListener('click', ()=>switchMode('engineering'));
+
+  // 面板关闭
+  document.getElementById('panel-close').addEventListener('click', ()=>switchMode('observatory'));
+  document.getElementById('panel-overlay').addEventListener('click', ()=>switchMode('observatory'));
+
+  // 键盘 Tab 切换
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='Tab'){
+      e.preventDefault();
+      switchMode(mode==='observatory'?'engineering':'observatory');
+    }
+  });
+
+  // Tooltip + 资产点击
+  const tooltip = document.getElementById('tooltip');
+
+  // 资产悬停
+  d3.selectAll('.asset-node')
+    .on('mouseenter', function(event){
+      const assetId = d3.select(this).attr('data-asset-id');
+      const asset = ASSETS.find(a=>a.id===assetId);
+      if(!asset) return;
+      const creator = USERS.find(u=>u.id===asset.creatorId);
+      tooltip.innerHTML = `<strong>${asset.name}</strong>创作者: ${creator?.name||'未知'}<br>浏览 ${asset.views} · 下载 ${asset.downloads}<br>${asset.price>0?asset.price+' ETH':'免费'}`;
+      tooltip.classList.add('show');
+    })
+    .on('mousemove', function(event){
+      tooltip.style.left = (event.clientX+15)+'px';
+      tooltip.style.top = (event.clientY+15)+'px';
+    })
+    .on('mouseleave', function(){ tooltip.classList.remove('show'); })
+    .on('click', function(event){
+      const assetId = d3.select(this).attr('data-asset-id');
+      showAssetDetail(assetId);
+    });
+
+  // 生灵悬停
+  d3.selectAll('.creature')
+    .on('mouseenter', function(event){
+      const userId = d3.select(this).attr('data-user-id');
+      const user = USERS.find(u=>u.id===userId);
+      if(!user) return;
+      const pos = creaturePositions.get(userId);
+      const asset = ASSETS.find(a=>a.id===pos?.currentAssetId);
+      tooltip.innerHTML = `<strong>${user.name}</strong>角色: ${user.role}<br>位置: ${asset?.name||'游走中'}<br>状态: ${pos?.moving?'移动中':'驻足'}`;
+      tooltip.classList.add('show');
+    })
+    .on('mousemove', function(event){
+      tooltip.style.left = (event.clientX+15)+'px';
+      tooltip.style.top = (event.clientY+15)+'px';
+    })
+    .on('mouseleave', function(){ tooltip.classList.remove('show'); });
+
+  // 窗口调整
+  window.addEventListener('resize', ()=>{
+    const svg = d3.select('#landscape-svg');
+    const width = document.getElementById('observatory').clientWidth;
+    const height = document.getElementById('observatory').clientHeight;
+    svg.attr('width', width).attr('height', height);
+    drawLandscape(width, height);
+    drawFlowPaths();
+    renderAssets(width, height);
+    renderCreatures(width, height);
+    renderEvents(currentDay);
+  });
+}
+
+// ========================
+// 资产详情
+// ========================
+function showAssetDetail(assetId){
+  const asset = ASSETS.find(a=>a.id===assetId);
+  if(!asset) return;
+  const creator = USERS.find(u=>u.id===asset.creatorId);
+  const assetEvents = EVENTS.filter(e=>e.assetId===assetId && e.day===currentDay);
+
+  switchMode('engineering');
+
+  // 替换面板内容显示单个资产详情
+  const body = document.getElementById('panel-body');
+  body.innerHTML = `
+    <div class="panel-section">
+      <div class="panel-section-title">${asset.name}</div>
+      <div class="panel-row"><span>创作者</span><span>${creator?.name||'未知'}</span></div>
+      <div class="panel-row"><span>类型</span><span>${asset.type}</span></div>
+      <div class="panel-row"><span>浏览</span><span>${asset.views}</span></div>
+      <div class="panel-row"><span>下载</span><span>${asset.downloads}</span></div>
+      <div class="panel-row"><span>价格</span><span>${asset.price>0?asset.price+' ETH':'免费'}</span></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">四权配置</div>
+      <div class="panel-row"><span>用（使用权）</span><span>${getGearName(asset.permissions.use)}</span></div>
+      <div class="panel-row"><span>扩（扩展权）</span><span>${getGearName(asset.permissions.expand)}</span></div>
+      <div class="panel-row"><span>衍（衍生权）</span><span>${getGearName(asset.permissions.derive)}</span></div>
+      <div class="panel-row"><span>益（收益权）</span><span>${getGearName(asset.permissions.benefit)}</span></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">今日事件 (${assetEvents.length})</div>
+      ${assetEvents.map(e=>`
+        <div class="panel-row"><span>${getEventLabel(e.type)}</span><span>${USERS.find(u=>u.id===e.userId)?.name||'未知'}</span></div>
+      `).join('') || '<div style="font-size:12px;color:var(--ink-light);padding:4px 0">今日无事</div>'}
+    </div>
+    <div class="panel-section">
+      <button id="back-to-overview" style="padding:6px 14px;border:1px solid var(--ink-faint);background:transparent;border-radius:4px;cursor:pointer;font-family:inherit;font-size:13px;color:var(--ink-medium);">← 返回概览</button>
+    </div>
+  `;
+
+  document.getElementById('back-to-overview').addEventListener('click', ()=>{
+    body.innerHTML = `
+      <div class="panel-section"><div class="panel-section-title">全局统计</div><div id="panel-stats"></div></div>
+      <div class="panel-section"><div class="panel-section-title">资产列表</div><div id="panel-assets"></div></div>
+      <div class="panel-section"><div class="panel-section-title">生灵轨迹</div><div id="panel-creatures"></div></div>
+    `;
+    updatePanel();
+  });
+}
+
+// ========================
+// 辅助函数
+// ========================
+function getGearName(gear){
+  const names={0:'禁',1:'己',2:'亲',3:'约',4:'法',5:'公'};
+  const bits=[];
+  for(let i=0;i<=5;i++){ if(gear&(1<<i)) bits.push(names[i]); }
+  return bits.join('+')||'禁';
+}
+function getEventLabel(type){
+  const labels={browse:'浏览',cite:'引用',remix:'改编',pay:'付费',spread:'传播',create:'创作',dispute:'争议',rest:'休息',reject:'被拒'};
+  return labels[type]||type;
+}
+
+// ========================
+// 启动
+// ========================
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
