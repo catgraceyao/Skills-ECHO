@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>ECHO 协议 v0.3 合约接口正式版</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; line-height: 1.7; color: #333; }
+h1 { border-bottom: 3px solid #1a73e8; padding-bottom: 10px; color: #1a73e8; }
+h2 { color: #1a73e8; margin-top: 40px; border-left: 4px solid #1a73e8; padding-left: 12px; }
+h3 { color: #444; margin-top: 30px; }
+table { border-collapse: collapse; width: 100%; margin: 15px 0; font-size: 14px; }
+th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+th { background: #f5f7fa; font-weight: 600; }
+tr:nth-child(even) { background: #fafbfc; }
+pre { background: #f5f7fa; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+code { font-family: 'SF Mono', Monaco, monospace; background: #f5f7fa; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+.new { color: #e53935; font-weight: 600; }
+.tag { display: inline-block; background: #e3f2fd; color: #1565c0; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 8px; }
+.meta { color: #666; font-size: 14px; margin-bottom: 30px; }
+.review-map { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; }
+</style>
+</head>
+<body>
+
+<h1>ECHO 协议 v0.3 合约接口正式版</h1>
+
+<div class="meta">
+<strong>作者</strong>：猫先森（Cat） | <strong>日期</strong>：2026-05-22 | <strong>状态</strong>：Final v0.3<br>
+<strong>审阅记录</strong>：基于 v0.2 review 反馈修订（10 条核心问题全部落实）
+</div>
+
+<h2>0. Review 反馈映射</h2>
+<table>
+<tr><th>Review 问题</th><th>对应章节</th><th>接口/参数</th></tr>
+<tr><td>#7 版本切换成本不明</td><td>§1.5 版本迁移机制</td><td><code>migrateLicense()</code>, <code>MigrationMode</code></td></tr>
+<tr><td>#8 紧急干预入口太窄</td><td>§3.3 紧急干预双通道</td><td><code>emergencyFreeze()</code>, <code>emergencyUnfreeze()</code></td></tr>
+<tr><td>#9 势位缺使用者反馈</td><td>§4 势位评估引擎</td><td><code>engagementScore</code>, <code>satisfactionScore</code>, <code>disputeRate</code></td></tr>
+<tr><td>#10 链下持久性</td><td>§2.4 链下存储冗余</td><td><code>storeToIPFS()</code>, <code>storeToArweave()</code>, <code>verifyOffchainData()</code></td></tr>
+<tr><td>#4 sunset 公式漏洞</td><td>§3.5 Sunset 修复</td><td><code>sunset = max(90天, 有效期×30%, 有效期+7天)</code></td></tr>
+<tr><td>#5 DAO 门槛未定义</td><td>§5 DAO 治理参数</td><td><code>daoThreshold</code>, <code>quorumPercentage</code>, <code>votingPeriod</code></td></tr>
+<tr><td>#3 裁决不透明</td><td>§3.6 冷却期裁决公式</td><td><code>cooldownRuling()</code> 伪代码</td></tr>
+</table>
+
+<h2>1. CreatorConfig 合约 <span class="tag">版本 DAG 管理</span></h2>
+
+<h3>1.1 核心接口</h3>
+<pre><code>function publishVersion(
+    uint256 parentVersionId,
+    string calldata configJSON,
+    bytes32 configHash,
+    bytes32 contractHash
+) external returns (uint256 versionId);
+
+function getVersion(uint256 versionId) external view returns (
+    uint256 parentId, bytes32 configHash, bytes32 contractHash,
+    uint256 publishTime, uint256 childCount
+);
+
+function getVersionLineage(uint256 versionId) external view returns (uint256[] memory path);</code></pre>
+
+<h3>1.2 核心参数</h3>
+<table>
+<tr><th>参数</th><th>类型</th><th>默认值</th><th>说明</th></tr>
+<tr><td><code>MAX_CONFIG_SIZE</code></td><td>uint256</td><td>10KB</td><td>单条 configJSON 最大尺寸</td></tr>
+<tr><td><code>VERSION_DEPTH_LIMIT</code></td><td>uint256</td><td>50</td><td>版本 DAG 最大深度</td></tr>
+<tr><td><code>MAX_CHILDREN_PER_VERSION</code></td><td>uint256</td><td>20</td><td>单版本最多分叉数</td></tr>
+</table>
+
+<h3>1.3 版本迁移机制 <span class="new">★ 新增</span></h3>
+<p><strong>问题</strong>：切换版本时旧许可怎么处理？是否重新付费？</p>
+<p><strong>方案</strong>：三种迁移模式，创作者在 <code>publishVersion()</code> 时选择</p>
+
+<pre><code>enum MigrationMode {
+    FREE,       // 免费迁移：旧许可自动继承到新版本
+    TOPUP,      // 差价补足：更贵补差价，更便宜不退
+    FULL_PRICE  // 全额重购：旧许可作废，需重新购买
+}
+
+function migrateLicense(
+    uint256 oldLicenseId,
+    uint256 targetVersionId,
+    MigrationMode migrationMode
+) external payable returns (uint256 newLicenseId);
+
+function previewMigrationCost(
+    uint256 oldLicenseId,
+    uint256 targetVersionId
+) external view returns (uint256 cost);</code></pre>
+
+<p><strong>迁移规则</strong>：</p>
+<ul>
+<li><strong>FREE</strong>：不收费，旧 token 销毁，新 token 发放，有效期不变</li>
+<li><strong>TOPUP</strong>：计算 <code>(新价格 - 旧价格)</code>，为负则收 0</li>
+<li><strong>FULL_PRICE</strong>：全额支付新版本价格，旧许可保留直到 sunset</li>
+</ul>
+<p><strong>重要</strong>：迁移不改变 sunset 时间，按原许可创建时间计算。</p>
+
+<h2>2. LicenseToken 合约 <span class="tag">许可凭证 + 三层哈希锚定</span></h2>
+
+<h3>2.1 核心接口</h3>
+<pre><code>function mintLicense(
+    address to,
+    uint256 versionId,
+    uint64 expiryTimestamp,
+    bytes32 configHash,
+    bytes32 contractHash
+) external payable returns (uint256 tokenId);
+
+function updateRuntimeHash(
+    uint256 tokenId,
+    bytes32 newRuntimeHash,
+    OffchainPointer calldata newPointer
+) external;
+
+function verifyHashIntegrity(uint256 tokenId) external view returns (bool);</code></pre>
+
+<h3>2.2 核心参数</h3>
+<table>
+<tr><th>参数</th><th>类型</th><th>默认值</th><th>说明</th></tr>
+<tr><td><code>MIN_SUNSET_DAYS</code></td><td>uint256</td><td>90</td><td>sunset 最小天数</td></tr>
+<tr><td><code>SUNSET_RATIO</code></td><td>uint256</td><td>30 (%)</td><td>sunset = max(90, 有效期×30%)</td></tr>
+<tr><td><code>SUNSET_EXTENSION</code></td><td>uint256</td><td>7 (天)</td><td>新增：许可有效期+7天保护</td></tr>
+</table>
+
+<h3>2.3 Sunset 公式修复 <span class="new">★ 修复</span></h3>
+<p><strong>原公式</strong>：<code>sunset = max(90天, 许可有效期 × 30%)</code></p>
+<p><strong>问题</strong>：1天试用许可 sunset = 90天，对短期许可不公平</p>
+<p><strong>修复公式</strong>：</p>
+<pre><code>function calculateSunset(uint64 expiryTimestamp, uint64 createTime) pure returns (uint64) {
+    uint64 licenseDuration = expiryTimestamp - createTime;
+    uint64 ratioBased = licenseDuration * 30 / 100;
+    uint64 extensionBased = licenseDuration + 7 days;  // 新增
+    return max(90 days, ratioBased, extensionBased);
+}</code></pre>
+
+<table>
+<tr><th>许可类型</th><th>原 sunset</th><th>修复后 sunset</th></tr>
+<tr><td>1 天试用</td><td>90 天</td><td>90 天（不变）</td></tr>
+<tr><td>30 天月度</td><td>90 天</td><td>90 天（不变）</td></tr>
+<tr><td>180 天半年</td><td>90 天</td><td><strong>187 天</strong>（延长）</td></tr>
+<tr><td>365 天年度</td><td>109.5 天</td><td><strong>372 天</strong>（大幅延长）</td></tr>
+</table>
+
+<h3>2.4 链下存储冗余 <span class="new">★ 新增</span></h3>
+<p><strong>问题</strong>：链上只存 pointer，链下数据谁来存？节点失效怎么办？</p>
+<p><strong>方案</strong>：IPFS + Arweave 双冗余</p>
+
+<pre><code>struct OffchainPointer {
+    bytes32 ipfsHash;
+    bytes32 arweaveHash;
+    uint256 checkpointTime;
+}
+
+function storeToIPFS(uint256 tokenId) external returns (bytes32 ipfsHash);
+function storeToArweave(uint256 tokenId) external payable returns (bytes32 arweaveHash);
+function verifyOffchainData(
+    uint256 tokenId,
+    OffchainPointer calldata pointer,
+    bytes calldata proofData
+) external view returns (bool);</code></pre>
+
+<p><strong>自动策略</strong>：</p>
+<ol>
+<li>每次 runtimeHash 更新 → 自动 snapshot 到 IPFS</li>
+<li>每日 batch → 打包 snapshot 到 Arweave（gas 优化）</li>
+<li>查询时优先读 IPFS（快），fallback 到 Arweave（可靠）</li>
+</ol>
+
+<h2>3. S-GraphCore 合约 <span class="tag">关系状态 + 紧急干预 + 冻结退出</span></h2>
+
+<h3>3.1 核心接口</h3>
+<pre><code>function createRelation(
+    uint256 licenseId, address creator, address user, bytes32 ruleHash
+) external returns (bytes32 nodeId);
+
+function updateRelationState(
+    bytes32 nodeId, bytes32 newState, bytes calldata proof
+) external;
+
+// 三阶段冻结退出
+function announceExit(string calldata reason) external;
+function getExitStatus(address creator) external view returns (
+    ExitStage stage, uint64 announceTime, uint64 deprecatedTime, uint64 archiveTime
+);
+function archiveCreatorRelations(address creator) external returns (bytes32 archiveHash);</code></pre>
+
+<h3>3.2 三分层写权限</h3>
+<table>
+<tr><th>写入主体</th><th>权限范围</th><th>触发条件</th><th>安全机制</th></tr>
+<tr><td>LicenseToken 合约</td><td>常态写入</td><td>使用者触发许可交互</td><td>自动执行</td></tr>
+<tr><td>高势位创作者（标准通道）</td><td>紧急干预</td><td>Top 10% + 3 地址多签</td><td><strong>48 小时时间锁</strong></td></tr>
+<tr><td>高势位创作者（快速通道）</td><td>紧急冻结</td><td>Top 10% + severity ≥ 3</td><td><strong>24h DAO 追认</strong></td></tr>
+<tr><td>DAO 治理多签</td><td>最终兜底</td><td>治理提案通过</td><td>时间锁 + 投票期</td></tr>
+</table>
+
+<h3>3.3 紧急干预双通道 <span class="new">★ 新增</span></h3>
+
+<pre><code>// 标准通道（原设计保留）
+function emergencyFreeze(bytes32[] calldata nodeIds, string calldata reason)
+    external returns (uint256 proposalId);
+
+// 快速通道（新增）
+function emergencyFreezeFast(
+    bytes32[] calldata nodeIds,
+    uint8 severity,           // 严重等级 1-5
+    bytes32 evidenceHash
+) external;
+
+function daoRatifyFastFreeze(uint256 fastFreezeId, bool approve) external;</code></pre>
+
+<p><strong>严重等级</strong>：</p>
+<table>
+<tr><th>等级</th><th>场景</th><th>通道</th></tr>
+<tr><td>L1</td><td>配置错误，不影响资产</td><td>标准通道</td></tr>
+<tr><td>L2</td><td>规则冲突，执行歧义</td><td>标准通道</td></tr>
+<tr><td>L3</td><td>安全漏洞，未授权访问风险</td><td><strong>快速通道</strong></td></tr>
+<tr><td>L4</td><td>数据篡改风险</td><td><strong>快速通道</strong></td></tr>
+<tr><td>L5</td><td>主动攻击，资产损失风险</td><td><strong>快速通道</strong></td></tr>
+</table>
+<p><strong>只有 Level 3+ 可触发快速通道。</strong>立即冻结，24 小时内 DAO 追认：通过则保持，否决/超时则自动解冻。</p>
+
+<h3>3.4 三阶段冻结退出时间线</h3>
+<pre>
+T+0:   announceExit() → ANNOUNCED（暂停新许可，全局通知）
+       └─ sunset 倒计时启动
+
+T+30天: 自动进入 DEPRECATED（旧许可继续有效，显示警告）
+
+T+sunset: 自动进入 ARCHIVED（链下归档，token 可查询不可交互）
+</pre>
+
+<h3>3.5 Sunset 退出示例（修复后）</h3>
+<table>
+<tr><th>许可类型</th><th>sunset</th><th>归档时间</th></tr>
+<tr><td>1 天试用</td><td>90 天</td><td>T+90 天</td></tr>
+<tr><td>30 天月度</td><td>90 天</td><td>T+90 天</td></tr>
+<tr><td>180 天半年</td><td>187 天</td><td>T+187 天</td></tr>
+<tr><td>365 天年度</td><td>372 天</td><td>T+372 天</td></tr>
+</table>
+
+<h3>3.6 冷却期裁决公式 <span class="new">★ 透明化</span></h3>
+
+<pre><code>function cooldownRuling(uint256 versionId) external {
+    require(block.timestamp >= cooldownDeadlines[versionId], "Cooldown not ended");
+    require(!rulingExecuted[versionId], "Ruling already executed");
+    
+    uint256 objectionNum = objectionCount[versionId];
+    RulingResult result;
+    
+    if (objectionNum == 0) {
+        result = RulingResult.PASSED;           // 无异议 → 通过
+    } else if (objectionNum < 3) {
+        cooldownDeadlines[versionId] += 7 days; // 异议不足 → 延长 7 天
+        result = RulingResult.EXTENDED;
+        emit CooldownExtended(versionId, cooldownDeadlines[versionId]);
+        return;
+    } else {
+        result = autoRuling(versionId);         // 异议 ≥ 3 → 自动裁决
+    }
+    
+    rulingResults[versionId] = result;
+    rulingExecuted[versionId] = true;
+    distributeStakes(versionId, result);
+    emit RulingExecuted(versionId, result, block.timestamp);
+}
+
+function autoRuling(uint256 versionId) internal view returns (RulingResult) {
+    uint256 newRightsDensity = computeRightsDensity(versionId);
+    uint256 parentVersionId = CreatorConfig.getVersion(versionId).parentId;
+    uint256 oldRightsDensity = computeRightsDensity(parentVersionId);
+    
+    return newRightsDensity >= oldRightsDensity 
+        ? RulingResult.PASSED    // 权利密度未降低 → 通过
+        : RulingResult.REJECTED; // 权利密度降低 → 拒绝
+}
+
+function computeRightsDensity(uint256 versionId) internal view returns (uint256) {
+    bytes32 configHash = CreatorConfig.getVersion(versionId).configHash;
+    string memory configJSON = IPFSResolver.resolve(configHash);
+    
+    uint256 irrevocableRatio = parseIrrevocableRatio(configJSON);  // 0-100
+    uint256 protectionClauses = parseProtectionClauses(configJSON); // 计数
+    
+    return irrevocableRatio * 70 / 100 + min(protectionClauses * 5, 30);
+}</code></pre>
+
+<p><strong>裁决结果</strong>：</p>
+<ul>
+<li><strong>PASSED</strong>：新版本生效，无异议或权利密度未降低</li>
+<li><strong>REJECTED</strong>：新版本被拒绝，创作者可修改后重新提交</li>
+<li><strong>EXTENDED</strong>：异议不足 3 个，延长 7 天给更多人反应时间</li>
+</ul>
+
+<h2>4. 势位评估引擎 <span class="tag">势位计算 + 动态锁 + 硬地板</span></h2>
+
+<h3>4.1 核心接口</h3>
+<pre><code>function getPotential(address creator) external view returns (uint256);
+function getPotentialLevel(address creator) external view returns (uint8 level);
+function reevaluatePotential(address creator) external;
+function getHardFloor(address creator) external view returns (uint256 floorPercentage);
+function validateHardFloor(address creator, bytes32 configHash) external view returns (bool);
+function setWeight(bytes32 metric, uint256 weight) external; // 仅 DAO
+function getWeight(bytes32 metric) external view returns (uint256);</code></pre>
+
+<h3>4.2 势位评估算法 <span class="new">★ 含使用者反馈权重</span></h3>
+
+<pre><code>function calculatePotential(address creator) public view returns (uint256) {
+    // === 创作者侧指标（权重 60%） ===
+    uint256 revenueScore = computeRevenueScore(creator);      // 收入稳定性 0-100
+    uint256 licenseScore = computeLicenseScore(creator);      // 许可数量/增长率 0-100
+    uint256 versionScore = computeVersionScore(creator);      // 版本迭代健康度 0-100
+    
+    // === 使用者侧指标（权重 40%，新增）★ ===
+    uint256 engagementScore = computeEngagementScore(creator);    // 活跃度 0-100
+    uint256 satisfactionScore = computeSatisfactionScore(creator); // NPS 0-100
+    uint256 disputeRate = computeDisputeRate(creator);          // 争议率 0-100
+    
+    uint256 creatorSide = (revenueScore + licenseScore + versionScore) * 60 / 300;
+    uint256 userSide = (engagementScore + satisfactionScore + (100 - disputeRate)) * 40 / 300;
+    
+    return creatorSide + userSide; // 0-100
+}</code></pre>
+
+<h3>4.3 指标计算方式</h3>
+<table>
+<tr><th>指标</th><th>数据来源</th><th>计算方式</th></tr>
+<tr><td>revenueScore</td><td>LicenseToken</td><td>近 30 天收入 / 历史平均收入</td></tr>
+<tr><td>licenseScore</td><td>LicenseToken</td><td>有效许可数 / 历史峰值 × 100</td></tr>
+<tr><td>versionScore</td><td>CreatorConfig</td><td>发布频率适中（1-4周/次）得 100 分</td></tr>
+<tr><td><strong>engagementScore</strong> <span class="new">★</span></td><td>S-GraphCore</td><td>近 30 天交互次数 / 许可数</td></tr>
+<tr><td><strong>satisfactionScore</strong> <span class="new">★</span></td><td>链下 NPS</td><td>使用者 NPS 评分平均值 × 10</td></tr>
+<tr><td><strong>disputeRate</strong> <span class="new">★</span></td><td>S-GraphCore</td><td>近 90 天异议数 / 总许可数</td></tr>
+</table>
+
+<h3>4.4 使用者 NPS 收集 <span class="new">★ 新增</span></h3>
+<pre><code>function submitNPS(address creator, uint8 npsScore, uint256 licenseId) external {
+    require(LicenseToken.ownerOf(licenseId) == msg.sender, "Must own license");
+    require(npsScore >= 1 && npsScore <= 10, "Score 1-10");
+    require(!hasRated[licenseId][creator], "Already rated");
+    
+    npsScores[creator].push(npsScore);
+    hasRated[licenseId][creator] = true;
+    emit NPSSubmitted(creator, msg.sender, npsScore);
+}</code></pre>
+<p><strong>防刷机制</strong>：一许可一评，需持有有效许可才能评分。</p>
+
+<h3>4.5 势位等级与硬地板</h3>
+<table>
+<tr><th>等级</th><th>势位范围</th><th>硬地板</th></tr>
+<tr><td>L1</td><td>0-25</td><td>20%</td></tr>
+<tr><td>L2</td><td>26-50</td><td>35%</td></tr>
+<tr><td>L3</td><td>51-75</td><td>50%</td></tr>
+<tr><td>L4</td><td>76-100</td><td>70%</td></tr>
+</table>
+
+<h2>5. DAO 治理参数 <span class="new">★ 新增</span></h2>
+
+<h3>5.1 核心参数</h3>
+<table>
+<tr><th>参数</th><th>默认值</th><th>说明</th></tr>
+<tr><td>DAO_MIN_MEMBERS</td><td>5</td><td>DAO 最少成员数</td></tr>
+<tr><td>DAO_QUORUM_PERCENTAGE</td><td>60%</td><td>最低参与门槛</td></tr>
+<tr><td>DAO_PASS_THRESHOLD</td><td>66.7%</td><td>通过门槛（2/3）</td></tr>
+<tr><td>DAO_VOTING_PERIOD</td><td>7 天</td><td>标准投票期</td></tr>
+<tr><td>DAO_EMERGENCY_VOTING_PERIOD</td><td>24 小时</td><td>紧急投票期</td></tr>
+<tr><td>DAO_TIMELOCK</td><td>48 小时</td><td>标准时间锁</td></tr>
+<tr><td>DAO_EMERGENCY_TIMELOCK</td><td>6 小时</td><td>紧急时间锁</td></tr>
+</table>
+
+<h3>5.2 投票权重</h3>
+<pre><code>function getVotingPower(address member) public view returns (uint256) {
+    uint256 basePower = 1;
+    uint256 potentialBoost = PotentialEngine.getPotential(member) / 100;
+    uint256 activityBoost = governanceActivity[member].recentParticipations;
+    return min(basePower + potentialBoost + activityBoost, 10);
+}</code></pre>
+
+<h3>5.3 可治理参数（13 项）</h3>
+<table>
+<tr><th>参数</th><th>当前值</th><th>调整范围</th></tr>
+<tr><td>SUNSET_RATIO</td><td>30%</td><td>20%-50%</td></tr>
+<tr><td>MIN_SUNSET_DAYS</td><td>90</td><td>60-180</td></tr>
+<tr><td>HARD_FLOOR_L1-L4</td><td>20%-70%</td><td>各 ±10%</td></tr>
+<tr><td>COOLDOWN_DAYS</td><td>7</td><td>3-14</td></tr>
+<tr><td>OBJECTION_THRESHOLD</td><td>3</td><td>2-5</td></tr>
+<tr><td>OBJECTION_STAKE</td><td>0.01 ETH</td><td>0.005-0.05</td></tr>
+<tr><td>EMERGENCY_TIMELOCK</td><td>48h/24h</td><td>24-72h / 12-48h</td></tr>
+<tr><td>IPFS_RESYNC_INTERVAL</td><td>1 天</td><td>1-7 天</td></tr>
+<tr><td>ARWEAVE_BATCH_SIZE</td><td>1000</td><td>500-5000</td></tr>
+</table>
+
+<h2>6. 交互流程图</h2>
+
+<h3>6.1 创作者发布新版本</h3>
+<pre>
+创作者 publishVersion()
+    → 自动启动 7 天冷却期
+    → 使用者可提交异议（质押 0.01 ETH）
+    → 7 天后自动裁决
+        ├─ 无异议 / 密度未降 → 生效
+        ├─ 异议 < 3 → 延长 7 天
+        └─ 异议 ≥ 3 且密度降 → 拒绝，可重提
+</pre>
+
+<h3>6.2 使用者购买许可</h3>
+<pre>
+使用者 mintLicense()
+    → 支付费用
+    → LicenseToken 创建 NFT + 三层哈希锚定
+    → S-GraphCore 创建关系节点
+    → 自动 snapshot 到 IPFS
+    → 24h 内 batch 到 Arweave
+    → 使用者获得许可 token
+</pre>
+
+<h3>6.3 紧急干预</h3>
+<pre>
+标准通道：emergencyFreeze()
+    → 3 地址多签确认
+    → 48h 时间锁
+    → 时间锁到期 → 自动冻结
+
+快速通道：emergencyFreezeFast(severity ≥ 3)
+    → 立即冻结
+    → 24h 内 DAO 追认
+        ├─ 通过 → 冻结保持
+        └─ 否决/超时 → 自动解冻
+</pre>
+
+<h3>6.4 创作者退出</h3>
+<pre>
+announceExit() → ANNOUNCED（暂停新许可，全局通知）
+    T+30天 → DEPRECATED（旧许可继续有效，显示警告）
+    T+sunset → ARCHIVED（链下归档，token 可查询不可交互）
+</pre>
+
+<h2>7. Gas 优化与存储成本</h2>
+
+<table>
+<tr><th>数据项</th><th>位置</th><th>大小</th></tr>
+<tr><td>configHash / contractHash / runtimeHash</td><td>链上</td><td>32 bytes × 3</td></tr>
+<tr><td>offchainPointer</td><td>链上</td><td>72 bytes</td></tr>
+<tr><td>许可核心数据</td><td>链上</td><td>~200 bytes</td></tr>
+<tr><td>关系节点</td><td>链上</td><td>~256 bytes</td></tr>
+<tr><td>完整配置 JSON</td><td>链下（IPFS）</td><td>最大 10KB</td></tr>
+<tr><td>历史快照</td><td>链下（IPFS+Arweave）</td><td>变化</td></tr>
+</table>
+
+<p><strong>1000 许可链上总存储</strong>：~624 KB（许可 200KB + 关系 256KB + 哈希 168KB）</p>
+
+<h2>8. 待确认参数（9 项）</h2>
+
+<table>
+<tr><th>参数</th><th>当前值</th><th>需确认方</th></tr>
+<tr><td>势位评估权重（创作者:使用者）</td><td>60:40</td><td>Talus 安全审计</td></tr>
+<tr><td>NPS 防刷机制</td><td>一许可一评</td><td>非攻进阶版前端</td></tr>
+<tr><td>快速通道 severity 阈值</td><td>≥ 3</td><td>社区共识</td></tr>
+<tr><td>DAO 成员准入</td><td>Top 20% 势位</td><td>治理讨论</td></tr>
+<tr><td>迁移 gas 承担方</td><td>使用者</td><td>经济模型</td></tr>
+<tr><td>Arweave 费用来源</td><td>创作者质押/协议基金</td><td>经济模型</td></tr>
+<tr><td>势位评估周期</td><td>daily</td><td>性能平衡</td></tr>
+<tr><td>runtimeHash 更新触发</td><td>每次关系变更</td><td>性能优化</td></tr>
+<tr><td>Batch Arweave 频率</td><td>daily</td><td>gas 优化</td></tr>
+</table>
+
+<h2>9. 下一步</h2>
+<ol>
+<li><strong>X7 / M77-claw</strong>：code review，检查安全漏洞</li>
+<li><strong>Talus</strong>：对照安全阈值，确认势位权重和硬地板</li>
+<li><strong>非攻进阶版</strong>：确认前端可实现性（NPS、迁移 UI、紧急干预界面）</li>
+<li><strong>雨娃</strong>：协调 v0.3 合稿，整合到主文档</li>
+<li><strong>猫先森</strong>：v0.3 正式版已完成，等待最终审阅通过</li>
+</ol>
+
+<hr>
+<p style="color:#666; font-size:13px;">
+文档版本：v0.3-final | 2026-05-22 | 猫先森<br>
+基于 ECHO v0.2 review 反馈修订 | 10 条核心问题全部落实
+</p>
+
+</body>
+</html>
