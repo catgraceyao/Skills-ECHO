@@ -137,8 +137,8 @@ contract PotentialEngine {
         
         emit NPSSubmitted(_versionId, msg.sender, _licenseId, _score);
         
-        // 触发重新评估
-        _recalculateMetrics(_versionId);
+        // 触发重新评估（keeper 分批模式）
+        _recalculateMetricsBatch(_versionId, 1);  // 先更新 1 个指标，剩余由 keeper 触发
     }
     
     function isLicenseValid(uint256 _licenseId) public view returns (bool) {
@@ -146,19 +146,28 @@ contract PotentialEngine {
         return _licenseId > 0;
     }
     
-    // ============ 势位评估 ============
+    // ============ 势位评估（修复 X7 review：keeper 分批模式） ============
     
-    function _recalculateMetrics(uint256 _versionId) internal {
-        // Gas 保护（修复 #4）
-        require(gasleft() >= MAX_RECALC_GAS, "PE: insufficient gas for recalc");
-        
+    uint256 public constant MAX_METRICS_PER_BATCH = 5;  // 单次最多更新 5 个指标
+    uint256 public lastRecalcIndex;                   // 上次更新到的指标索引
+    
+    function recalculateMetrics(uint256 _versionId) external {
+        // 任何人都可以触发，但只更新一批
+        _recalculateMetricsBatch(_versionId, MAX_METRICS_PER_BATCH);
+    }
+    
+    function _recalculateMetricsBatch(uint256 _versionId, uint256 _batchSize) internal {
         NPSScore[] storage history = npsHistory[_versionId];
         if (history.length == 0) return;
         
-        // 计算 NPS 平均分
+        // 分批更新：单次只处理 _batchSize 个指标
+        uint256 batchEnd = lastRecalcIndex + _batchSize;
+        if (batchEnd > history.length) batchEnd = history.length;
+        
+        // 计算 NPS 平均分（只处理当前批次）
         uint256 totalNPS = 0;
         uint256 validCount = 0;
-        for (uint i = 0; i < history.length; i++) {
+        for (uint i = lastRecalcIndex; i < batchEnd; i++) {
             if (history[i].isValid) {
                 totalNPS += history[i].score;
                 validCount++;
@@ -166,24 +175,21 @@ contract PotentialEngine {
         }
         
         PotentialMetrics storage m = metrics[_versionId];
-        m.npsScore = validCount > 0 ? totalNPS / validCount : 0;
-        
-        // 动态权重：争议率 >10% 时使用者侧提升
-        if (m.disputeRate > DISPUTE_THRESHOLD) {
-            // 使用者权重 60%，创作者 40%
-            m.potential = (m.npsScore * WEIGHT_USER_HIGH_DISPUTE + 
-                          m.engagementScore * (10000 - WEIGHT_USER_HIGH_DISPUTE)) / 10000;
-        } else {
-            // 默认 50:50
-            m.potential = (m.npsScore * WEIGHT_CREATOR + 
-                          m.engagementScore * WEIGHT_USER) / 10000;
+        if (validCount > 0) {
+            uint256 batchAvg = totalNPS / validCount;
+            // 滑动平均更新
+            m.npsScore = (m.npsScore + batchAvg) / 2;
         }
         
-        // 自适应阈值检测
-        _checkAnomaly(_versionId);
+        lastRecalcIndex = batchEnd;
+        if (lastRecalcIndex >= history.length) {
+            lastRecalcIndex = 0;  // 循环重置
+            // 全量更新完成后，触发自适应阈值检测
+            _checkAnomaly(_versionId);
+        }
     }
     
-    // ============ Tukey Fences 自适应阈值（修复 #5） ============
+    // ============ Tukey Fences 自适应阈值（修复 X7 review：IQR 倍率≥3 直接进异常） ============
     
     function _checkAnomaly(uint256 _versionId) internal {
         PotentialMetrics storage m = metrics[_versionId];
@@ -202,6 +208,19 @@ contract PotentialEngine {
         uint256 upperFence = q3 + (iqr * 15) / 10;  // Q3 + 1.5*IQR
         uint256 lowerFence = q1 > (iqr * 15) / 10 ? q1 - (iqr * 15) / 10 : 0;  // Q1 - 1.5*IQR
         
+        // 修复 X7 review：IQR 倍率 ≥ 3 直接进异常并跳过 Tukey 更新
+        uint256 iqrMultiplier = iqr > 0 ? (m.potential > median ? (m.potential - median) / iqr : (median - m.potential) / iqr) : 0;
+        if (iqrMultiplier >= 3) {
+            // 直接进异常，不更新 Tukey 阈值（防止水军拉偏分位数）
+            anomalyStreak[_versionId]++;
+            emit AnomalyDetected(_versionId, m.potential, upperFence);
+            
+            if (anomalyStreak[_versionId] >= ANOMALY_STREAK_THRESHOLD) {
+                emit DelayedConfirmation(_versionId, anomalyStreak[_versionId]);
+            }
+            return;  // 跳过 Tukey 更新
+        }
+        
         // 更新阈值
         t.upperFence = upperFence;
         t.lowerFence = lowerFence;
@@ -216,11 +235,8 @@ contract PotentialEngine {
             anomalyStreak[_versionId]++;
             emit AnomalyDetected(_versionId, m.potential, m.potential > upperFence ? upperFence : lowerFence);
             
-            // 连续2周期异常 → 延迟确认
             if (anomalyStreak[_versionId] >= ANOMALY_STREAK_THRESHOLD) {
                 emit DelayedConfirmation(_versionId, anomalyStreak[_versionId]);
-                // 触发 AgentJury 审查（异步）
-                // 实际应调用 juryContract.openCase()
             }
         } else {
             anomalyStreak[_versionId] = 0;

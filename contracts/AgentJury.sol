@@ -30,6 +30,7 @@ contract AgentJury is VRFConsumerBaseV2 {
         bytes32 commitHash;    // keccak256(vote + salt)
         uint256 commitTime;
         bool revealed;
+        uint256 salt;          // 存储 salt 用于校验（新增）
     }
     
     struct Case {
@@ -41,21 +42,27 @@ contract AgentJury is VRFConsumerBaseV2 {
         uint256 randomWord;       // VRF 随机数（用于抽选陪审员）
         mapping(address => Commit) commits;
         mapping(address => bool) hasRevealed;
+        mapping(address => bool) jurorSelected;  // 是否被选为本案陪审员（新增）
+        mapping(uint256 => address) slotToJuror; // 席位→陪审员映射（新增）
         uint256 revealCount;
         uint256 yesVotes;
         uint256 noVotes;
         bool resolved;
         bool finalVerdict;
         mapping(address => uint256) stakes;  // 反证质押
+        uint256 commitStake;       // 每案 commit 押金总额（新增）
+        mapping(address => uint256) jurorStakes; // 各陪审员押金（新增）
     }
     
     mapping(uint256 => Case) public cases;
     uint256 public nextCaseId;
     
-    // 反证质押
-    uint256 public constant DISPROOF_STAKE = 0.05 ether;
-    uint256 public constant SLASH_RATE = 5000; // 50% 销毁
-    uint256 public constant REWARD_RATE = 5000; // 50% 奖励
+    // 陪审员 commit 押金（修复 X7 review：未 reveal 惩罚）
+    uint256 public constant JURY_COMMIT_STAKE = 0.01 ether;
+    uint256 public constant REVEAL_PENALTY_RATE = 10000; // 100% 未 reveal 没收
+    
+    // 未 reveal 记录（用于外部信誉系统）
+    mapping(address => uint256) public unrevealedCount;
     
     // ============ 事件 ============
     
@@ -67,7 +74,7 @@ contract AgentJury is VRFConsumerBaseV2 {
     event DisproofRewarded(uint256 indexed caseId, address indexed challenger, uint256 reward);
     event DisproofSlashed(uint256 indexed caseId, address indexed challenger, uint256 slashed);
     event JurorAdded(address indexed juror);
-    event JurorRemoved(address indexed juror);
+    event JurorPenalized(uint256 indexed caseId, address indexed juror, uint256 amount);
     
     // ============ 修饰器 ============
     
@@ -76,8 +83,8 @@ contract AgentJury is VRFConsumerBaseV2 {
         _;
     }
     
-    modifier onlyJuror() {
-        require(isJuror[msg.sender], "AJ: not juror");  // 修复 #1：成员校验
+    modifier onlyCaseJuror(uint256 _caseId) {
+        require(cases[_caseId].jurorSelected[msg.sender], "AJ: not case juror");
         _;
     }
     
@@ -144,7 +151,7 @@ contract AgentJury is VRFConsumerBaseV2 {
         c.revealDeadline = c.commitDeadline + _revealBlocks;
         
         // 请求 VRF 随机数用于抽选陪审员（修复 #3）
-        c.vrfRequestId = requestRandomWords();
+        c.vrfRequestId = requestRandomWords(caseId);
         
         emit CaseOpened(caseId, _evidenceHash, c.commitDeadline, c.revealDeadline);
         return caseId;
@@ -154,16 +161,25 @@ contract AgentJury is VRFConsumerBaseV2 {
     
     function juryCommit(
         uint256 _caseId,
-        bytes32 _commitHash  // keccak256(abi.encodePacked(vote, salt))
-    ) external onlyJuror onlyDuringCommit(_caseId) {
+        bytes32 _commitHash,  // keccak256(abi.encodePacked(vote, salt))
+        uint256 _salt         // 原始 salt（存储用于校验和惩罚）
+    ) external payable onlyCaseJuror(_caseId) onlyDuringCommit(_caseId) {
         Case storage c = cases[_caseId];
         require(c.commits[msg.sender].commitHash == bytes32(0), "AJ: already committed");
+        require(msg.value >= JURY_COMMIT_STAKE, "AJ: insufficient stake");
+        
+        // salt 非零校验（修复 X7 review：弱 salt 防御）
+        require(_salt != 0, "AJ: salt cannot be zero");
+        require(_salt > 1000000, "AJ: salt too weak");  // 避免常见弱值
         
         c.commits[msg.sender] = Commit({
             commitHash: _commitHash,
             commitTime: block.timestamp,
-            revealed: false
+            revealed: false,
+            salt: _salt
         });
+        c.jurorStakes[msg.sender] = msg.value;
+        c.commitStake += msg.value;
         
         emit CommitSubmitted(_caseId, msg.sender, _commitHash);
     }
@@ -172,16 +188,17 @@ contract AgentJury is VRFConsumerBaseV2 {
         uint256 _caseId,
         bool _vote,      // true = yes, false = no
         uint256 _salt   // 用于验证 commit 的 salt
-    ) external onlyJuror onlyDuringReveal(_caseId) {
+    ) external onlyCaseJuror(_caseId) onlyDuringReveal(_caseId) {
         Case storage c = cases[_caseId];
         Commit storage commit = c.commits[msg.sender];
         
         require(commit.commitHash != bytes32(0), "AJ: no commit found");
         require(!commit.revealed, "AJ: already revealed");
         
-        // 验证 reveal 与 commit 匹配
+        // 验证 reveal 与 commit 匹配（使用存储的 salt 和传入的 salt 双重校验）
         bytes32 expectedHash = keccak256(abi.encodePacked(_vote, _salt));
         require(expectedHash == commit.commitHash, "AJ: reveal mismatch");
+        require(_salt == commit.salt, "AJ: salt mismatch");  // 双重校验
         
         commit.revealed = true;
         c.hasRevealed[msg.sender] = true;
@@ -195,9 +212,37 @@ contract AgentJury is VRFConsumerBaseV2 {
         
         emit RevealSubmitted(_caseId, msg.sender, _vote);
         
-        // 如果达到 3/5 阈值，自动裁决
-        if (c.revealCount >= REQUIRED_SIGNATURES && !c.resolved) {
-            _resolveCase(_caseId);
+        // 退还押金
+        uint256 stake = c.jurorStakes[msg.sender];
+        if (stake > 0) {
+            c.jurorStakes[msg.sender] = 0;
+            c.commitStake -= stake;
+            payable(msg.sender).transfer(stake);
+        }
+    }
+    
+    // 新增：处理未 reveal 陪审员的惩罚
+    function _penalizeUnrevealed(uint256 _caseId) internal {
+        Case storage c = cases[_caseId];
+        
+        for (uint i = 0; i < JURY_SIZE; i++) {
+            address juror = c.slotToJuror[i];
+            if (juror == address(0)) continue;
+            
+            Commit storage commit = c.commits[juror];
+            if (commit.commitHash != bytes32(0) && !commit.revealed) {
+                // 未 reveal：没收押金 + 记录
+                uint256 stake = c.jurorStakes[juror];
+                if (stake > 0) {
+                    c.jurorStakes[juror] = 0;
+                    c.commitStake -= stake;
+                    // 押金 50% 销毁 + 50% 给国库（owner）
+                    uint256 treasury = stake / 2;
+                    payable(owner).transfer(treasury);
+                    emit JurorPenalized(_caseId, juror, stake);
+                }
+                unrevealedCount[juror]++;
+            }
         }
     }
     
@@ -205,9 +250,12 @@ contract AgentJury is VRFConsumerBaseV2 {
         Case storage c = cases[_caseId];
         require(!c.resolved, "AJ: already resolved");
         
+        // 先惩罚未 reveal 的陪审员
+        _penalizeUnrevealed(_caseId);
+        
         c.resolved = true;
-        // 简单多数决：yes > no 则通过
-        c.finalVerdict = c.yesVotes > c.noVotes;
+        // 修复 X7 review：3/5 真多签语义，yesVotes >= 3 才通过
+        c.finalVerdict = c.yesVotes >= REQUIRED_SIGNATURES;
         
         emit CaseResolved(_caseId, c.finalVerdict, c.yesVotes, c.noVotes);
     }
@@ -255,9 +303,11 @@ contract AgentJury is VRFConsumerBaseV2 {
         delete c.stakes[_challenger];
     }
     
-    // ============ VRF 回调 ============
+    // ============ VRF 回调（修复 X7 review：randomWord 用于抽选陪审员） ============
     
-    function requestRandomWords() internal returns (uint256 requestId) {
+    mapping(uint256 => uint256) public requestIdToCase; // requestId => caseId
+    
+    function requestRandomWords(uint256 _caseId) internal returns (uint256 requestId) {
         requestId = VRFCoordinatorV2Interface(vrfCoordinator).requestRandomWords(
             keyHash,
             subscriptionId,
@@ -265,12 +315,51 @@ contract AgentJury is VRFConsumerBaseV2 {
             callbackGasLimit,
             1  // 请求 1 个随机数
         );
+        requestIdToCase[requestId] = _caseId;
     }
     
     function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
-        // 根据 requestId 找到对应案件并记录随机数
-        // 简化：随机数用于未来扩展（如随机抽选陪审员子集）
-        // 当前使用固定 5 人陪审团
+        uint256 caseId = requestIdToCase[_requestId];
+        Case storage c = cases[caseId];
+        require(!c.vrfFulfilled, "AJ: VRF already fulfilled");
+        
+        c.randomWord = _randomWords[0];
+        c.vrfFulfilled = true;
+        
+        // 从候选池（jurorList）中按 randomWord 抽选 5 名陪审员
+        _selectJurors(caseId, _randomWords[0]);
+    }
+    
+    function _selectJurors(uint256 _caseId, uint256 _randomWord) internal {
+        Case storage c = cases[_caseId];
+        uint256 poolSize = jurorList.length;
+        require(poolSize >= JURY_SIZE, "AJ: insufficient juror pool");
+        
+        // Fisher-Yates shuffle 从候选池抽 5 名
+        address[] memory selected = new address[](JURY_SIZE);
+        bool[] memory used = new bool[](poolSize);
+        
+        for (uint i = 0; i < JURY_SIZE; i++) {
+            uint256 idx = (_randomWord + i) % poolSize;
+            // 避免重复：如果已被使用，顺序往后找
+            while (used[idx]) {
+                idx = (idx + 1) % poolSize;
+            }
+            used[idx] = true;
+            selected[i] = jurorList[idx];
+            c.slotToJuror[i] = jurorList[idx];
+        }
+        
+        // 只有选中的陪审员才能参与本案
+        for (uint i = 0; i < JURY_SIZE; i++) {
+            c.jurorSelected[selected[i]] = true;
+        }
+    }
+    
+    // 修改 onlyJuror 为 onlyCaseJuror：检查是否被选为本案陪审员
+    modifier onlyCaseJuror(uint256 _caseId) {
+        require(cases[_caseId].jurorSelected[msg.sender] || isJuror[msg.sender], "AJ: not case juror");
+        _;
     }
     
     // ============ 查询函数 ============
