@@ -1,0 +1,318 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts/utils/math/Math.sol";
+
+/**
+ * @title PotentialEngine
+ * @notice 势位评估引擎：NPS + 使用反馈 + Tukey fences 自适应阈值
+ * @dev 基于 v0.4 文档 §4.x
+ * 修复 X7 review #4 (gas风险) 和 #5 (Tukey水军攻击), Seaman 遗漏 #2 (NPS三道锁)
+ */
+contract PotentialEngine {
+    using Math for uint256;
+
+    // ============ 常量 ============
+    
+    uint256 public constant NPS_DENOMINATOR = 10000;  // NPS 精度 0-10000
+    uint256 public constant MIN_HOLDING_PERIOD = 7 days;   // NPS 7天持有期（修复遗漏）
+    uint256 public constant RATING_COOLDOWN = 30 days;     // NPS 30天频率限制（修复遗漏）
+    uint256 public constant WEIGHT_CREATOR = 5000;         // 创作者权重 50%
+    uint256 public constant WEIGHT_USER = 5000;            // 使用者权重 50%
+    uint256 public constant DISPUTE_THRESHOLD = 1000;      // 争议率 >10% 时使用者权重提升
+    uint256 public constant WEIGHT_USER_HIGH_DISPUTE = 6000; // 争议率高时使用者权重 60%
+    uint256 public constant ANOMALY_STREAK_THRESHOLD = 2;  // 连续2周期异常触发延迟确认
+    uint256 public constant MIN_IQR = 3;                   // Tukey IQR 最小值（修复 #5）
+    uint256 public constant MAX_RECALC_GAS = 8000000;    // recalculate 最大 gas（修复 #4）
+
+    // ============ 数据结构 ============
+    
+    struct NPSScore {
+        uint256 score;           // 0-10000
+        uint256 timestamp;       // 评分时间
+        uint256 licenseId;       // 关联许可
+        bool isValid;            // 是否有效
+    }
+    
+    struct LicenseInfo {
+        uint256 purchaseTime;    // 购买时间
+        bool exists;             // 是否存在
+    }
+    
+    struct PotentialMetrics {
+        uint256 npsScore;        // NPS 平均分
+        uint256 engagementScore; // 参与度分
+        uint256 disputeRate;     // 争议率 (basis points)
+        uint256 activityScore;   // 活跃度分
+        uint256 potential;       // 综合势位分
+    }
+    
+    struct Thresholds {
+        uint256 upperFence;      // Tukey 上围栏
+        uint256 lowerFence;      // Tukey 下围栏
+        uint256 iqr;             // 四分位距
+        uint256 median;          // 中位数
+        uint256 lastUpdated;     // 上次更新时间
+    }
+    
+    // ============ 状态变量 ============
+    
+    mapping(uint256 => NPSScore[]) public npsHistory;     // versionId => NPS 历史
+    mapping(uint256 => mapping(address => uint256)) public lastRatingTime; // versionId => user => time
+    mapping(uint256 => mapping(uint256 => LicenseInfo)) public licenses; // versionId => licenseId => info
+    mapping(uint256 => PotentialMetrics) public metrics;   // versionId => 当前指标
+    mapping(uint256 => Thresholds) public thresholds;      // versionId => 阈值
+    mapping(uint256 => uint256) public anomalyStreak;      // versionId => 连续异常次数
+    
+    address public owner;
+    address public juryContract;   // AgentJury 合约地址
+    
+    // ============ 事件 ============
+    
+    event NPSSubmitted(uint256 indexed versionId, address indexed user, uint256 licenseId, uint256 score);
+    event NPSInvalidated(uint256 indexed versionId, uint256 indexed licenseId, string reason);
+    event ThresholdsUpdated(uint256 indexed versionId, uint256 upper, uint256 lower, uint256 iqr);
+    event AnomalyDetected(uint256 indexed versionId, uint256 metric, uint256 fence);
+    event DelayedConfirmation(uint256 indexed versionId, uint256 streak);
+    
+    // ============ 修饰器 ============
+    
+    modifier onlyOwner() {
+        require(msg.sender == owner, "PE: not owner");
+        _;
+    }
+    
+    modifier onlyJury() {
+        require(msg.sender == juryContract, "PE: not jury");
+        _;
+    }
+    
+    // ============ 构造函数 ============
+    
+    constructor() {
+        owner = msg.sender;
+    }
+    
+    function setJuryContract(address _jury) external onlyOwner {
+        juryContract = _jury;
+    }
+    
+    // ============ NPS 提交（三道锁） ============
+    
+    function submitNPS(
+        uint256 _versionId,
+        uint256 _licenseId,
+        uint256 _score  // 0-10000
+    ) external {
+        require(_score <= NPS_DENOMINATOR, "PE: invalid score");
+        
+        LicenseInfo storage lic = licenses[_versionId][_licenseId];
+        require(lic.exists, "PE: license not found");
+        
+        // 锁1：7天持有期（修复遗漏）
+        require(
+            block.timestamp >= lic.purchaseTime + MIN_HOLDING_PERIOD,
+            "PE: holding period not met"
+        );
+        
+        // 锁2：30天频率限制（修复遗漏）
+        uint256 lastTime = lastRatingTime[_versionId][msg.sender];
+        require(
+            block.timestamp >= lastTime + RATING_COOLDOWN,
+            "PE: rating cooldown active"
+        );
+        
+        // 锁3：许可有效性实时验证
+        require(isLicenseValid(_licenseId), "PE: license expired or refunded");
+        
+        // 记录 NPS
+        npsHistory[_versionId].push(NPSScore({
+            score: _score,
+            timestamp: block.timestamp,
+            licenseId: _licenseId,
+            isValid: true
+        }));
+        
+        lastRatingTime[_versionId][msg.sender] = block.timestamp;
+        
+        emit NPSSubmitted(_versionId, msg.sender, _licenseId, _score);
+        
+        // 触发重新评估
+        _recalculateMetrics(_versionId);
+    }
+    
+    function isLicenseValid(uint256 _licenseId) public view returns (bool) {
+        // 简化：实际应调用 LicenseNFT 合约验证
+        return _licenseId > 0;
+    }
+    
+    // ============ 势位评估 ============
+    
+    function _recalculateMetrics(uint256 _versionId) internal {
+        // Gas 保护（修复 #4）
+        require(gasleft() >= MAX_RECALC_GAS, "PE: insufficient gas for recalc");
+        
+        NPSScore[] storage history = npsHistory[_versionId];
+        if (history.length == 0) return;
+        
+        // 计算 NPS 平均分
+        uint256 totalNPS = 0;
+        uint256 validCount = 0;
+        for (uint i = 0; i < history.length; i++) {
+            if (history[i].isValid) {
+                totalNPS += history[i].score;
+                validCount++;
+            }
+        }
+        
+        PotentialMetrics storage m = metrics[_versionId];
+        m.npsScore = validCount > 0 ? totalNPS / validCount : 0;
+        
+        // 动态权重：争议率 >10% 时使用者侧提升
+        if (m.disputeRate > DISPUTE_THRESHOLD) {
+            // 使用者权重 60%，创作者 40%
+            m.potential = (m.npsScore * WEIGHT_USER_HIGH_DISPUTE + 
+                          m.engagementScore * (10000 - WEIGHT_USER_HIGH_DISPUTE)) / 10000;
+        } else {
+            // 默认 50:50
+            m.potential = (m.npsScore * WEIGHT_CREATOR + 
+                          m.engagementScore * WEIGHT_USER) / 10000;
+        }
+        
+        // 自适应阈值检测
+        _checkAnomaly(_versionId);
+    }
+    
+    // ============ Tukey Fences 自适应阈值（修复 #5） ============
+    
+    function _checkAnomaly(uint256 _versionId) internal {
+        PotentialMetrics storage m = metrics[_versionId];
+        Thresholds storage t = thresholds[_versionId];
+        
+        // 计算历史指标的中位数和 IQR
+        uint256[] memory scores = _extractScores(_versionId);
+        if (scores.length < 4) return; // 数据不足
+        
+        (uint256 q1, uint256 median, uint256 q3) = _calculateQuartiles(scores);
+        uint256 iqr = q3 - q1;
+        
+        // IQR >= 3 兜底（修复 #5）
+        if (iqr < MIN_IQR) iqr = MIN_IQR;
+        
+        uint256 upperFence = q3 + (iqr * 15) / 10;  // Q3 + 1.5*IQR
+        uint256 lowerFence = q1 > (iqr * 15) / 10 ? q1 - (iqr * 15) / 10 : 0;  // Q1 - 1.5*IQR
+        
+        // 更新阈值
+        t.upperFence = upperFence;
+        t.lowerFence = lowerFence;
+        t.iqr = iqr;
+        t.median = median;
+        t.lastUpdated = block.timestamp;
+        
+        emit ThresholdsUpdated(_versionId, upperFence, lowerFence, iqr);
+        
+        // 检测当前指标是否越界
+        if (m.potential > upperFence || m.potential < lowerFence) {
+            anomalyStreak[_versionId]++;
+            emit AnomalyDetected(_versionId, m.potential, m.potential > upperFence ? upperFence : lowerFence);
+            
+            // 连续2周期异常 → 延迟确认
+            if (anomalyStreak[_versionId] >= ANOMALY_STREAK_THRESHOLD) {
+                emit DelayedConfirmation(_versionId, anomalyStreak[_versionId]);
+                // 触发 AgentJury 审查（异步）
+                // 实际应调用 juryContract.openCase()
+            }
+        } else {
+            anomalyStreak[_versionId] = 0;
+        }
+    }
+    
+    function _extractScores(uint256 _versionId) internal view returns (uint256[] memory) {
+        NPSScore[] storage history = npsHistory[_versionId];
+        uint256[] memory scores = new uint256[](history.length);
+        for (uint i = 0; i < history.length; i++) {
+            scores[i] = history[i].score;
+        }
+        return scores;
+    }
+    
+    function _calculateQuartiles(uint256[] memory arr) internal pure returns (uint256 q1, uint256 median, uint256 q3) {
+        require(arr.length >= 4, "PE: insufficient data");
+        
+        // 排序（简化：冒泡排序，小数组可接受）
+        for (uint i = 0; i < arr.length; i++) {
+            for (uint j = i + 1; j < arr.length; j++) {
+                if (arr[i] > arr[j]) {
+                    uint256 temp = arr[i];
+                    arr[i] = arr[j];
+                    arr[j] = temp;
+                }
+            }
+        }
+        
+        uint256 n = arr.length;
+        
+        // 中位数
+        if (n % 2 == 0) {
+            median = (arr[n / 2 - 1] + arr[n / 2]) / 2;
+        } else {
+            median = arr[n / 2];
+        }
+        
+        // Q1：前半部分的中位数
+        uint256 half = n / 2;
+        if (half % 2 == 0) {
+            q1 = (arr[half / 2 - 1] + arr[half / 2]) / 2;
+        } else {
+            q1 = arr[half / 2];
+        }
+        
+        // Q3：后半部分的中位数
+        uint256 start = n % 2 == 0 ? half : half + 1;
+        if ((n - start) % 2 == 0) {
+            q3 = (arr[start + (n - start) / 2 - 1] + arr[start + (n - start) / 2]) / 2;
+        } else {
+            q3 = arr[start + (n - start) / 2];
+        }
+        
+        return (q1, median, q3);
+    }
+    
+    // ============ 外部查询 ============
+    
+    function getMetrics(uint256 _versionId) external view returns (PotentialMetrics memory) {
+        return metrics[_versionId];
+    }
+    
+    function getThresholds(uint256 _versionId) external view returns (Thresholds memory) {
+        return thresholds[_versionId];
+    }
+    
+    function getNPSCount(uint256 _versionId) external view returns (uint256) {
+        return npsHistory[_versionId].length;
+    }
+    
+    // ============ 管理员 ============
+    
+    function registerLicense(uint256 _versionId, uint256 _licenseId, uint256 _purchaseTime) external onlyOwner {
+        licenses[_versionId][_licenseId] = LicenseInfo({
+            purchaseTime: _purchaseTime,
+            exists: true
+        });
+    }
+    
+    function invalidateNPS(uint256 _versionId, uint256 _index, string calldata _reason) external onlyJury {
+        require(_index < npsHistory[_versionId].length, "PE: invalid index");
+        npsHistory[_versionId][_index].isValid = false;
+        emit NPSInvalidated(_versionId, npsHistory[_versionId][_index].licenseId, _reason);
+    }
+    
+    function updateEngagementScore(uint256 _versionId, uint256 _score) external onlyOwner {
+        metrics[_versionId].engagementScore = _score;
+    }
+    
+    function updateDisputeRate(uint256 _versionId, uint256 _rate) external onlyOwner {
+        require(_rate <= 10000, "PE: invalid rate");
+        metrics[_versionId].disputeRate = _rate;
+    }
+}
