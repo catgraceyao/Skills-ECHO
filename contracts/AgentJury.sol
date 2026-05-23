@@ -75,6 +75,10 @@ contract AgentJury is VRFConsumerBaseV2 {
     // 未 reveal 记录（用于外部信誉系统）
     mapping(address => uint256) public unrevealedCount;
     
+    // 销毁记账（新增：显式销毁路径，X7 checklist #3）
+    uint256 public burnedAccumulated;
+    address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+    
     // ============ 事件 ============
     
     event CaseOpened(uint256 indexed caseId, bytes32 evidenceHash);
@@ -88,6 +92,7 @@ contract AgentJury is VRFConsumerBaseV2 {
     event DisproofSlashed(uint256 indexed caseId, address indexed challenger, uint256 slashed);
     event CandidateAdded(address indexed juror);
     event CandidateRemoved(address indexed juror);
+    event JurorRemoved(address indexed juror);  // 编译补丁 T2：补回声明（X7 checklist）
     
     // ============ 修饰器 ============
     
@@ -284,11 +289,16 @@ contract AgentJury is VRFConsumerBaseV2 {
                     c.jurorStakes[juror] = 0;
                     c.commitStake -= stake;
                     
-                    // 50% 销毁（留在合约中）+ 50% 给 DAO 国库
-                    uint256 treasuryAmount = stake / 2;
+                    // 50% 销毁（转到 BURN_ADDRESS）+ 50% 给 DAO 国库（X7 checklist #3）
+                    uint256 burnAmount = stake / 2;
+                    uint256 treasuryAmount = stake - burnAmount;
+                    
                     if (daoTreasury != address(0)) {
                         payable(daoTreasury).transfer(treasuryAmount);
                     }
+                    // 显式销毁：转到死地址
+                    payable(BURN_ADDRESS).transfer(burnAmount);
+                    burnedAccumulated += burnAmount;
                     
                     emit BondSlashed(_caseId, juror, stake);  // X7 checklist 事件名
                 }
