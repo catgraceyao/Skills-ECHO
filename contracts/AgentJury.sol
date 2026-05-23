@@ -41,7 +41,6 @@ contract AgentJury is VRFConsumerBaseV2 {
         bytes32 commitHash;    // keccak256(vote, salt, caseId, msg.sender)
         uint256 commitTime;
         bool revealed;
-        uint256 salt;          // 存储 salt
     }
     
     struct Case {
@@ -191,8 +190,7 @@ contract AgentJury is VRFConsumerBaseV2 {
         c.commits[msg.sender] = Commit({
             commitHash: _commitHash,
             commitTime: block.timestamp,
-            revealed: false,
-            salt: _salt
+            revealed: false
         });
         c.jurorStakes[msg.sender] = msg.value;
         c.commitStake += msg.value;
@@ -211,10 +209,10 @@ contract AgentJury is VRFConsumerBaseV2 {
         require(commit.commitHash != bytes32(0), "AJ: no commit found");
         require(!commit.revealed, "AJ: already revealed");
         
-        // commitHash 绑 caseId + msg.sender（X7 checklist #1）
+        // commitHash 绑 caseId + msg.sender（X7 checklist #1），不存 salt
         bytes32 expectedHash = keccak256(abi.encodePacked(_vote, _salt, _caseId, msg.sender));
         require(expectedHash == commit.commitHash, "AJ: reveal mismatch");
-        require(_salt == commit.salt, "AJ: salt mismatch");
+        // 注意：不再二次校验 salt 是否等于 storage 中的值（已删除 salt 字段）
         
         commit.revealed = true;
         c.hasRevealed[msg.sender] = true;
