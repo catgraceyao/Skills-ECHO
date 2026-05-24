@@ -14,7 +14,7 @@ contract GovernanceDAO {
 
     // ============ 常量 ============
     
-    uint256 public constant DAO_MIN_MEMBERS = 11;          // 最小成员数 5→11
+    uint256 public daoMinMembers = 3;                   // 初始最小成员数 3，owner可调
     uint256 public constant DAO_MAX_MEMBERS = 21;          // 最大成员数
     uint256 public constant VOTE_DURATION = 7 days;        // 投票期
     uint256 public constant EXECUTE_DELAY = 12 hours;      // 执行延迟（6h→12h）
@@ -90,6 +90,11 @@ contract GovernanceDAO {
     
     constructor() {
         owner = msg.sender;
+    }
+    
+    function setDaoMinMembers(uint256 _newMin) external onlyOwner {
+        require(_newMin >= 3 && _newMin <= DAO_MAX_MEMBERS, "DAO: invalid min members");
+        daoMinMembers = _newMin;
     }
     
     function setEmergencyContract(address _emergency) external onlyOwner {
@@ -177,7 +182,7 @@ contract GovernanceDAO {
         address _target,
         bytes calldata _callData
     ) external onlyMember returns (uint256 id) {
-        require(memberList.length >= DAO_MIN_MEMBERS, "DAO: insufficient members");
+        require(memberList.length >= daoMinMembers, "DAO: insufficient members");
         
         id = nextProposalId++;
         Proposal storage p = proposals[id];
