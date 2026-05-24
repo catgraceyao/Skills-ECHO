@@ -234,11 +234,10 @@ contract PotentialEngine {
             }
         }
         
-        versionRecalcIndex[_versionId] = batchEnd;  // 修复 H2
-        if (versionRecalcIndex[_versionId] >= history.length) {
-            versionRecalcIndex[_versionId] = 0;  // 循环重置
-            // 全量更新完成后，触发自适应阈值检测
-            _checkAnomaly(_versionId);
+        versionRecalcIndex[_versionId] = batchEnd;
+        if (batchEnd >= history.length) {
+            versionRecalcIndex[_versionId] = history.length;  // H2 fix: stop at end, no loop
+            _checkAnomaly(_versionId);  // full pass complete
         }
     }
 
@@ -263,12 +262,12 @@ contract PotentialEngine {
         uint256 lowerFence = q1 > (iqr * 15) / 10 ? q1 - (iqr * 15) / 10 : 0;  // Q1 - 1.5*IQR
         
         // 修复 H3：IQR 倍率检测与 fences 逻辑统一
-        // 当前 potential 偏离中位数的 IQR 倍数
+        // 当前 potential 偏离中位数的 IQR 倍数（H3 fix: *10 避免整数除法盲区）
         uint256 deviation = m.potential > median ? m.potential - median : median - m.potential;
-        uint256 iqrMultiplier = iqr > 0 ? deviation / iqr : 0;
+        uint256 iqrMultiplier10 = iqr > 0 ? (deviation * 10) / iqr : 0;
         
-        if (iqrMultiplier >= 3) {
-            // 极端偏离（>=3 IQR），直接进异常，不更新 Tukey 阈值
+        if (iqrMultiplier10 >= 30) {
+            // 极端偏离（>=3.0 IQR），直接进异常，不更新 Tukey 阈值
             // 防止水军用极端值拉偏分位数
             anomalyStreak[_versionId]++;
             emit AnomalyDetected(_versionId, m.potential, upperFence);
@@ -288,8 +287,8 @@ contract PotentialEngine {
         
         emit ThresholdsUpdated(_versionId, upperFence, lowerFence, iqr);
         
-        // 检测当前指标是否越界（标准 Tukey 1.5 IQR）
-        if (m.potential > upperFence || m.potential < lowerFence) {
+        // 检测当前指标是否越界（标准 Tukey 1.5 IQR，H3 fix: >=15 即 1.5x）
+        if (iqrMultiplier10 >= 15) {
             anomalyStreak[_versionId]++;
             emit AnomalyDetected(_versionId, m.potential, m.potential > upperFence ? upperFence : lowerFence);
             
