@@ -24,6 +24,8 @@ contract PotentialEngine {
     uint256 public constant EMA_ALPHA_NUMERATOR = 2;        // EMA α = 0.2 (2/10)，新数据权重20%
     uint256 public constant EMA_ALPHA_DENOMINATOR = 10;     // EMA 分母
     uint256 public constant MAX_NPS_HISTORY = 1000;         // NPS 历史最大长度（修复 H4）
+    uint256 public constant ANOMALY_STREAK_THRESHOLD = 2;  // 连续2周期异常触发延迟确认
+    uint256 public constant MIN_IQR = 3;                   // Tukey IQR 最小值（修复 #5）
 
     // ============ 数据结构 ============
 
@@ -123,7 +125,8 @@ contract PotentialEngine {
         );
 
         // 锁3:许可有效性实时验证
-        require(isLicenseValid(_licenseId), "PE: license expired or refunded");
+        require(isLicenseValid(_versionId, _licenseId), "PE: license expired or refunded");
+
 
         // 记录 NPS
         npsHistory[_versionId].push(NPSScore({
@@ -142,6 +145,13 @@ contract PotentialEngine {
         
         // 限制历史长度（修复 H4）
         _trimNPSHistory(_versionId);
+    }
+
+    function isLicenseValid(uint256 _versionId, uint256 _licenseId) public view returns (bool) {
+        // 简化：实际应调用 LicenseNFT 合约验证
+        // TODO: 接入 LicenseNFT.isLicenseValid() 外部调用
+        LicenseInfo storage lic = licenses[_versionId][_licenseId];
+        return lic.exists;
     }
 
     function _trimNPSHistory(uint256 _versionId) internal {
