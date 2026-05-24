@@ -86,6 +86,9 @@ contract GovernanceDAO {
         _;
     }
     
+    // 允许接收 ETH（来自 AgentJury 的 slash 资金）
+    receive() external payable {}
+    
     // ============ 构造函数 ============
     
     constructor() {
