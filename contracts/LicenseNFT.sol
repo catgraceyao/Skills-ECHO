@@ -140,7 +140,8 @@ contract LicenseNFT is ERC721, ERC721Enumerable, Ownable {
     // ============ 转让许可 ============
     
     function transferLicense(address _from, address _to, uint256 _tokenId) external {
-        require(_isApprovedOrOwner(msg.sender, _tokenId), "LNFT: not authorized");
+        // OpenZeppelin 5.x: _isApprovedOrOwner 已移除，改用 _isAuthorized
+        require(_isAuthorized(msg.sender, _tokenId), "LNFT: not authorized");
         require(licenses[_tokenId].status == LicenseStatus.Active, "LNFT: not active");
         require(block.timestamp <= licenses[_tokenId].expiryTime, "LNFT: expired");
         
