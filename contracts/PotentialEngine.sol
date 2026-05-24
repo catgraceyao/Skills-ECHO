@@ -21,11 +21,15 @@ contract PotentialEngine {
     uint256 public constant WEIGHT_USER = 5000;            // 使用者权重 50%
     uint256 public constant DISPUTE_THRESHOLD = 1000;      // 争议率 >10% 时使用者权重提升
     uint256 public constant WEIGHT_USER_HIGH_DISPUTE = 6000; // 争议率高时使用者权重 60%
+    uint256 public constant EMA_WARMUP_BATCHES = 5;        // EMA冷启动：前5个batch渐进SMA过渡，第6个batch起切EMA
     uint256 public constant EMA_ALPHA_NUMERATOR = 2;        // EMA α = 0.2 (2/10)，新数据权重20%
     uint256 public constant EMA_ALPHA_DENOMINATOR = 10;     // EMA 分母
     uint256 public constant MAX_NPS_HISTORY = 1000;         // NPS 历史最大长度（修复 H4）
     uint256 public constant ANOMALY_STREAK_THRESHOLD = 2;  // 连续2周期异常触发延迟确认
     uint256 public constant MIN_IQR = 3;                   // Tukey IQR 最小值（修复 #5）
+
+    // ============ EMA冷启动状态（round8-fix）============
+    mapping(uint256 => uint256) public emaBatchCounter;    // 每个versionId已处理batch数
 
     // ============ 数据结构 ============
 
@@ -70,9 +74,19 @@ contract PotentialEngine {
     address public juryContract;   // AgentJury 合约地址
 
     // ============ 事件 ============
+    /// @notice 前端可视化规范（round8-fix）
+    /// @dev 合约仅抛出事件，前端按以下规范渲染：
+    /// - 正常区间（lowerFence ~ upperFence）：绿色折线，无闪烁
+    /// - 温和异常（potential 越界 1.5 IQR）：黄色闪烁 + 警告图标
+    /// - 极端异常（偏离中位数 >=3 IQR）：红色全屏遮罩 + "延迟确认中"文案
+    /// - 连续 ANOMALY_STREAK_THRESHOLD(2) 周期异常：加锁图标 + 倒计时
+    ///   （等待人工/Agent陪审团介入，期间禁止自动阈值更新）
+    /// - EMA冷启动期（emaBatchCounter < 5）：灰色虚线 + "数据积累中"提示
+    ///   第5个batch完成后变实线绿色，前端监听 EMAWarmedUp 事件切换
 
     event NPSSubmitted(uint256 indexed versionId, address indexed user, uint256 licenseId, uint256 score);
     event NPSInvalidated(uint256 indexed versionId, uint256 indexed licenseId, string reason);
+    event EMAWarmedUp(uint256 indexed versionId, uint256 finalSMAValue);
     event ThresholdsUpdated(uint256 indexed versionId, uint256 upper, uint256 lower, uint256 iqr);
     event AnomalyDetected(uint256 indexed versionId, uint256 metric, uint256 fence);
     event DelayedConfirmation(uint256 indexed versionId, uint256 streak);
@@ -201,11 +215,23 @@ contract PotentialEngine {
         PotentialMetrics storage m = metrics[_versionId];
         if (validCount > 0) {
             uint256 batchAvg = totalNPS / validCount;
-            // 修复 H1：指数移动平均（EMA），替代简单算术平均
-            // EMA_t = α * new_value + (1-α) * EMA_{t-1}
-            m.npsScore = (EMA_ALPHA_NUMERATOR * batchAvg + 
-                (EMA_ALPHA_DENOMINATOR - EMA_ALPHA_NUMERATOR) * m.npsScore) 
-                / EMA_ALPHA_DENOMINATOR;
+            
+            // round8-fix: EMA冷启动，前5个batch渐进SMA过渡
+            uint256 batchCount = emaBatchCounter[_versionId];
+            if (batchCount < EMA_WARMUP_BATCHES) {
+                // 渐进累积平均：(旧总分 * 计数 + 新值) / (计数 + 1)
+                m.npsScore = (m.npsScore * batchCount + batchAvg) / (batchCount + 1);
+                emaBatchCounter[_versionId] = batchCount + 1;
+                if (batchCount + 1 == EMA_WARMUP_BATCHES) {
+                    emit EMAWarmedUp(_versionId, m.npsScore);
+                }
+            } else {
+                // 修复 H1：标准指数移动平均（EMA）
+                // EMA_t = α * new_value + (1-α) * EMA_{t-1}
+                m.npsScore = (EMA_ALPHA_NUMERATOR * batchAvg + 
+                    (EMA_ALPHA_DENOMINATOR - EMA_ALPHA_NUMERATOR) * m.npsScore) 
+                    / EMA_ALPHA_DENOMINATOR;
+            }
         }
         
         versionRecalcIndex[_versionId] = batchEnd;  // 修复 H2
