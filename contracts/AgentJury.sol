@@ -1,37 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
-import "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
-
 /**
  * @title AgentJury
- * @notice Agent 陪审团：commit-reveal + VRF 抽选 + 3/5 多签
- * @dev 基于 X7 第三轮 checklist，两阶段开案 + 候选池 + caseId+msg.sender 绑 salt
+ * @notice Agent 陪审团：commit-reveal + Multi-Source Entropy 抽选 + 3/5 多签
+ * @dev 方案C：去掉 Chainlink VRF，改用 blockhash + timestamp + gasprice + caseId + msg.sender 多源熵
  */
-contract AgentJury is VRFConsumerBaseV2 {
+contract AgentJury {
     // ============ 状态变量 ============
     
     address public owner;
-    address public daoTreasury;                     // DAO 国库地址（新增）
+    address public daoTreasury;                     // DAO 国库地址
     
-    // 候选池（新增：从候选池抽选，不是直接用 jurorList）
+    // 候选池（从候选池抽选，不是直接用 jurorList）
     address[] public juryCandidates;                // 陪审员候选池
     mapping(address => bool) public isCandidate;    // 是否在候选池
     
     uint256 public constant JURY_SIZE = 5;          // 陪审团规模
     uint256 public constant REQUIRED_SIGNATURES = 3; // 3/5 多签
     
-    // VRF 配置
-    address public vrfCoordinator;
-    bytes32 public keyHash;
-    uint64 public subscriptionId;
-    uint32 public callbackGasLimit = 200000;
-    uint16 public requestConfirmations = 3;
-    
-    // 案件状态机（新增：两阶段开案）
+    // 案件状态机（两阶段开案）
     enum CaseState {
-        PENDING_VRF,    // 等待 VRF 随机数
         COMMIT_OPEN,    // 可 commit
         REVEAL_OPEN,    // 可 reveal
         RESOLVED        // 已结案
@@ -48,15 +37,13 @@ contract AgentJury is VRFConsumerBaseV2 {
         bytes32 evidenceHash;
         uint256 commitDeadline;
         uint256 revealDeadline;
-        uint256 vrfRequestId;
-        uint256 randomWord;
-        uint256 commitBlocks;      // B4 fix: store for VRF callback
-        uint256 revealBlocks;    // B4 fix: store for VRF callback
-        CaseState state;                           // 案件状态（新增）
+        uint256 commitBlocks;      // store for openCase
+        uint256 revealBlocks;      // store for openCase
+        CaseState state;           // 案件状态
         mapping(address => Commit) commits;
         mapping(address => bool) hasRevealed;
-        mapping(address => bool) eligibleJurors;   // 被选为本案陪审员（新增）
-        address[] selectedJurors;                   // 选中的陪审员列表（新增）
+        mapping(address => bool) eligibleJurors;   // 被选为本案陪审员
+        address[] selectedJurors;                   // 选中的陪审员列表
         uint256 revealCount;
         uint256 yesVotes;
         uint256 noVotes;
@@ -69,33 +56,37 @@ contract AgentJury is VRFConsumerBaseV2 {
     
     mapping(uint256 => Case) public cases;
     uint256 public nextCaseId;
-    mapping(uint256 => uint256) public requestIdToCase;
     
     // 押金配置
     uint256 public constant JURY_COMMIT_STAKE = 0.01 ether;
-    uint256 public constant MAX_CANDIDATES = 100;  // B5 fix: candidate pool upper limit
+    uint256 public constant MAX_CANDIDATES = 100;  // 候选池上限
+    
+    // 反证配置
+    uint256 public constant DISPROOF_STAKE = 0.05 ether;
+    uint256 public constant REWARD_RATE = 5000;     // 50% reward
+    uint256 public constant SLASH_RATE = 5000;      // 50% slash
     
     // 未 reveal 记录（用于外部信誉系统）
     mapping(address => uint256) public unrevealedCount;
     
-    // 销毁记账（新增：显式销毁路径，X7 checklist #3）
+    // 销毁记账（显式销毁路径）
     uint256 public burnedAccumulated;
     address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
     
     // ============ 事件 ============
     
     event CaseOpened(uint256 indexed caseId, bytes32 evidenceHash);
-    event JurorsSelected(uint256 indexed caseId, address[5] jurors, uint256 randomWord);  // 新增
+    event JurorsSelected(uint256 indexed caseId, address[5] jurors, uint256 seed);
     event CommitSubmitted(uint256 indexed caseId, address indexed juror, bytes32 commitHash);
     event RevealSubmitted(uint256 indexed caseId, address indexed juror, bool vote);
-    event CaseResolved(uint256 indexed caseId, bool verdict, uint256 yesVotes, uint256 noVotes, string verdictType);  // 新增 verdictType
-    event BondSlashed(uint256 indexed caseId, address indexed juror, uint256 amount);  // 改名（原 JurorPenalized）
+    event CaseResolved(uint256 indexed caseId, bool verdict, uint256 yesVotes, uint256 noVotes, string verdictType);
+    event BondSlashed(uint256 indexed caseId, address indexed juror, uint256 amount);
     event DisproofStaked(uint256 indexed caseId, address indexed challenger, uint256 amount);
     event DisproofRewarded(uint256 indexed caseId, address indexed challenger, uint256 reward);
     event DisproofSlashed(uint256 indexed caseId, address indexed challenger, uint256 slashed);
     event CandidateAdded(address indexed juror);
     event CandidateRemoved(address indexed juror);
-    event JurorRemoved(address indexed juror);  // 编译补丁 T2：补回声明（X7 checklist）
+    event JurorRemoved(address indexed juror);
     
     // ============ 修饰器 ============
     
@@ -105,12 +96,12 @@ contract AgentJury is VRFConsumerBaseV2 {
     }
     
     modifier onlyEligibleJuror(uint256 _caseId) {
-        require(cases[_caseId].eligibleJurors[msg.sender], "AJ: not selected for this case");  // 新增
+        require(cases[_caseId].eligibleJurors[msg.sender], "AJ: not selected for this case");
         _;
     }
     
     modifier onlyDuringCommit(uint256 _caseId) {
-        require(cases[_caseId].state == CaseState.COMMIT_OPEN, "AJ: commit not open");  // 两阶段校验
+        require(cases[_caseId].state == CaseState.COMMIT_OPEN, "AJ: commit not open");
         require(block.number <= cases[_caseId].commitDeadline, "AJ: commit phase ended");
         _;
     }
@@ -124,23 +115,17 @@ contract AgentJury is VRFConsumerBaseV2 {
     // ============ 构造函数 ============
     
     constructor(
-        address _vrfCoordinator,
-        bytes32 _keyHash,
-        uint64 _subscriptionId,
-        address _daoTreasury                    // 新增
-    ) VRFConsumerBaseV2(_vrfCoordinator) {
+        address _daoTreasury
+    ) {
         owner = msg.sender;
-        vrfCoordinator = _vrfCoordinator;
-        keyHash = _keyHash;
-        subscriptionId = _subscriptionId;
-        daoTreasury = _daoTreasury;              // 初始化 DAO 国库
+        daoTreasury = _daoTreasury;
     }
     
-    // ============ 候选池管理（新增）============
+    // ============ 候选池管理 ============
     
     function addCandidate(address _juror) external onlyOwner {
         require(!isCandidate[_juror], "AJ: already candidate");
-        require(juryCandidates.length < MAX_CANDIDATES, "AJ: candidate pool full");  // B5 fix: upper limit
+        require(juryCandidates.length < MAX_CANDIDATES, "AJ: candidate pool full");
         isCandidate[_juror] = true;
         juryCandidates.push(_juror);
         emit CandidateAdded(_juror);
@@ -159,7 +144,7 @@ contract AgentJury is VRFConsumerBaseV2 {
         emit CandidateRemoved(_juror);
     }
     
-    // ============ 案件管理（两阶段开案）============
+    // ============ 案件管理（两阶段开案：Multi-Source Entropy）============
     
     function openCase(
         bytes32 _evidenceHash,
@@ -170,13 +155,26 @@ contract AgentJury is VRFConsumerBaseV2 {
         Case storage c = cases[caseId];
         c.caseId = caseId;
         c.evidenceHash = _evidenceHash;
-        c.commitBlocks = _commitBlocks;       // B4 fix: store for later
-        c.revealBlocks = _revealBlocks;         // B4 fix: store for later
-        // B4 fix: commitDeadline set in fulfillRandomWords after VRF callback
-        c.state = CaseState.PENDING_VRF;          // 阶段 A：等待 VRF
+        c.commitBlocks = _commitBlocks;
+        c.revealBlocks = _revealBlocks;
         
-        // 请求 VRF 随机数
-        c.vrfRequestId = requestRandomWords(caseId);
+        // Multi-Source Entropy: blockhash + timestamp + gasprice + caseId + msg.sender
+        // 前一区块的 hash 在交易执行时已经确定，当前区块的 hash 还未知
+        uint256 seed = uint256(keccak256(abi.encodePacked(
+            blockhash(block.number - 1),
+            block.timestamp,
+            tx.gasprice,
+            caseId,
+            msg.sender
+        )));
+        
+        // 直接开放 commit（无需等 VRF callback）
+        c.state = CaseState.COMMIT_OPEN;
+        c.commitDeadline = block.number + _commitBlocks;
+        c.revealDeadline = c.commitDeadline + _revealBlocks;
+        
+        // 从候选池抽选 5 名陪审员
+        _selectJurors(caseId, seed);
         
         emit CaseOpened(caseId, _evidenceHash);
         return caseId;
@@ -193,7 +191,7 @@ contract AgentJury is VRFConsumerBaseV2 {
         require(c.commits[msg.sender].commitHash == bytes32(0), "AJ: already committed");
         require(msg.value == JURY_COMMIT_STAKE, "AJ: incorrect stake");
         
-        // 弱 salt 防御（X7 checklist #1）
+        // 弱 salt 防御
         require(_salt != 0, "AJ: salt cannot be zero");
         require(_salt > 1_000_000, "AJ: salt too weak");
         
@@ -219,10 +217,9 @@ contract AgentJury is VRFConsumerBaseV2 {
         require(commit.commitHash != bytes32(0), "AJ: no commit found");
         require(!commit.revealed, "AJ: already revealed");
         
-        // commitHash 绑 caseId + msg.sender（X7 checklist #1），不存 salt
+        // commitHash 绑 caseId + msg.sender，不存 salt
         bytes32 expectedHash = keccak256(abi.encodePacked(_vote, _salt, _caseId, msg.sender));
         require(expectedHash == commit.commitHash, "AJ: reveal mismatch");
-        // 注意：不再二次校验 salt 是否等于 storage 中的值（已删除 salt 字段）
         
         commit.revealed = true;
         c.hasRevealed[msg.sender] = true;
@@ -243,12 +240,9 @@ contract AgentJury is VRFConsumerBaseV2 {
             c.commitStake -= stake;
             payable(msg.sender).transfer(stake);
         }
-        
-        // 提前满票可触发结案（但需等全部 reveal 或时间到）
-        // 不自动结案，等 finalizeCase 外部调用
     }
     
-    // 任何人可触发结案（X7 checklist #3）
+    // 任何人可触发结案
     function finalizeCase(uint256 _caseId) external {
         Case storage c = cases[_caseId];
         require(c.state != CaseState.RESOLVED, "AJ: already resolved");
@@ -267,10 +261,10 @@ contract AgentJury is VRFConsumerBaseV2 {
         c.state = CaseState.RESOLVED;
         c.resolved = true;
         
-        // 先惩罚未 reveal 的陪审员（X7 checklist #2）
+        // 先惩罚未 reveal 的陪审员
         _penalizeUnrevealed(_caseId);
         
-        // 平票/不达 3 票直接 No（X7 checklist #3）
+        // 平票/不达 3 票直接 No
         if (c.yesVotes >= REQUIRED_SIGNATURES) {
             c.finalVerdict = true;
             emit CaseResolved(_caseId, true, c.yesVotes, c.noVotes, "Yes");
@@ -280,7 +274,7 @@ contract AgentJury is VRFConsumerBaseV2 {
         }
     }
     
-    // 未 reveal 惩罚（X7 checklist #2：50% 销毁 + 50% DAO 国库）
+    // 未 reveal 惩罚（50% 销毁 + 50% DAO 国库）
     function _penalizeUnrevealed(uint256 _caseId) internal {
         Case storage c = cases[_caseId];
         
@@ -294,18 +288,17 @@ contract AgentJury is VRFConsumerBaseV2 {
                     c.jurorStakes[juror] = 0;
                     c.commitStake -= stake;
                     
-                    // 50% 销毁（转到 BURN_ADDRESS）+ 50% 给 DAO 国库（X7 checklist #3）
+                    // 50% 销毁 + 50% 给 DAO 国库
                     uint256 burnAmount = stake / 2;
                     uint256 treasuryAmount = stake - burnAmount;
                     
                     if (daoTreasury != address(0)) {
                         payable(daoTreasury).transfer(treasuryAmount);
                     }
-                    // 显式销毁：转到死地址
                     payable(BURN_ADDRESS).transfer(burnAmount);
                     burnedAccumulated += burnAmount;
                     
-                    emit BondSlashed(_caseId, juror, stake);  // X7 checklist 事件名
+                    emit BondSlashed(_caseId, juror, stake);
                 }
                 unrevealedCount[juror]++;
             }
@@ -347,36 +340,9 @@ contract AgentJury is VRFConsumerBaseV2 {
         delete c.stakes[_challenger];
     }
     
-    // ============ VRF 回调（两阶段：抽选陪审员）============
+    // ============ 陪审员抽选（Multi-Source Entropy）============
     
-    function requestRandomWords(uint256 _caseId) internal returns (uint256 requestId) {
-        requestId = VRFCoordinatorV2Interface(vrfCoordinator).requestRandomWords(
-            keyHash,
-            subscriptionId,
-            requestConfirmations,
-            callbackGasLimit,
-            1
-        );
-        requestIdToCase[requestId] = _caseId;
-    }
-    
-    function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
-        uint256 caseId = requestIdToCase[_requestId];
-        Case storage c = cases[caseId];
-        require(c.state == CaseState.PENDING_VRF, "AJ: not pending VRF");
-        
-        c.randomWord = _randomWords[0];
-        c.state = CaseState.COMMIT_OPEN;  // 阶段 B：commit 开放
-        
-        // B4 fix: set deadlines AFTER VRF callback to prevent window compression
-        c.commitDeadline = block.number + c.commitBlocks;
-        c.revealDeadline = c.commitDeadline + c.revealBlocks;
-        
-        // 从候选池抽选 5 名陪审员（X7 checklist #4）
-        _selectJurors(caseId, _randomWords[0]);
-    }
-    
-    function _selectJurors(uint256 _caseId, uint256 _randomWord) internal {
+    function _selectJurors(uint256 _caseId, uint256 _seed) internal {
         Case storage c = cases[_caseId];
         uint256 poolSize = juryCandidates.length;
         require(poolSize >= JURY_SIZE, "AJ: insufficient candidate pool");
@@ -385,7 +351,7 @@ contract AgentJury is VRFConsumerBaseV2 {
         bool[] memory used = new bool[](poolSize);
         
         for (uint i = 0; i < JURY_SIZE; i++) {
-            uint256 idx = (_randomWord + i * 31) % poolSize;  // 31 是质数，打散分布
+            uint256 idx = (_seed + i * 31) % poolSize;  // 31 是质数，打散分布
             while (used[idx]) {
                 idx = (idx + 1) % poolSize;
             }
@@ -395,7 +361,7 @@ contract AgentJury is VRFConsumerBaseV2 {
             c.selectedJurors.push(juryCandidates[idx]);
         }
         
-        emit JurorsSelected(_caseId, selected, _randomWord);
+        emit JurorsSelected(_caseId, selected, _seed);
     }
     
     // ============ 查询函数 ============
