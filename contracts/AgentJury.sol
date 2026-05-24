@@ -50,6 +50,8 @@ contract AgentJury is VRFConsumerBaseV2 {
         uint256 revealDeadline;
         uint256 vrfRequestId;
         uint256 randomWord;
+        uint256 commitBlocks;      // B4 fix: store for VRF callback
+        uint256 revealBlocks;    // B4 fix: store for VRF callback
         CaseState state;                           // 案件状态（新增）
         mapping(address => Commit) commits;
         mapping(address => bool) hasRevealed;
@@ -71,6 +73,7 @@ contract AgentJury is VRFConsumerBaseV2 {
     
     // 押金配置
     uint256 public constant JURY_COMMIT_STAKE = 0.01 ether;
+    uint256 public constant MAX_CANDIDATES = 100;  // B5 fix: candidate pool upper limit
     
     // 未 reveal 记录（用于外部信誉系统）
     mapping(address => uint256) public unrevealedCount;
@@ -137,6 +140,7 @@ contract AgentJury is VRFConsumerBaseV2 {
     
     function addCandidate(address _juror) external onlyOwner {
         require(!isCandidate[_juror], "AJ: already candidate");
+        require(juryCandidates.length < MAX_CANDIDATES, "AJ: candidate pool full");  // B5 fix: upper limit
         isCandidate[_juror] = true;
         juryCandidates.push(_juror);
         emit CandidateAdded(_juror);
@@ -166,8 +170,9 @@ contract AgentJury is VRFConsumerBaseV2 {
         Case storage c = cases[caseId];
         c.caseId = caseId;
         c.evidenceHash = _evidenceHash;
-        c.commitDeadline = block.number + _commitBlocks;
-        c.revealDeadline = c.commitDeadline + _revealBlocks;
+        c.commitBlocks = _commitBlocks;       // B4 fix: store for later
+        c.revealBlocks = _revealBlocks;         // B4 fix: store for later
+        // B4 fix: commitDeadline set in fulfillRandomWords after VRF callback
         c.state = CaseState.PENDING_VRF;          // 阶段 A：等待 VRF
         
         // 请求 VRF 随机数
@@ -362,6 +367,10 @@ contract AgentJury is VRFConsumerBaseV2 {
         
         c.randomWord = _randomWords[0];
         c.state = CaseState.COMMIT_OPEN;  // 阶段 B：commit 开放
+        
+        // B4 fix: set deadlines AFTER VRF callback to prevent window compression
+        c.commitDeadline = block.number + c.commitBlocks;
+        c.revealDeadline = c.commitDeadline + c.revealBlocks;
         
         // 从候选池抽选 5 名陪审员（X7 checklist #4）
         _selectJurors(caseId, _randomWords[0]);
