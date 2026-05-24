@@ -158,12 +158,14 @@ contract AgentJury {
         c.commitBlocks = _commitBlocks;
         c.revealBlocks = _revealBlocks;
         
-        // Multi-Source Entropy: blockhash + timestamp + gasprice + caseId + msg.sender
+        // Multi-Source Entropy: blockhash + timestamp + gasprice + block.number + caseId + msg.sender
         // 前一区块的 hash 在交易执行时已经确定，当前区块的 hash 还未知
+        // block.number 确保即使 gasprice=0（Qitmeer 零气费交易）仍有足够熵
         uint256 seed = uint256(keccak256(abi.encodePacked(
             blockhash(block.number - 1),
             block.timestamp,
             tx.gasprice,
+            block.number,        // 加固：防止 gasprice=0 导致熵减少
             caseId,
             msg.sender
         )));
