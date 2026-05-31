@@ -1,0 +1,13 @@
+{
+  "name": "echo-bronze-contracts",
+  "version": "0.1.0",
+  "description": "ECHO Bronze Ambassador Contracts - Qitmeer QNG Mainnet",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy.js --network qng"
+  },
+  "devDependencies": {
+    "hardhat": "^2.28.0"
+  }
+}
