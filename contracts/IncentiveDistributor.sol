@@ -132,7 +132,7 @@ contract IncentiveDistributor {
     event ArbitratorAuthorized(address indexed arbitrator);
     event ArbitratorRevoked(address indexed arbitrator);
     event ReviewerFrozen(address indexed reviewer, uint256 until);
-    event ReviewerUnfrozen(address indexed reviewer);
+    event FeeWithdrawn(address indexed collector, uint256 amount);
     
     // ============ 修饰符 ============
     
@@ -317,7 +317,7 @@ contract IncentiveDistributor {
     // ============ 裁决功能 ============
     
     /// @notice 裁决标记（Owner 或授权裁决者）
-    function arbitrateMark(uint256 markId, bool isValid, string calldata reason) external onlyArbitrator {
+    function arbitrateMark(uint256 markId, bool isValid, string calldata reason) public onlyArbitrator {
         MarkRecord storage mark = marks[markId];
         require(mark.status == MarkStatus.Pending, "NOT_PENDING");
         
@@ -341,7 +341,7 @@ contract IncentiveDistributor {
     }
     
     /// @notice 旧版裁决标记无效（保留兼容）
-    function rejectMark(uint256 markId, string calldata reason) external onlyArbitrator {
+    function rejectMark(uint256 markId, string calldata reason) public onlyArbitrator {
         arbitrateMark(markId, false, reason);
     }
     
