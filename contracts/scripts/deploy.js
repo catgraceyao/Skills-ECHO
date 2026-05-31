@@ -15,25 +15,25 @@ async function main() {
   console.log(`🚀 部署者: ${deployer.address}`);
   
   const balance = await hre.ethers.provider.getBalance(deployer.address);
-  console.log(`💰 余额: ${hre.ethers.formatEther(balance)} MEER`);
+  console.log(`💰 余额: ${hre.ethers.utils.formatEther(balance)} MEER`);
   
   // 1. 部署 BronzeAmbassadorConfig
   console.log('\n📄 1. 部署 BronzeAmbassadorConfig...');
   const BronzeConfig = await hre.ethers.getContractFactory('BronzeAmbassadorConfig');
   const bronzeConfig = await BronzeConfig.deploy();
-  await bronzeConfig.waitForDeployment();
-  console.log(`   ✅ 地址: ${await bronzeConfig.getAddress()}`);
+  await bronzeConfig.deployed();
+  console.log(`   ✅ 地址: ${bronzeConfig.address}`);
   
   // 2. 部署 IncentiveDistributor
   console.log('\n📄 2. 部署 IncentiveDistributor...');
   const FEE_COLLECTOR = process.env.FEE_COLLECTOR || deployer.address;
   const IncentiveDistributor = await hre.ethers.getContractFactory('IncentiveDistributor');
   const incentive = await IncentiveDistributor.deploy(
-    await bronzeConfig.getAddress(),
+    bronzeConfig.address,
     FEE_COLLECTOR
   );
-  await incentive.waitForDeployment();
-  console.log(`   ✅ 地址: ${await incentive.getAddress()}`);
+  await incentive.deployed();
+  console.log(`   ✅ 地址: ${incentive.address}`);
   
   // 3. 部署 SnapshotRecorder
   console.log('\n📄 3. 部署 SnapshotRecorder...');
@@ -41,30 +41,30 @@ async function main() {
   const GOVERNANCE_DAO = '0x07E0FFCA344f846B499C811CE3127F5f3BFAd0b7';
   const SnapshotRecorder = await hre.ethers.getContractFactory('SnapshotRecorder');
   const snapshot = await SnapshotRecorder.deploy(AGENT_JURY, GOVERNANCE_DAO);
-  await snapshot.waitForDeployment();
-  console.log(`   ✅ 地址: ${await snapshot.getAddress()}`);
+  await snapshot.deployed();
+  console.log(`   ✅ 地址: ${snapshot.address}`);
   
   // 4. 验证参数
   console.log('\n🔍 验证 BronzeAmbassadorConfig 参数...');
   const core = await bronzeConfig.getCoreParams();
-  console.log(`   奖励/标记: ${hre.ethers.formatEther(core[0])} MEER`);
+  console.log(`   奖励/标记: ${hre.ethers.utils.formatEther(core[0])} MEER`);
   console.log(`   审查费率: ${core[1] / 100}%`);
   console.log(`   准确率窗口: ${core[2] / 86400} 天`);
   
   // 5. 存款
   console.log('\n💰 向 IncentiveDistributor 存款 10 MEER...');
   await deployer.sendTransaction({
-    to: await incentive.getAddress(),
-    value: hre.ethers.parseEther('10')
+    to: incentive.address,
+    value: hre.ethers.utils.parseEther('10')
   });
   console.log('   ✅ 存款完成');
   
   console.log('\n🎉 部署完成！');
   console.log('');
   console.log('========== 部署结果 ==========');
-  console.log(`BronzeAmbassadorConfig: ${await bronzeConfig.getAddress()}`);
-  console.log(`IncentiveDistributor:   ${await incentive.getAddress()}`);
-  console.log(`SnapshotRecorder:       ${await snapshot.getAddress()}`);
+  console.log(`BronzeAmbassadorConfig: ${bronzeConfig.address}`);
+  console.log(`IncentiveDistributor:   ${incentive.address}`);
+  console.log(`SnapshotRecorder:       ${snapshot.address}`);
 }
 
 main().catch(err => {

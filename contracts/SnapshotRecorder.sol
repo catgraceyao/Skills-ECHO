@@ -292,8 +292,13 @@ contract SnapshotRecorder {
     }
     
     function _getNextCaseId() internal view returns (uint256) {
-        // AgentJury.nextCaseId() selector: 需要 ABI 确认
-        // 占位：返回 0
+        // 调用 AgentJury.nextCaseId() — 假设为 public 状态变量，自动生成 getter
+        (bool success, bytes memory data) = agentJury.staticcall(
+            abi.encodeWithSignature("nextCaseId()")
+        );
+        if (success && data.length >= 32) {
+            return abi.decode(data, (uint256));
+        }
         return 0;
     }
 }

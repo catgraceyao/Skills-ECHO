@@ -236,6 +236,15 @@ contract BronzeAmbassadorConfig {
         uint256 _feeAggregationPeriod,
         uint256 _reviewScopePercentile
     ) external onlyOwner whenNotPaused {
+        require(_promotionThreshold > 0, "INVALID_THRESHOLD");
+        require(_promotionMinAccuracyBps <= 10000, "INVALID_ACCURACY_BPS");
+        require(_markCooldownSeconds > 0, "INVALID_COOLDOWN");
+        require(_maliciousConsecutiveThreshold > 0, "INVALID_MALICIOUS_THRESHOLD");
+        require(_freezeDurationSeconds > 0, "INVALID_FREEZE_DURATION");
+        require(_maliciousAccuracyThresholdBps <= 10000, "INVALID_MALICIOUS_BPS");
+        require(_feeAggregationPeriod > 0, "INVALID_FEE_PERIOD");
+        require(_reviewScopePercentile > 0 && _reviewScopePercentile <= 100, "INVALID_PERCENTILE");
+        
         promotionThreshold = _promotionThreshold;
         promotionMinAccuracyBps = _promotionMinAccuracyBps;
         markCooldownSeconds = _markCooldownSeconds;

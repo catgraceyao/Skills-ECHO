@@ -76,8 +76,14 @@ contract IncentiveDistributor {
     /// @notice 日期 → 批次
     mapping(uint256 => DailyBatch) public dailyBatches;
     
-    /// @notice 已处理的日期列表
-    uint256[] public processedDates;
+    /// @notice 已提取的审查费总额
+    uint256 public totalFeesWithdrawn;
+    
+    /// @notice 授权裁决者
+    mapping(address => bool) public authorizedArbitrators;
+    
+    /// @notice 所有有标记的日期列表
+    uint256[] public allDates;
     
     /// @notice 合约总余额
     uint256 public totalDeposited;
@@ -123,7 +129,8 @@ contract IncentiveDistributor {
     );
     
     event Deposited(address indexed sender, uint256 amount, uint256 newBalance);
-    event FeeWithdrawn(address indexed collector, uint256 amount);
+    event ArbitratorAuthorized(address indexed arbitrator);
+    event ArbitratorRevoked(address indexed arbitrator);
     event ReviewerFrozen(address indexed reviewer, uint256 until);
     event ReviewerUnfrozen(address indexed reviewer);
     
@@ -136,6 +143,11 @@ contract IncentiveDistributor {
     
     modifier whenNotPaused() {
         require(!paused, "PAUSED");
+        _;
+    }
+    
+    modifier onlyArbitrator() {
+        require(msg.sender == owner || authorizedArbitrators[msg.sender], "NOT_ARBITRATOR");
         _;
     }
     
@@ -166,7 +178,18 @@ contract IncentiveDistributor {
         emit Deposited(msg.sender, msg.value, address(this).balance);
     }
     
-    // ============ 核心功能：提交标记 ============
+    /// @notice 授权裁决者
+    function authorizeArbitrator(address arbitrator) external onlyOwner {
+        require(arbitrator != address(0), "INVALID_ADDRESS");
+        authorizedArbitrators[arbitrator] = true;
+        emit ArbitratorAuthorized(arbitrator);
+    }
+    
+    /// @notice 撤销裁决者
+    function revokeArbitrator(address arbitrator) external onlyOwner {
+        authorizedArbitrators[arbitrator] = false;
+        emit ArbitratorRevoked(arbitrator);
+    }
     
     /// @notice 提交一次节点标记
     /// @param nodeId 被标记的节点 ID
@@ -202,6 +225,11 @@ contract IncentiveDistributor {
             rewardAmount: rewardPerMark
         });
         
+        // 检查是否已有该日期的批次
+        if (dailyBatches[date].markIds.length == 0) {
+            allDates.push(date);
+        }
+        
         // 加入当日批次
         dailyBatches[date].date = date;
         dailyBatches[date].markIds.push(markId);
@@ -221,7 +249,7 @@ contract IncentiveDistributor {
     
     // ============ 批量结算 ============
     
-    /// @notice 处理指定日期的所有标记（T+1 后结算）
+    /// @notice 处理指定日期的所有标记（T+1 后结算，只结算已裁决为有效的）
     /// @param date UTC 日期（0 点 timestamp）
     function processBatch(uint256 date) external whenNotPaused {
         DailyBatch storage batch = dailyBatches[date];
@@ -243,9 +271,10 @@ contract IncentiveDistributor {
             
             if (mark.status != MarkStatus.Pending) continue;
             
-            // 简化：所有 pending 标记默认有效
-            // 实际应由裁决系统或 AI 判定
-            mark.isValid = true;
+            // 只结算已裁决为有效的标记
+            if (!mark.isValid) continue;
+            
+            // 先更新状态（Checks-Effects-Interactions）
             mark.status = MarkStatus.Settled;
             
             // 更新审查员统计
@@ -257,46 +286,63 @@ contract IncentiveDistributor {
             uint256 fee = (rewardPerMark * reviewFeeBps) / 10000;
             uint256 netReward = rewardPerMark - fee;
             
-            // 转账奖励
-            (bool success, ) = mark.reviewer.call{value: netReward}("");
-            require(success, "REWARD_TRANSFER_FAILED");
-            
+            // 再转账（防止重入）
             totalRewardsPaid += netReward;
             totalFeesCollected += fee;
             
             emit MarkSettled(markId, mark.reviewer, netReward, block.timestamp);
         }
         
+        // 批量转账（减少外部调用次数）
+        for (uint i = 0; i < batch.markIds.length; i++) {
+            uint256 markId = batch.markIds[i];
+            MarkRecord storage mark = marks[markId];
+            if (mark.status != MarkStatus.Settled) continue;
+            
+            (uint256 rewardPerMark, uint256 reviewFeeBps, ) = config.getCoreParams();
+            uint256 fee = (rewardPerMark * reviewFeeBps) / 10000;
+            uint256 netReward = rewardPerMark - fee;
+            
+            (bool success, ) = mark.reviewer.call{value: netReward}("");
+            require(success, "REWARD_TRANSFER_FAILED");
+        }
+        
         batch.processed = true;
         batch.processedAt = block.timestamp;
         totalDistributed += totalRewardsPaid;
-        processedDates.push(date);
         
         emit BatchProcessed(date, batch.markIds.length, totalRewardsPaid, totalFeesCollected, block.timestamp);
     }
     
     // ============ 裁决功能 ============
     
-    /// @notice 裁决标记无效（Owner 或授权裁决者）
-    function rejectMark(uint256 markId, string calldata reason) external onlyOwner {
+    /// @notice 裁决标记（Owner 或授权裁决者）
+    function arbitrateMark(uint256 markId, bool isValid, string calldata reason) external onlyArbitrator {
         MarkRecord storage mark = marks[markId];
         require(mark.status == MarkStatus.Pending, "NOT_PENDING");
         
-        mark.status = MarkStatus.Rejected;
-        mark.isValid = false;
+        mark.isValid = isValid;
         
-        // 更新连续无效计数
-        consecutiveInvalidMarks[mark.reviewer]++;
-        
-        // 检查是否触发冻结
-        uint256 threshold = config.maliciousConsecutiveThreshold();
-        if (consecutiveInvalidMarks[mark.reviewer] >= threshold) {
-            uint256 freezeDuration = config.freezeDurationSeconds();
-            freezeUntil[mark.reviewer] = block.timestamp + freezeDuration;
-            emit ReviewerFrozen(mark.reviewer, freezeUntil[mark.reviewer]);
+        if (!isValid) {
+            mark.status = MarkStatus.Rejected;
+            // 更新连续无效计数
+            consecutiveInvalidMarks[mark.reviewer]++;
+            
+            // 检查是否触发冻结
+            uint256 threshold = config.maliciousConsecutiveThreshold();
+            if (consecutiveInvalidMarks[mark.reviewer] >= threshold) {
+                uint256 freezeDuration = config.freezeDurationSeconds();
+                freezeUntil[mark.reviewer] = block.timestamp + freezeDuration;
+                emit ReviewerFrozen(mark.reviewer, freezeUntil[mark.reviewer]);
+            }
+            
+            emit MarkRejected(markId, mark.reviewer, reason);
         }
-        
-        emit MarkRejected(markId, mark.reviewer, reason);
+    }
+    
+    /// @notice 旧版裁决标记无效（保留兼容）
+    function rejectMark(uint256 markId, string calldata reason) external onlyArbitrator {
+        arbitrateMark(markId, false, reason);
     }
     
     /// @notice 手动解冻审查员
@@ -313,12 +359,17 @@ contract IncentiveDistributor {
         require(msg.sender == feeCollector || msg.sender == owner, "UNAUTHORIZED");
         
         uint256 totalFees = 0;
-        for (uint i = 0; i < processedDates.length; i++) {
-            totalFees += dailyBatches[processedDates[i]].totalFees;
+        for (uint i = 0; i < allDates.length; i++) {
+            uint256 date = allDates[i];
+            if (dailyBatches[date].processed) {
+                totalFees += dailyBatches[date].totalFees;
+            }
         }
         
-        uint256 available = totalFees - totalDistributed; // 简化：实际应跟踪已提取费用
+        uint256 available = totalFees - totalFeesWithdrawn;
         require(available > 0, "NO_FEES");
+        
+        totalFeesWithdrawn += available;
         
         (bool success, ) = feeCollector.call{value: available}("");
         require(success, "FEE_TRANSFER_FAILED");
@@ -370,9 +421,21 @@ contract IncentiveDistributor {
     
     /// @notice 获取待处理批次日期列表
     function getPendingDates() external view returns (uint256[] memory) {
-        // 简化实现：返回所有有 mark 但未处理的日期
-        // 实际应使用更高效的存储结构
-        return processedDates; // 占位
+        uint256 count = 0;
+        for (uint i = 0; i < allDates.length; i++) {
+            if (!dailyBatches[allDates[i]].processed) {
+                count++;
+            }
+        }
+        
+        uint256[] memory pending = new uint256[](count);
+        uint256 idx = 0;
+        for (uint i = 0; i < allDates.length; i++) {
+            if (!dailyBatches[allDates[i]].processed) {
+                pending[idx++] = allDates[i];
+            }
+        }
+        return pending;
     }
     
     /// @notice 获取合约余额
@@ -392,7 +455,24 @@ contract IncentiveDistributor {
         return (timestamp / 1 days) * 1 days;
     }
     
-    // ============ 管理功能 ============
+    /// @notice 获取已处理日期列表
+    function getProcessedDates() external view returns (uint256[] memory) {
+        uint256 count = 0;
+        for (uint i = 0; i < allDates.length; i++) {
+            if (dailyBatches[allDates[i]].processed) {
+                count++;
+            }
+        }
+        
+        uint256[] memory processed = new uint256[](count);
+        uint256 idx = 0;
+        for (uint i = 0; i < allDates.length; i++) {
+            if (dailyBatches[allDates[i]].processed) {
+                processed[idx++] = allDates[i];
+            }
+        }
+        return processed;
+    }
     
     /// @notice 更新配置合约地址
     function setConfig(address _config) external onlyOwner {
