@@ -8,7 +8,7 @@
     "platform": 0.10,
     "winner_pool": 0.20
   },
-  "benefit_modes": {
+  "expand_levels": {
     "0": {
       "name": "免费模式",
       "entry_fee": 0,
