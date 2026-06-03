@@ -3,7 +3,7 @@
   "description": "ECHO 经济模型对战分账细化 - 16卦MVP",
   "deadline": "2026-06-03 22:00",
   "split_ratio": {
-    "creator": 0.53,
+    "creator": 0.45,
     "arranger": 0.25,
     "platform": 0.10,
     "winner_pool": 0.20
