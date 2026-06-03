@@ -1,0 +1,268 @@
+{
+  "version": "v0.1",
+  "description": "ECHO 经济模型对战分账细化 - 16卦MVP",
+  "deadline": "2026-06-03 22:00",
+  "split_ratio": {
+    "creator": 0.45,
+    "arranger": 0.25,
+    "platform": 0.10,
+    "winner_pool": 0.20
+  },
+  "benefit_modes": {
+    "0": {
+      "name": "免费模式",
+      "entry_fee": 0,
+      "mer_consumption_rate": 0.5,
+      "mer_output_rate": 0,
+      "potential_boost": 0.5,
+      "has_split": false
+    },
+    "1": {
+      "name": "按次付费",
+      "entry_fee": 1,
+      "mer_consumption_rate": 1.0,
+      "mer_output_rate": 1.0,
+      "potential_boost": 1.0,
+      "has_split": true
+    },
+    "2": {
+      "name": "分成模式",
+      "entry_fee": 10,
+      "mer_consumption_rate": 0.5,
+      "mer_output_rate": 0.8,
+      "creator_extra_fee": 0.2,
+      "potential_boost": 1.2,
+      "has_split": true
+    },
+    "3": {
+      "name": "高级模式",
+      "entry_fee": 50,
+      "mer_consumption_rate": 1.5,
+      "mer_output_rate": 2.0,
+      "potential_boost": 1.5,
+      "stake_requirement": 100,
+      "has_split": true
+    }
+  },
+  "hexagrams": [
+    {
+      "id": 1,
+      "name": "乾为天",
+      "type": "攻击型",
+      "potential_gain": 1.15,
+      "mer_consumption": 1.0,
+      "mer_output": 1.5,
+      "roi": 1.5,
+      "weight_base": 0.0156,
+      "weight_dynamic": "使用率>20%-0.003, 胜率<40%+0.002"
+    },
+    {
+      "id": 2,
+      "name": "坤为地",
+      "type": "防御型",
+      "potential_gain": 1.10,
+      "mer_consumption": 0.8,
+      "mer_output": 1.2,
+      "roi": 1.5,
+      "weight_base": 0.0156,
+      "weight_dynamic": "使用率>15%-0.002, 连胜>3+0.001"
+    },
+    {
+      "id": 3,
+      "name": "水火既济",
+      "type": "辅助型",
+      "potential_gain": 1.05,
+      "mer_consumption": 0.6,
+      "mer_output": 1.05,
+      "roi": 1.75,
+      "weight_base": 0.0156,
+      "weight_dynamic": "使用率>25%-0.004"
+    },
+    {
+      "id": 4,
+      "name": "雷地豫",
+      "type": "控制型",
+      "potential_gain": 1.08,
+      "mer_consumption": 0.7,
+      "mer_output": 1.1,
+      "roi": 1.57,
+      "weight_base": 0.0156,
+      "weight_dynamic": "连胜>5-0.003"
+    },
+    {
+      "id": 5,
+      "name": "山火贲",
+      "type": "爆发型",
+      "potential_gain": 1.13,
+      "mer_consumption": 0.9,
+      "mer_output": 1.8,
+      "roi": 2.0,
+      "weight_base": 0.0156,
+      "weight_dynamic": "胜率>60%-0.003, 胜率<30%+0.002"
+    },
+    {
+      "id": 6,
+      "name": "风天小畜",
+      "type": "持续型",
+      "potential_gain": 1.06,
+      "mer_consumption": 0.5,
+      "mer_output": 1.0,
+      "roi": 2.0,
+      "weight_base": 0.0156,
+      "weight_dynamic": "对战>10回合+0.003"
+    },
+    {
+      "id": 7,
+      "name": "水雷屯",
+      "type": "反击型",
+      "potential_gain": 1.04,
+      "mer_consumption": 0.5,
+      "mer_output": 1.0,
+      "roi": 2.0,
+      "weight_base": 0.0156,
+      "weight_dynamic": "低排名使用率>30%-0.002"
+    },
+    {
+      "id": 8,
+      "name": "火水未济",
+      "type": "特殊型",
+      "potential_gain": 0.95,
+      "mer_consumption": 0.8,
+      "mer_output": 1.6,
+      "roi": 2.0,
+      "weight_base": 0.0156,
+      "weight_dynamic": "逆袭成功率>40%-0.005"
+    },
+    {
+      "id": 9,
+      "name": "天雷无妄",
+      "type": "攻击型",
+      "potential_gain": 1.13,
+      "mer_consumption": 0.9,
+      "mer_output": 1.4,
+      "roi": 1.56,
+      "weight_base": 0.0156,
+      "weight_dynamic": "胜率>55%-0.002"
+    },
+    {
+      "id": 10,
+      "name": "地水师",
+      "type": "防御型",
+      "potential_gain": 1.12,
+      "mer_consumption": 0.7,
+      "mer_output": 1.1,
+      "roi": 1.57,
+      "weight_base": 0.0156,
+      "weight_dynamic": "使用率>20%-0.002"
+    },
+    {
+      "id": 11,
+      "name": "地天泰",
+      "type": "辅助型",
+      "potential_gain": 1.08,
+      "mer_consumption": 0.8,
+      "mer_output": 1.2,
+      "roi": 1.5,
+      "weight_base": 0.0156,
+      "weight_dynamic": "固定权重（特殊机制）"
+    },
+    {
+      "id": 12,
+      "name": "天风姤",
+      "type": "控制型",
+      "potential_gain": 1.06,
+      "mer_consumption": 0.6,
+      "mer_output": 1.0,
+      "roi": 1.67,
+      "weight_base": 0.0156,
+      "weight_dynamic": "连胜>5-0.003"
+    },
+    {
+      "id": 13,
+      "name": "火天大有",
+      "type": "爆发型",
+      "potential_gain": 1.15,
+      "mer_consumption": 1.0,
+      "mer_output": 1.6,
+      "roi": 1.6,
+      "weight_base": 0.0156,
+      "weight_dynamic": "胜率<35%+0.002"
+    },
+    {
+      "id": 14,
+      "name": "水风井",
+      "type": "持续型",
+      "potential_gain": 1.04,
+      "mer_consumption": 0.5,
+      "mer_output": 1.0,
+      "roi": 2.0,
+      "weight_base": 0.0156,
+      "weight_dynamic": "对战>10回合+0.003"
+    },
+    {
+      "id": 15,
+      "name": "地雷复",
+      "type": "反击型",
+      "potential_gain": 1.02,
+      "mer_consumption": 0.6,
+      "mer_output": 1.2,
+      "roi": 2.0,
+      "weight_base": 0.0156,
+      "weight_dynamic": "复活成功率>40%-0.004"
+    },
+    {
+      "id": 16,
+      "name": "天地否",
+      "type": "特殊型",
+      "potential_gain": 0.90,
+      "mer_consumption": 1.0,
+      "mer_output": 2.0,
+      "roi": 2.0,
+      "weight_base": 0.0156,
+      "weight_dynamic": "使用率>10%-0.005"
+    }
+  ],
+  "calculation_examples": {
+    "example_1": {
+      "name": "乾为天 - 按次付费模式(benefit=1)",
+      "hexagram": "乾为天",
+      "benefit_mode": 1,
+      "entry_fee": 1,
+      "mer_consumption": 1.0,
+      "mer_output": 1.5,
+      "total_revenue": 2.5,
+      "split": {
+        "creator": 1.125,
+        "arranger": 0.625,
+        "platform": 0.25,
+        "winner_pool": 0.5
+      },
+      "winner_gets": 2.0,
+      "loser_cost": 1.0,
+      "creator_net": 1.125,
+      "platform_net": 0.25,
+      "notes": "总收益=入场费1+卦象消耗1=2。赢家得产出1.5+赢家池0.5=2.0。输家只亏入场费1+消耗1=2（但消耗已分账，实际净亏1）。"
+    },
+    "example_2": {
+      "name": "天地否 - 高级模式(benefit=3)",
+      "hexagram": "天地否",
+      "benefit_mode": 3,
+      "entry_fee": 50,
+      "mer_consumption": 1.5,
+      "mer_output": 2.0,
+      "extra_multiplier": 2,
+      "total_revenue": 51.5,
+      "split": {
+        "creator": 23.175,
+        "arranger": 12.875,
+        "platform": 5.15,
+        "winner_pool": 10.3
+      },
+      "winner_gets": 14.3,
+      "loser_cost": 51.5,
+      "creator_net": 23.175,
+      "platform_net": 5.15,
+      "notes": "总收益=入场费50+卦象消耗1.5=51.5。天地否特殊机制：产出翻倍(2.0x2=4.0)。赢家得4.0+赢家池10.3=14.3。输家亏51.5。 creators拿45%=23.175。"
+    }
+  }
+}
