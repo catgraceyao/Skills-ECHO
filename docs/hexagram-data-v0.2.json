@@ -1,0 +1,315 @@
+{
+  "version": "v0.2",
+  "phase": "Phase 1 MVP",
+  "totalHexagrams": 64,
+  "activeHexagrams": 16,
+  "baseHexagrams": [
+    {
+      "hexagramId": 1,
+      "name": "乾",
+      "symbol": "☰",
+      "element": "天",
+      "attribute": "阳之极",
+      "effectType": "attack",
+      "effectValue": 15,
+      "effectUnit": "%",
+      "description": "攻击力 +15%"
+    },
+    {
+      "hexagramId": 2,
+      "name": "坤",
+      "symbol": "☷",
+      "element": "地",
+      "attribute": "阴之极",
+      "effectType": "health",
+      "effectValue": 20,
+      "effectUnit": "%",
+      "description": "生命值 +20%"
+    },
+    {
+      "hexagramId": 3,
+      "name": "震",
+      "symbol": "☳",
+      "element": "雷",
+      "attribute": "动",
+      "effectType": "skillTrigger",
+      "effectValue": 10,
+      "effectUnit": "%",
+      "description": "技能触发率 +10%"
+    },
+    {
+      "hexagramId": 4,
+      "name": "巽",
+      "symbol": "☴",
+      "element": "风",
+      "attribute": "入",
+      "effectType": "dodge",
+      "effectValue": 15,
+      "effectUnit": "%",
+      "description": "被攻击时15%闪避"
+    },
+    {
+      "hexagramId": 5,
+      "name": "坎",
+      "symbol": "☵",
+      "element": "水",
+      "attribute": "陷",
+      "effectType": "control",
+      "effectValue": 1,
+      "effectUnit": "round",
+      "description": "敌方技能冷却 +1回合"
+    },
+    {
+      "hexagramId": 6,
+      "name": "离",
+      "symbol": "☲",
+      "element": "火",
+      "attribute": "丽",
+      "effectType": "burn",
+      "effectValue": 3,
+      "effectUnit": "%/round",
+      "description": "每回合敌方生命 -3%"
+    },
+    {
+      "hexagramId": 7,
+      "name": "艮",
+      "symbol": "☶",
+      "element": "山",
+      "attribute": "止",
+      "effectType": "defense",
+      "effectValue": 15,
+      "effectUnit": "%",
+      "description": "受到伤害 -15%"
+    },
+    {
+      "hexagramId": 8,
+      "name": "兑",
+      "symbol": "☱",
+      "element": "泽",
+      "attribute": "悦",
+      "effectType": "revenue",
+      "effectValue": 10,
+      "effectUnit": "%",
+      "description": "收益倍率 +10%"
+    }
+  ],
+  "combinationEffects": [
+    {
+      "combinationId": "QIAN+QIAN",
+      "hexagramA": 1,
+      "hexagramB": 1,
+      "resultName": "天行健",
+      "category": "同卦叠加",
+      "effectType": "attackDouble",
+      "effectValue": 200,
+      "effectUnit": "%",
+      "description": "攻击力翻倍，无视防御",
+      "fourRightsImpact": "攻击力 ×2，敌方减伤失效"
+    },
+    {
+      "combinationId": "KUN+KUN",
+      "hexagramA": 2,
+      "hexagramB": 2,
+      "resultName": "地势坤",
+      "category": "同卦叠加",
+      "effectType": "healthDouble",
+      "effectValue": 200,
+      "effectUnit": "%",
+      "description": "生命值翻倍，每回合回5%",
+      "fourRightsImpact": "生命值 ×2，持续恢复"
+    },
+    {
+      "combinationId": "ZHEN+ZHEN",
+      "hexagramA": 3,
+      "hexagramB": 3,
+      "resultName": "雷天大壮",
+      "category": "同卦叠加",
+      "effectType": "combo",
+      "effectValue": 2,
+      "effectUnit": "hits",
+      "description": "连击2次，每次50%伤害",
+      "fourRightsImpact": "技能触发率 ×2"
+    },
+    {
+      "combinationId": "XUN+XUN",
+      "hexagramA": 4,
+      "hexagramB": 4,
+      "resultName": "随风巽",
+      "category": "同卦叠加",
+      "effectType": "dodgeBoost",
+      "effectValue": 50,
+      "effectUnit": "%",
+      "description": "闪避率50%，持续3回合",
+      "fourRightsImpact": "被攻击闪避率 50%"
+    },
+    {
+      "combinationId": "KAN+KAN",
+      "hexagramA": 5,
+      "hexagramB": 5,
+      "resultName": "坎为水",
+      "category": "同卦叠加",
+      "effectType": "seal",
+      "effectValue": 2,
+      "effectUnit": "round",
+      "description": "敌方技能封印2回合",
+      "fourRightsImpact": "敌方技能触发率 = 0"
+    },
+    {
+      "combinationId": "LI+LI",
+      "hexagramA": 6,
+      "hexagramB": 6,
+      "resultName": "离为火",
+      "category": "同卦叠加",
+      "effectType": "burnDouble",
+      "effectValue": 6,
+      "effectUnit": "%/round",
+      "description": "燃烧伤害翻倍，不可闪避",
+      "fourRightsImpact": "每回合敌方生命 -6%"
+    },
+    {
+      "combinationId": "GEN+GEN",
+      "hexagramA": 7,
+      "hexagramB": 7,
+      "resultName": "艮为山",
+      "category": "同卦叠加",
+      "effectType": "immune",
+      "effectValue": 2,
+      "effectUnit": "round",
+      "description": "免疫一切伤害2回合",
+      "fourRightsImpact": "受到伤害 = 0"
+    },
+    {
+      "combinationId": "DUI+DUI",
+      "hexagramA": 8,
+      "hexagramB": 8,
+      "resultName": "兑为泽",
+      "category": "同卦叠加",
+      "effectType": "revenueDouble",
+      "effectValue": 200,
+      "effectUnit": "%",
+      "description": "收益倍率翻倍，战后结算",
+      "fourRightsImpact": "收益倍率 ×2（软顶生效）"
+    },
+    {
+      "combinationId": "QIAN+DUI",
+      "hexagramA": 1,
+      "hexagramB": 8,
+      "resultName": "天泽履",
+      "category": "相生组合",
+      "effectType": "attackRevenue",
+      "effectValue": 25,
+      "effectUnit": "%",
+      "description": "攻击+收益双增益",
+      "fourRightsImpact": "攻击力+10%，收益倍率+15%"
+    },
+    {
+      "combinationId": "KUN+GEN",
+      "hexagramA": 2,
+      "hexagramB": 7,
+      "resultName": "山地剥",
+      "category": "相生组合",
+      "effectType": "healthDefense",
+      "effectValue": 35,
+      "effectUnit": "%",
+      "description": "防御+生命双增益",
+      "fourRightsImpact": "生命值+15%，受到伤害-20%"
+    },
+    {
+      "combinationId": "KAN+LI",
+      "hexagramA": 5,
+      "hexagramB": 6,
+      "resultName": "水火未济",
+      "category": "相克组合",
+      "effectType": "reset",
+      "effectValue": 0,
+      "effectUnit": "",
+      "description": "互相抵消，势位重置",
+      "fourRightsImpact": "双方势位归零，重新计算"
+    },
+    {
+      "combinationId": "ZHEN+XUN",
+      "hexagramA": 3,
+      "hexagramB": 4,
+      "resultName": "风雷益",
+      "category": "相生组合",
+      "effectType": "speedCrit",
+      "effectValue": 20,
+      "effectUnit": "%",
+      "description": "速度+暴击双增益",
+      "fourRightsImpact": "先攻权，技能触发率+20%"
+    },
+    {
+      "combinationId": "QIAN+KUN",
+      "hexagramA": 1,
+      "hexagramB": 2,
+      "resultName": "天地否",
+      "category": "对冲组合",
+      "effectType": "positionSwap",
+      "effectValue": 30,
+      "effectUnit": "%",
+      "description": "势位部分互换（弱者获强者30%势位）",
+      "fourRightsImpact": "弱者获得强者30%势位，强者保留70%"
+    },
+    {
+      "combinationId": "ZHEN+GEN",
+      "hexagramA": 3,
+      "hexagramB": 7,
+      "resultName": "山雷颐",
+      "category": "对冲组合",
+      "effectType": "critVsDefense",
+      "effectValue": 50,
+      "effectUnit": "%",
+      "description": "暴击 vs 防御对冲",
+      "fourRightsImpact": "暴击率50% vs 减伤50%"
+    },
+    {
+      "combinationId": "KAN+DUI",
+      "hexagramA": 5,
+      "hexagramB": 8,
+      "resultName": "泽水困",
+      "category": "对冲组合",
+      "effectType": "controlRevenue",
+      "effectValue": 0,
+      "effectUnit": "",
+      "description": "控制 vs 收益对冲",
+      "fourRightsImpact": "敌方收益倍率归零"
+    },
+    {
+      "combinationId": "LI+XUN",
+      "hexagramA": 6,
+      "hexagramB": 4,
+      "resultName": "风火家人",
+      "category": "对冲组合",
+      "effectType": "burnVsDodge",
+      "effectValue": 0,
+      "effectUnit": "",
+      "description": "持续 vs 闪避对冲",
+      "fourRightsImpact": "燃烧伤害 vs 闪避恢复"
+    }
+  ],
+  "positionSwapRules": {
+    "mechanism": "天地否（乾+坤）势位部分互换",
+    "weakToStrongRatio": 30,
+    "strongRetentionRatio": 70,
+    "formula": "if (weak < strong) { weak += (strong - weak) * 0.30; strong = strong * 0.70 + weak * 0.30; }"
+  },
+  "softCap": {
+    "value": 100000,
+    "unit": "MEER",
+    "trigger": "收益组合触发（兑+兑 或 乾+兑）",
+    "excessHandling": "进入公共池"
+  },
+  "revenueDistribution": {
+    "shares": [
+      { "shareType": 1, "name": "CREATOR", "bps": 4500, "percentage": 45, "description": "创作者" },
+      { "shareType": 2, "name": "EDGE", "bps": 2500, "percentage": 25, "description": "编排者" },
+      { "shareType": 3, "name": "REVIEWER", "bps": 800, "percentage": 8, "description": "审查员" },
+      { "shareType": 4, "name": "PUBLIC", "bps": 800, "percentage": 8, "description": "公共池" },
+      { "shareType": 5, "name": "PLATFORM", "bps": 500, "percentage": 5, "description": "系统" },
+      { "shareType": 6, "name": "AMBASSADOR", "bps": 500, "percentage": 5, "description": "大使" },
+      { "shareType": 7, "name": "RESERVE", "bps": 400, "percentage": 4, "description": "储备" }
+    ],
+    "totalBps": 10000,
+    "totalPercentage": 100
+  }
+}
