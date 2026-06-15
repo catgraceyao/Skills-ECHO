@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHO 生态模拟器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --paper: #F5F0E6;
+            --paper-dark: #E8E0D0;
+            --sky: #5AA4AE;
+            --sky-light: #7EC4CE;
+            --sky-dark: #3D8A94;
+            --cinnabar: #C85A54;
+            --cinnabar-light: #E07A74;
+            --ink: #2D3436;
+            --ink-light: #5A6266;
+            --ink-faint: #8A9296;
+            --border: #D4CFC4;
+            --gold: #B8956A;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .serif { font-family: 'Noto Serif SC', serif; }
+        .text-sky { color: var(--sky); }
+        .text-cinnabar { color: var(--cinnabar); }
+
+        .app { min-height: 100vh; display: flex; flex-direction: column; }
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.3); opacity: 0.3; } 100% { transform: scale(1); opacity: 0.7; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        @keyframes edgePulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+        @keyframes metricPop { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+        /* Top Bar */
+        .topbar {
+            height: 56px;
+            background: linear-gradient(135deg, var(--paper) 0%, var(--paper-dark) 100%);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+        }
+        .topbar-logo { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 700; letter-spacing: 2px; }
+        .topbar-logo .seal {
+            width: 32px; height: 32px; background: var(--sky); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-family: 'Noto Serif SC', serif; font-size: 14px;
+            box-shadow: 0 2px 8px rgba(90,164,174,0.3);
+        }
+        .topbar-nav { display: flex; gap: 8px; }
+        .topbar-nav button {
+            padding: 6px 16px; border: none; background: transparent; color: var(--ink-light);
+            font-size: 14px; cursor: pointer; border-radius: 6px; transition: all 0.2s;
+        }
+        .topbar-nav button:hover, .topbar-nav button.active { background: var(--sky); color: white; }
+
+        .page-container { margin-top: 56px; flex: 1; padding: 24px 32px; max-width: 1400px; margin-left: auto; margin-right: auto; width: 100%; }
+
+        /* ===== HOME ===== */
+        .home-grid { display: grid; grid-template-columns: 1fr 380px; gap: 24px; height: calc(100vh - 104px); }
+        .chat-panel {
+            background: white; border-radius: 16px; border: 1px solid var(--border);
+            display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+        }
+        .chat-header { padding: 20px 24px; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, var(--paper) 0%, white 100%); }
+        .chat-header h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+        .chat-header p { font-size: 13px; color: var(--ink-faint); }
+        .chat-body { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+        .chat-msg { max-width: 80%; padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.6; animation: fadeIn 0.3s ease; }
+        .chat-msg.ai { background: var(--paper); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .chat-msg.user { background: var(--sky); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .chat-input-box { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
+        .chat-input-box input { flex: 1; padding: 10px 16px; border: 1px solid var(--border); border-radius: 24px; font-size: 14px; outline: none; background: var(--paper); }
+        .chat-input-box input:focus { border-color: var(--sky); }
+        .chat-input-box button { width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--sky); color: white; cursor: pointer; font-size: 18px; }
+
+        .proposal-card {
+            background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .proposal-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--sky-dark); }
+        .proposal-meta { display: flex; gap: 16px; font-size: 12px; color: var(--ink-faint); margin-bottom: 12px; }
+        .proposal-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+        .tag { padding: 2px 8px; border-radius: 4px; font-size: 11px; background: var(--paper-dark); color: var(--ink-light); }
+        .tag.mode { background: var(--sky); color: white; }
+        .proposal-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .btn-sm { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: white; font-size: 13px; cursor: pointer; }
+        .btn-sm.primary { background: var(--sky); color: white; border-color: var(--sky); }
+
+        .side-panel { display: flex; flex-direction: column; gap: 16px; }
+        .shortcut-card {
+            background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px;
+            cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .shortcut-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); border-color: var(--sky-light); }
+        .shortcut-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 12px; }
+        .shortcut-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .shortcut-card p { font-size: 12px; color: var(--ink-faint); line-height: 1.5; }
+
+        .history-section { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 16px 20px; flex: 1; overflow-y: auto; }
+        .history-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+        .history-item { padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; background: var(--paper); cursor: pointer; font-size: 13px; }
+        .history-item:hover { background: var(--paper-dark); }
+        .history-item .time { font-size: 11px; color: var(--ink-faint); margin-top: 4px; }
+
+        /* ===== CONFIG ===== */
+        .config-page { max-width: 900px; margin: 0 auto; }
+        .step-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 32px; padding: 16px 20px; background: white; border-radius: 12px; border: 1px solid var(--border); }
+        .step-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; background: var(--paper-dark); color: var(--ink-faint); transition: all 0.3s; }
+        .step-dot.active { background: var(--sky); color: white; box-shadow: 0 2px 8px rgba(90,164,174,0.4); }
+        .step-dot.done { background: var(--sky-dark); color: white; }
+        .step-line { flex: 1; height: 2px; background: var(--border); border-radius: 1px; }
+        .step-line.done { background: var(--sky); }
+
+        .step-panel { background: white; border-radius: 16px; border: 1px solid var(--border); padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.04); }
+        .step-panel h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .step-panel .subtitle { color: var(--ink-faint); font-size: 14px; margin-bottom: 28px; }
+
+        .mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .mode-card { border: 2px solid var(--border); border-radius: 12px; padding: 24px 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .mode-card:hover { border-color: var(--sky-light); }
+        .mode-card.selected { border-color: var(--sky); background: rgba(90,164,174,0.04); }
+        .mode-card .mode-icon { font-size: 32px; margin-bottom: 12px; }
+        .mode-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+        .mode-card p { font-size: 12px; color: var(--ink-faint); line-height: 1.5; }
+        .mode-features { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); text-align: left; }
+        .mode-features li { font-size: 12px; color: var(--ink-light); margin-bottom: 4px; list-style: none; padding-left: 16px; position: relative; }
+        .mode-features li::before { content: "✓"; position: absolute; left: 0; color: var(--sky); font-weight: 700; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 14px; background: var(--paper); outline: none; transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--sky); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        /* Tooltip */
+        .param-label { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+        .param-label label { margin-bottom: 0 !important; }
+        .tooltip { position: relative; cursor: help; color: var(--ink-faint); font-size: 13px; }
+        .tooltip:hover .tooltip-text { display: block; }
+        .tooltip-text {
+            display: none; position: absolute; bottom: 24px; left: 0;
+            background: var(--ink); color: white; padding: 10px 14px; border-radius: 8px;
+            font-size: 12px; line-height: 1.6; width: 280px; z-index: 100;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        .tooltip-text::after { content: ""; position: absolute; top: 100%; left: 12px; border: 6px solid transparent; border-top-color: var(--ink); }
+
+        /* Four Rights - Six Levels */
+        .four-rights-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
+        .right-card {
+            border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+            background: var(--paper); transition: all 0.2s;
+        }
+        .right-card:hover { border-color: var(--sky-light); }
+        .right-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .right-card .right-icon { font-size: 20px; }
+        .right-desc { font-size: 12px; color: var(--ink-faint); margin-bottom: 12px; line-height: 1.5; }
+        .six-levels { display: flex; gap: 4px; }
+        .level-btn {
+            flex: 1; padding: 8px 4px; border: 1px solid var(--border); border-radius: 6px;
+            background: white; font-size: 12px; cursor: pointer; text-align: center;
+            transition: all 0.2s; position: relative;
+        }
+        .level-btn:hover { border-color: var(--sky-light); }
+        .level-btn.selected { background: var(--sky); color: white; border-color: var(--sky); }
+        .level-btn .level-num { font-size: 10px; opacity: 0.6; display: block; margin-bottom: 2px; }
+        .level-bar { height: 3px; border-radius: 2px; margin-top: 6px; }
+        .level-bar.l0 { background: var(--cinnabar); }
+        .level-bar.l1 { background: #E07A74; }
+        .level-bar.l2 { background: var(--gold); }
+        .level-bar.l3 { background: #7EC4CE; }
+        .level-bar.l4 { background: var(--sky); }
+        .level-bar.l5 { background: #4CAF50; }
+
+        .advanced-toggle {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; background: var(--paper); border-radius: 8px;
+            cursor: pointer; margin-bottom: 16px; font-size: 14px; font-weight: 500;
+        }
+        .advanced-toggle:hover { background: var(--paper-dark); }
+        .advanced-toggle .toggle-icon { transition: transform 0.2s; }
+        .advanced-toggle.open .toggle-icon { transform: rotate(180deg); }
+        .advanced-panel { display: none; padding: 0 0 16px 0; }
+        .advanced-panel.open { display: block; }
+
+        /* Custom Agent Roles */
+        .role-templates { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .role-template {
+            padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border);
+            background: white; font-size: 12px; cursor: pointer; transition: all 0.2s;
+        }
+        .role-template:hover { border-color: var(--sky); background: rgba(90,164,174,0.04); }
+        .role-template.active { background: var(--sky); color: white; border-color: var(--sky); }
+        .custom-role-input { display: flex; gap: 8px; margin-bottom: 16px; }
+        .custom-role-input input { flex: 1; }
+        .custom-role-input button { padding: 8px 16px; background: var(--sky); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+        .role-list { display: flex; flex-direction: column; gap: 12px; }
+        .role-item {
+            display: grid; grid-template-columns: 1fr 120px 100px 40px;
+            gap: 12px; align-items: center; padding: 12px 16px;
+            background: var(--paper); border-radius: 8px; border: 1px solid var(--border);
+        }
+        .role-item .role-name { font-size: 14px; font-weight: 500; }
+        .role-item .role-count input { width: 60px; text-align: center; }
+        .role-item .role-ratio { text-align: center; font-size: 12px; color: var(--ink-faint); }
+        .role-item .role-delete { text-align: center; cursor: pointer; color: var(--cinnabar); font-size: 16px; }
+
+        .preview-summary { background: var(--paper); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .preview-summary h4 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+        .preview-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .preview-row:last-child { border-bottom: none; }
+        .preview-label { color: var(--ink-faint); }
+        .preview-value { font-weight: 500; }
+
+        .step-actions { display: flex; justify-content: space-between; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+        .btn { padding: 10px 24px; border-radius: 8px; border: none; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-secondary { background: var(--paper-dark); color: var(--ink); }
+        .btn-primary { background: var(--sky); color: white; }
+        .btn-primary:hover { background: var(--sky-dark); }
+        .btn-cinnabar { background: var(--cinnabar); color: white; }
+
+        /* Compare Config */
+        .compare-config { background: var(--paper); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px dashed var(--sky-light); }
+        .compare-config h4 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--sky-dark); }
+        .compare-row { display: grid; grid-template-columns: 100px 1fr 1fr; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .compare-row:last-child { border-bottom: none; }
+        .compare-row .label { font-weight: 500; }
+        .compare-row .baseline { color: var(--ink-faint); }
+        .compare-row .variant { color: var(--sky); font-weight: 600; }
+
+        /* ===== PLAYER ===== */
+        .player-page { display: flex; flex-direction: column; height: calc(100vh - 80px); gap: 16px; }
+        .player-toolbar {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 20px; background: white; border-radius: 12px; border: 1px solid var(--border);
+        }
+        .player-toolbar button {
+            width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border);
+            background: white; cursor: pointer; font-size: 16px; transition: all 0.2s;
+        }
+        .player-toolbar button:hover { background: var(--paper); }
+        .time-slider { flex: 1; -webkit-appearance: none; height: 6px; border-radius: 3px; background: var(--border); outline: none; }
+        .time-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--sky); cursor: pointer; }
+        .time-display { font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 600; color: var(--sky-dark); min-width: 80px; text-align: center; }
+        .speed-select { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--paper); font-size: 13px; }
+        .event-inject-btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--cinnabar); background: rgba(200,90,84,0.08); color: var(--cinnabar); font-size: 13px; cursor: pointer; }
+
+        .player-main { flex: 1; display: grid; grid-template-columns: 1fr 280px; gap: 16px; }
+        .canvas-area { background: white; border-radius: 16px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+        .canvas-tabs {
+            position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 4px; background: var(--paper); padding: 4px; border-radius: 8px;
+            border: 1px solid var(--border); z-index: 10;
+        }
+        .canvas-tab { padding: 6px 16px; border-radius: 6px; border: none; background: transparent; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+        .canvas-tab.active { background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.08); font-weight: 500; }
+        .canvas-view { width: 100%; height: 100%; }
+
+        /* Network Graph - Dynamic */
+        .network-graph { width: 100%; height: 100%; position: relative; overflow: hidden; }
+        .graph-node {
+            position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 10px; font-weight: 500; cursor: pointer;
+            transition: all 0.6s ease; will-change: transform, left, top;
+        }
+        .graph-node.pulsing { animation: pulse 1.2s ease infinite; }
+        .graph-node.floating { animation: float 2s ease infinite; }
+        .graph-node.highlight { box-shadow: 0 0 20px rgba(200,90,84,0.6); border: 2px solid var(--cinnabar); }
+        .graph-edge {
+            position: absolute; height: 2px; transform-origin: left center;
+            transition: all 0.4s ease; will-change: opacity, width;
+        }
+        .graph-edge.active { height: 3px; animation: edgePulse 1s ease infinite; }
+        .pulse-ring {
+            position: absolute; border-radius: 50%; border: 2px solid var(--cinnabar);
+            animation: pulse 1.5s ease-out infinite; pointer-events: none;
+        }
+        .transaction-particle {
+            position: absolute; width: 8px; height: 8px; border-radius: 50%;
+            background: var(--gold); pointer-events: none; z-index: 50;
+        }
+
+        .sidebar { display: flex; flex-direction: column; gap: 12px; }
+        .metric-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 16px; }
+        .metric-card h4 { font-size: 12px; color: var(--ink-faint); font-weight: 400; margin-bottom: 8px; }
+        .metric-value { font-family: 'Noto Serif SC', serif; font-size: 24px; font-weight: 700; color: var(--sky-dark); transition: all 0.3s; }
+        .metric-value.pop { animation: metricPop 0.3s ease; }
+        .metric-trend { font-size: 12px; margin-top: 4px; }
+        .metric-trend.up { color: var(--cinnabar); }
+        .metric-trend.down { color: var(--sky); }
+        .event-log { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 16px; flex: 1; overflow-y: auto; }
+        .event-log h4 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+        .event-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+        .event-item:last-child { border-bottom: none; }
+        .event-icon { font-size: 14px; }
+        .event-time { color: var(--ink-faint); min-width: 40px; }
+        .event-desc { flex: 1; }
+
+        /* ===== COMPARE MODE ===== */
+        .compare-grid { display: grid; grid-template-columns: 1fr 300px 1fr; gap: 16px; height: 100%; }
+        .compare-panel { background: white; border-radius: 16px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; }
+        .compare-header { padding: 12px 16px; background: var(--paper); border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .compare-badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+        .compare-badge.baseline { background: var(--sky); color: white; }
+        .compare-badge.variant { background: var(--cinnabar); color: white; }
+        .compare-canvas { flex: 1; position: relative; }
+
+        .diff-panel { background: white; border-radius: 16px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; }
+        .diff-panel .diff-header {
+            padding: 12px 16px; background: linear-gradient(135deg, var(--cinnabar) 0%, var(--cinnabar-light) 100%);
+            color: white; font-size: 13px; font-weight: 600; text-align: center;
+        }
+        .sync-indicator {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 8px; background: var(--paper); border-radius: 8px;
+            font-size: 12px; color: var(--ink-faint); margin: 8px 16px;
+        }
+        .sync-indicator .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sky); animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .diff-content { flex: 1; overflow-y: auto; padding: 16px; }
+        .diff-section { margin-bottom: 20px; }
+        .diff-section h5 { font-size: 12px; color: var(--ink-faint); margin-bottom: 8px; font-weight: 500; }
+        .diff-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+        .diff-row .diff-label { color: var(--ink-light); }
+        .diff-row .diff-value { font-weight: 600; }
+        .diff-row .diff-value.positive { color: var(--cinnabar); }
+        .diff-row .diff-value.negative { color: var(--sky); }
+        .diff-row .diff-value.neutral { color: var(--ink); }
+
+        .diff-bar-container { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+        .diff-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+        .diff-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+        .diff-bar-fill.red { background: var(--cinnabar); }
+        .diff-bar-fill.blue { background: var(--sky); }
+        .diff-heatmap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; margin-top: 8px; }
+        .diff-heatmap-cell { aspect-ratio: 1; border-radius: 3px; transition: all 0.3s; cursor: pointer; }
+        .diff-heatmap-cell:hover { transform: scale(1.2); }
+
+        /* Headless Mode */
+        .headless-panel { background: white; border-radius: 16px; border: 1px solid var(--border); padding: 32px; text-align: center; }
+        .progress-ring { width: 140px; height: 140px; margin: 20px auto; position: relative; }
+        .progress-ring svg { transform: rotate(-90deg); }
+        .progress-ring .pct { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Noto Serif SC', serif; font-size: 28px; font-weight: 700; color: var(--sky-dark); }
+        .batch-list { margin-top: 20px; text-align: left; max-height: 300px; overflow-y: auto; }
+        .batch-item { display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 6px; margin-bottom: 4px; font-size: 13px; }
+        .batch-item.done { background: rgba(90,164,174,0.08); }
+        .batch-item.running { background: var(--paper); border: 1px dashed var(--sky); }
+        .batch-item.failed { background: rgba(200,90,84,0.08); }
+
+        /* ===== DASHBOARD ===== */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .dash-card { background: white; border-radius: 16px; border: 1px solid var(--border); padding: 24px; transition: all 0.2s; }
+        .dash-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+        .dash-card .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .dash-card .card-header h3 { font-size: 14px; font-weight: 500; color: var(--ink-light); }
+        .dash-card .card-header .status { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+        .status.good { background: rgba(90,164,174,0.12); color: var(--sky-dark); }
+        .status.warn { background: rgba(200,90,84,0.12); color: var(--cinnabar); }
+        .status.neutral { background: var(--paper-dark); color: var(--ink-faint); }
+        .dash-value { font-family: 'Noto Serif SC', serif; font-size: 32px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+        .dash-chart { height: 60px; display: flex; align-items: flex-end; gap: 3px; }
+        .dash-bar { flex: 1; background: var(--sky-light); border-radius: 2px 2px 0 0; opacity: 0.6; transition: opacity 0.2s; }
+        .dash-bar:hover { opacity: 1; }
+
+        .analysis-section { background: white; border-radius: 16px; border: 1px solid var(--border); padding: 24px; margin-bottom: 16px; }
+        .analysis-section h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+        @media (max-width: 1024px) {
+            .home-grid { grid-template-columns: 1fr; }
+            .side-panel { display: none; }
+            .player-main { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .mode-grid { grid-template-columns: 1fr; }
+            .compare-grid { grid-template-columns: 1fr; }
+            .four-rights-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="topbar-logo">
+                <div class="seal">回</div>
+                <span class="serif">ECHO 生态模拟器</span>
+            </div>
+            <div class="topbar-nav">
+                <button class="active" onclick="showPage('home')">首页</button>
+                <button onclick="showPage('config')">配置</button>
+                <button onclick="showPage('player')">推演</button>
+                <button onclick="showPage('dashboard')">分析</button>
+            </div>
+        </div>
+
+        <!-- Page: Home -->
+        <div id="page-home" class="page-container fade-in">
+            <div class="home-grid">
+                <div class="chat-panel">
+                    <div class="chat-header">
+                        <h2>🎋 模拟助手</h2>
+                        <p>描述你想验证的假设，AI 会为你设计实验方案</p>
+                    </div>
+                    <div class="chat-body" id="chatBody">
+                        <div class="chat-msg ai">
+                            你好，我是 ECHO 模拟助手。你想验证什么经济假设？<br><br>
+                            比如：「降低版税率能否让小创作者活下去？」或「桥接密度 50% 是不是最优？」
+                        </div>
+                    </div>
+                    <div class="chat-input-box">
+                        <input type="text" id="chatInput" placeholder="输入你想验证的假设..." onkeypress="if(event.key==='Enter')sendChat()">
+                        <button onclick="sendChat()">➤</button>
+                    </div>
+                </div>
+                <div class="side-panel">
+                    <div class="shortcut-card" onclick="quickStart('visual')">
+                        <div class="shortcut-icon" style="background:rgba(90,164,174,0.12);">🧪</div>
+                        <h3>新手体验</h3>
+                        <p>跑一遍默认实验，建立对 ECHO 机制的第一直觉（可视模式，50轮）</p>
+                    </div>
+                    <div class="shortcut-card" onclick="quickStart('headless')">
+                        <div class="shortcut-icon" style="background:rgba(184,149,106,0.12);">📊</div>
+                        <h3>研究者模板</h3>
+                        <p>参数敏感性分析，批量跑 100 次取统计平均（无头模式）</p>
+                    </div>
+                    <div class="shortcut-card" onclick="quickStart('compare')">
+                        <div class="shortcut-icon" style="background:rgba(200,90,84,0.12);">⚖️</div>
+                        <h3>治理者模板</h3>
+                        <p>政策 A/B 测试，对比两组规则差异（比较模式，200轮）</p>
+                    </div>
+                    <div class="history-section">
+                        <h3>📁 最近实验</h3>
+                        <div class="history-item" onclick="loadExperiment('exp1')">
+                            <div>β=0.01 基准组验证</div>
+                            <div class="time">可视模式 · 200轮 · 2小时前</div>
+                        </div>
+                        <div class="history-item" onclick="loadExperiment('exp2')">
+                            <div>桥接密度 ρ 扫描实验</div>
+                            <div class="time">无头模式 · 500轮×7组 · 昨天</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Config -->
+        <div id="page-config" class="page-container hidden">
+            <div class="config-page">
+                <div class="step-nav">
+                    <div class="step-dot active" id="dot-0">0</div>
+                    <div class="step-line" id="line-0"></div>
+                    <div class="step-dot" id="dot-1">1</div>
+                    <div class="step-line" id="line-1"></div>
+                    <div class="step-dot" id="dot-2">2</div>
+                    <div class="step-line" id="line-2"></div>
+                    <div class="step-dot" id="dot-3">3</div>
+                    <div class="step-line" id="line-3"></div>
+                    <div class="step-dot" id="dot-4">4</div>
+                    <div class="step-line" id="line-4"></div>
+                    <div class="step-dot" id="dot-5">5</div>
+                </div>
+
+                <!-- Step 0: Mode -->
+                <div class="step-panel" id="step-0">
+                    <h2>选择模拟模式</h2>
+                    <p class="subtitle">三种模式对应三种不同的验证需求，选定后不可中途切换</p>
+                    <div class="mode-grid">
+                        <div class="mode-card" onclick="selectMode('visual')" id="mode-visual">
+                            <div class="mode-icon">👁️</div>
+                            <h3>可视模拟</h3>
+                            <p>单方案实时推演<br>过程每一步动画渲染</p>
+                            <ul class="mode-features">
+                                <li>节点闪烁、脉冲、事件高亮</li>
+                                <li>实时指标跳动、事件滚屏</li>
+                                <li>支持手动注入突发事件</li>
+                                <li>适合：建立直觉、演示汇报</li>
+                            </ul>
+                        </div>
+                        <div class="mode-card" onclick="selectMode('compare')" id="mode-compare">
+                            <div class="mode-icon">⚖️</div>
+                            <h3>比较模拟</h3>
+                            <p>双方案同步推演<br>差异自动量化与高亮</p>
+                            <ul class="mode-features">
+                                <li>左右同步播放，统一时间轴</li>
+                                <li>中间差异面板：指标差、热力图</li>
+                                <li>拓扑差异自动标红/蓝</li>
+                                <li>适合：政策 A/B 测试、参数对比</li>
+                            </ul>
+                        </div>
+                        <div class="mode-card" onclick="selectMode('headless')" id="mode-headless">
+                            <div class="mode-icon">🎲</div>
+                            <h3>无头模式</h3>
+                            <p>蒙特卡洛批量运行<br>最小化前端，最大化统计</p>
+                            <ul class="mode-features">
+                                <li>批量跑 N 次取统计平均</li>
+                                <li>进度环 + 实时分布图</li>
+                                <li>自动输出置信区间</li>
+                                <li>适合：参数扫描、假设验证</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="step-actions">
+                        <button class="btn btn-secondary" onclick="showPage('home')">返回首页</button>
+                        <button class="btn btn-primary" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+
+                <!-- Step 1: Basics -->
+                <div class="step-panel hidden" id="step-1">
+                    <h2>基础设置</h2>
+                    <p class="subtitle">实验的基本参数与运行环境</p>
+                    <div class="form-group">
+                        <label>实验名称</label>
+                        <input type="text" id="expName" value="基准组验证" placeholder="给实验起个名字">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>模拟时长（轮数）</label>
+                            <input type="number" id="expDuration" value="200" min="10" max="10000">
+                        </div>
+                        <div class="form-group">
+                            <label>步长（秒/轮）</label>
+                            <input type="number" id="expStep" value="1" min="0.1" max="60" step="0.1">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>随机种子</label>
+                            <input type="number" id="expSeed" value="42">
+                        </div>
+                        <div class="form-group">
+                            <label>初始节点数</label>
+                            <input type="number" id="expNodes" value="100" min="10" max="10000">
+                        </div>
+                    </div>
+                    <div id="headless-batch-config" class="hidden">
+                        <div class="form-group">
+                            <label>蒙特卡洛批次数</label>
+                            <input type="number" value="100" min="10" max="1000">
+                            <div style="font-size:11px;color:var(--ink-faint);margin-top:4px;">每次实验独立运行，最终取统计平均</div>
+                        </div>
+                    </div>
+                    <div class="step-actions">
+                        <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                        <button class="btn btn-primary" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Agents -->
+                <div class="step-panel hidden" id="step-2">
+                    <h2>Agent 部署</h2>
+                    <p class="subtitle">自定义角色名称与数量，或选择预设模板</p>
+                    <div class="role-templates">
+                        <div class="role-template active" onclick="addRoleTemplate('创作者')">创作者</div>
+                        <div class="role-template" onclick="addRoleTemplate('消费者')">消费者</div>
+                        <div class="role-template" onclick="addRoleTemplate('中介')">中介</div>
+                        <div class="role-template" onclick="addRoleTemplate('治理者')">治理者</div>
+                        <div class="role-template" onclick="addRoleTemplate('投资者')">投资者</div>
+                    </div>
+                    <div class="custom-role-input">
+                        <input type="text" id="customRoleName" placeholder="自定义角色名称（如：头部 KOL）">
+                        <button onclick="addCustomRole()">添加</button>
+                    </div>
+                    <div class="role-list" id="roleList">
+                        <div class="role-item">
+                            <div class="role-name">创作者</div>
+                            <div class="role-count"><input type="number" value="20" min="0" onchange="updateRoleRatio()"></div>
+                            <div class="role-ratio">20%</div>
+                            <div class="role-delete" onclick="removeRole(this)">×</div>
+                        </div>
+                        <div class="role-item">
+                            <div class="role-name">消费者</div>
+                            <div class="role-count"><input type="number" value="70" min="0" onchange="updateRoleRatio()"></div>
+                            <div class="role-ratio">70%</div>
+                            <div class="role-delete" onclick="removeRole(this)">×</div>
+                        </div>
+                        <div class="role-item">
+                            <div class="role-name">中介</div>
+                            <div class="role-count"><input type="number" value="10" min="0" onchange="updateRoleRatio()"></div>
+                            <div class="role-ratio">10%</div>
+                            <div class="role-delete" onclick="removeRole(this)">×</div>
+                        </div>
+                    </div>
+                    <div class="step-actions">
+                        <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                        <button class="btn btn-primary" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Skill Market -->
+                <div class="step-panel hidden" id="step-3">
+                    <h2>Skill 市场</h2>
+                    <p class="subtitle">配置 Skill 分类体系与初始供给</p>
+                    <div class="form-group">
+                        <label>分类体系</label>
+                        <select>
+                            <option>默认三层分类（领域/子类/技能）</option>
+                            <option>扁平标签体系</option>
+                            <option>自定义层级</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>初始 Skill 数量</label>
+                            <input type="number" value="50" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>品质分布</label>
+                            <select>
+                                <option>正态分布（大部分中等）</option>
+                                <option>幂律分布（少数优质）</option>
+                                <option>均匀分布</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>定价策略</label>
+                        <select>
+                            <option>自由市场（Agent 自主定价）</option>
+                            <option>统一定价（系统设定基准）</option>
+                            <option>混合定价（基准+浮动）</option>
+                        </select>
+                    </div>
+                    <div class="step-actions">
+                        <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                        <button class="btn btn-primary" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Rules (Four Rights + Advanced) -->
+                <div class="step-panel hidden" id="step-4">
+                    <h2>Echo 规则</h2>
+                    <p class="subtitle">配置四权档位、收益分配与治理参数</p>
+
+                    <div id="compare-config-panel" class="compare-config hidden">
+                        <h4>⚖️ 对比方案配置（比较模式专属）</h4>
+                        <div class="compare-row">
+                            <div class="label">方案</div>
+                            <div class="baseline">方案 A（基线）</div>
+                            <div class="variant">方案 B（实验）</div>
+                        </div>
+                        <div class="compare-row">
+                            <div class="label">使用权</div>
+                            <div class="baseline">约（合约授权）</div>
+                            <div class="variant">亲（亲友圈）</div>
+                        </div>
+                        <div class="compare-row">
+                            <div class="label">版税率</div>
+                            <div class="baseline">30%</div>
+                            <div class="variant">15%</div>
+                        </div>
+                        <div class="compare-row">
+                            <div class="label">冷却期</div>
+                            <div class="baseline">0（不启用）</div>
+                            <div class="variant">3 轮</div>
+                        </div>
+                        <div style="margin-top:12px;font-size:12px;color:var(--ink-faint);">
+                            💡 比较模式下，两组实验仅差异项不同，其余参数完全一致。差异项将在推演时同步高亮。
+                        </div>
+                    </div>
+
+                    <h4 style="font-size:14px;margin-bottom:16px;color:var(--sky-dark);">📜 四权配置（每权六档）</h4>
+                    <div class="four-rights-grid">
+                        <div class="right-card">
+                            <h4><span class="right-icon">🎮</span>使用权</h4>
+                            <div class="right-desc">谁可以「用」这个 Skill？决定 Skill 的流通范围</div>
+                            <div class="six-levels" id="usage-levels">
+                                <div class="level-btn" onclick="selectLevel('usage', 0)">
+                                    <span class="level-num">0</span>禁
+                                    <div class="level-bar l0"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('usage', 1)">
+                                    <span class="level-num">1</span>己
+                                    <div class="level-bar l1"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('usage', 2)">
+                                    <span class="level-num">2</span>亲
+                                    <div class="level-bar l2"></div>
+                                </div>
+                                <div class="level-btn selected" onclick="selectLevel('usage', 3)">
+                                    <span class="level-num">3</span>约
+                                    <div class="level-bar l3"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('usage', 4)">
+                                    <span class="level-num">4</span>法
+                                    <div class="level-bar l4"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('usage', 5)">
+                                    <span class="level-num">5</span>公
+                                    <div class="level-bar l5"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="right-card">
+                            <h4><span class="right-icon">🌱</span>衍生权</h4>
+                            <div class="right-desc">谁可以基于这个 Skill 做「二次创作」？决定创新链条长度</div>
+                            <div class="six-levels" id="derivative-levels">
+                                <div class="level-btn" onclick="selectLevel('derivative', 0)">
+                                    <span class="level-num">0</span>禁
+                                    <div class="level-bar l0"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('derivative', 1)">
+                                    <span class="level-num">1</span>己
+                                    <div class="level-bar l1"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('derivative', 2)">
+                                    <span class="level-num">2</span>亲
+                                    <div class="level-bar l2"></div>
+                                </div>
+                                <div class="level-btn selected" onclick="selectLevel('derivative', 3)">
+                                    <span class="level-num">3</span>约
+                                    <div class="level-bar l3"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('derivative', 4)">
+                                    <span class="level-num">4</span>法
+                                    <div class="level-bar l4"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('derivative', 5)">
+                                    <span class="level-num">5</span>公
+                                    <div class="level-bar l5"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="right-card">
+                            <h4><span class="right-icon">🔗</span>扩展权</h4>
+                            <div class="right-desc">谁可以将这个 Skill 接入「更大系统」？决定生态边界</div>
+                            <div class="six-levels" id="extension-levels">
+                                <div class="level-btn" onclick="selectLevel('extension', 0)">
+                                    <span class="level-num">0</span>禁
+                                    <div class="level-bar l0"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('extension', 1)">
+                                    <span class="level-num">1</span>己
+                                    <div class="level-bar l1"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('extension', 2)">
+                                    <span class="level-num">2</span>亲
+                                    <div class="level-bar l2"></div>
+                                </div>
+                                <div class="level-btn selected" onclick="selectLevel('extension', 3)">
+                                    <span class="level-num">3</span>约
+                                    <div class="level-bar l3"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('extension', 4)">
+                                    <span class="level-num">4</span>法
+                                    <div class="level-bar l4"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('extension', 5)">
+                                    <span class="level-num">5</span>公
+                                    <div class="level-bar l5"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="right-card">
+                            <h4><span class="right-icon">💰</span>收益权</h4>
+                            <div class="right-desc">谁可以「获得经济回报」？决定价值分配流向</div>
+                            <div class="six-levels" id="revenue-levels">
+                                <div class="level-btn" onclick="selectLevel('revenue', 0)">
+                                    <span class="level-num">0</span>禁
+                                    <div class="level-bar l0"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('revenue', 1)">
+                                    <span class="level-num">1</span>己
+                                    <div class="level-bar l1"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('revenue', 2)">
+                                    <span class="level-num">2</span>亲
+                                    <div class="level-bar l2"></div>
+                                </div>
+                                <div class="level-btn selected" onclick="selectLevel('revenue', 3)">
+                                    <span class="level-num">3</span>约
+                                    <div class="level-bar l3"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('revenue', 4)">
+                                    <span class="level-num">4</span>法
+                                    <div class="level-bar l4"></div>
+                                </div>
+                                <div class="level-btn" onclick="selectLevel('revenue', 5)">
+                                    <span class="level-num">5</span>公
+                                    <div class="level-bar l5"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top:24px;">
+                        <div class="param-label">
+                            <label>版税率（Skill 被使用时，平台抽取比例）</label>
+                            <span class="tooltip">ⓘ
+                                <span class="tooltip-text">版税率决定每次 Skill 被编排/使用时，平台抽成比例。剩余部分按四权配置分配给相关方。基准值 30%，降低可能增加头部集中度。</span>
+                            </span>
+                        </div>
+                        <input type="range" min="0" max="50" value="30" id="royaltyRate" oninput="updateRoyaltyLabel(this.value)">
+                        <div style="text-align:center;font-size:12px;color:var(--ink-faint);margin-top:4px;"><span id="royaltyLabel">30%</span></div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="param-label">
+                            <label>冷却期（轮）</label>
+                            <span class="tooltip">ⓘ
+                                <span class="tooltip-text">创作者降档后，多长时间内不能再次降档。用于防止恶意快速降档套利。仅在生态多样性显著下降时启用。云子数据显示 C3 效果最佳。</span>
+                            </span>
+                        </div>
+                        <select id="cooldownSelect">
+                            <option value="0">0（不启用）</option>
+                            <option value="3">3 轮</option>
+                            <option value="5">5 轮</option>
+                            <option value="7">7 轮</option>
+                        </select>
+                        <div style="font-size:11px;color:var(--ink-faint);margin-top:4px;">仅在多样性显著下降时启用（Shannon < 2.5）</div>
+                    </div>
+
+                    <div class="advanced-toggle" onclick="toggleAdvanced()" id="advancedToggle">
+                        <span>🔧 高级参数（Shi-Graph 引擎内核）</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="advanced-panel" id="advancedPanel">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <div class="param-label">
+                                    <label>β（边界约束系数）</label>
+                                    <span class="tooltip">ⓘ
+                                        <span class="tooltip-text">控制势位差异的敏感度。β=0.01 时差异微小（Gini≈0.37），β 提高会压平生态（Gini 降至 0.3 以下），牺牲多样性。哪吒拍板默认 0.01。</span>
+                                    </span>
+                                </div>
+                                <input type="number" value="0.01" step="0.01" min="0" max="1">
+                            </div>
+                            <div class="form-group">
+                                <div class="param-label">
+                                    <label>ρ（桥接密度）</label>
+                                    <span class="tooltip">ⓘ
+                                        <span class="tooltip-text">T2/T3 中间层边的占比，控制跨领域连接密度。ρ 越高生态越均匀（Gini 越低）。哪吒拍板 50%，待 6/13 对齐会验证。</span>
+                                    </span>
+                                </div>
+                                <input type="number" value="0.5" step="0.1" min="0" max="1">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <div class="param-label">
+                                    <label>入出边权重比</label>
+                                    <span class="tooltip">ⓘ
+                                        <span class="tooltip-text">被编排（入边）vs 主动编排（出边）的权重比。2:1 意味着「被引用」比「引用别人」更有价值。X7 实验验证 2:1 时 Gini=0.372。</span>
+                                    </span>
+                                </div>
+                                <select>
+                                    <option>2:1（默认）</option>
+                                    <option>1:1</option>
+                                    <option>3:1</option>
+                                    <option>5:1</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <div class="param-label">
+                                    <label>ξ（综合开放度）</label>
+                                    <span class="tooltip">ⓘ
+                                        <span class="tooltip-text">四权的综合评级，0-5 档。ξ 决定谁能进入生态（门禁），不是生态里谁最富。ξ=3（约）意味着需合约授权才能使用。</span>
+                                    </span>
+                                </div>
+                                <select>
+                                    <option value="0">0 - 禁（完全封闭）</option>
+                                    <option value="1">1 - 己（仅自己）</option>
+                                    <option value="2">2 - 亲（亲友圈）</option>
+                                    <option value="3" selected>3 - 约（合约授权）</option>
+                                    <option value="4">4 - 法（法律框架）</option>
+                                    <option value="5">5 - 公（完全开放）</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-actions">
+                        <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                        <button class="btn btn-primary" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+
+                <!-- Step 5: Preview -->
+                <div class="step-panel hidden" id="step-5">
+                    <h2>预览确认</h2>
+                    <p class="subtitle">检查配置无误后启动模拟</p>
+                    <div class="preview-summary">
+                        <h4>📋 实验摘要</h4>
+                        <div class="preview-row">
+                            <span class="preview-label">实验名称</span>
+                            <span class="preview-value" id="previewName">基准组验证</span>
+                        </div>
+                        <div class="preview-row">
+                            <span class="preview-label">模拟模式</span>
+                            <span class="preview-value" id="previewMode">可视模拟</span>
+                        </div>
+                        <div class="preview-row">
+                            <span class="preview-label">时长 / 步长</span>
+                            <span class="preview-value">200 轮 / 1秒</span>
+                        </div>
+                        <div class="preview-row">
+                            <span class="preview-label">Agent 角色</span>
+                            <span class="preview-value">创作者 20 / 消费者 70 / 中介 10</span>
+                        </div>
+                        <div class="preview-row">
+                            <span class="preview-label">四权配置</span>
+                            <span class="preview-value">使用权约 · 衍生权约 · 扩展权约 · 收益权约</span>
+                        </div>
+                        <div class="preview-row">
+                            <span class="preview-label">核心参数</span>
+                            <span class="preview-value">版税30% · 无冷却期 · β=0.01 · ρ=50% · 2:1</span>
+                        </div>
+                    </div>
+                    <div class="step-actions">
+                        <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                        <button class="btn btn-cinnabar" onclick="startSimulation()">🚀 启动模拟</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Player -->
+        <div id="page-player" class="page-container hidden">
+            <div class="player-page">
+                <div class="player-toolbar">
+                    <button onclick="resetSim()" title="重置">⏮</button>
+                    <button onclick="stepBack()" title="步退">⏴</button>
+                    <button onclick="togglePlay()" id="playBtn" title="播放/暂停">▶</button>
+                    <button onclick="stepForward()" title="步进">⏵</button>
+                    <input type="range" class="time-slider" id="timeSlider" min="0" max="200" value="0" oninput="seekTime(this.value)">
+                    <span class="time-display" id="timeDisplay">T=0/200</span>
+                    <select class="speed-select" id="speedSelect">
+                        <option value="0.5">0.5x</option>
+                        <option value="1" selected>1x</option>
+                        <option value="2">2x</option>
+                        <option value="5">5x</option>
+                    </select>
+                    <button class="event-inject-btn" onclick="injectEvent()">📍 注入事件</button>
+                </div>
+
+                <!-- Normal / Visual Mode -->
+                <div class="player-main" id="player-normal">
+                    <div class="canvas-area">
+                        <div class="canvas-tabs">
+                            <button class="canvas-tab active" onclick="setView('network')">宏观网络</button>
+                            <button class="canvas-tab" onclick="setView('domain')">中观领域</button>
+                            <button class="canvas-tab" onclick="setView('individual')">微观个体</button>
+                        </div>
+                        <div class="canvas-view" id="canvasView">
+                            <div class="network-graph" id="networkGraph"></div>
+                        </div>
+                    </div>
+                    <div class="sidebar">
+                        <div class="metric-card">
+                            <h4>马太效应</h4>
+                            <div class="metric-value" id="metric-matthew">0.22</div>
+                            <div class="metric-trend down">↓ 健康</div>
+                        </div>
+                        <div class="metric-card">
+                            <h4>Gini 系数</h4>
+                            <div class="metric-value" id="metric-gini">0.37</div>
+                            <div class="metric-trend neutral">→ 适中</div>
+                        </div>
+                        <div class="metric-card">
+                            <h4>活跃 Agent</h4>
+                            <div class="metric-value" id="metric-agents">23</div>
+                        </div>
+                        <div class="event-log">
+                            <h4>事件日志</h4>
+                            <div id="eventLogContent">
+                                <div class="event-item">
+                                    <span class="event-icon">🌱</span>
+                                    <span class="event-time">T=0</span>
+                                    <span class="event-desc">系统初始化完成</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compare Mode (3-column) -->
+                <div class="player-main hidden" id="player-compare">
+                    <div class="compare-grid">
+                        <div class="compare-panel">
+                            <div class="compare-header">
+                                <span>方案 A：基线</span>
+                                <span class="compare-badge baseline">基线</span>
+                            </div>
+                            <div class="compare-canvas" id="compareA"></div>
+                        </div>
+
+                        <div class="diff-panel">
+                            <div class="diff-header">差异分析</div>
+                            <div class="sync-indicator">
+                                <div class="sync-dot"></div>
+                                <span>同步播放中 · T=<span id="compareTime">0</span></span>
+                            </div>
+                            <div class="diff-content">
+                                <div class="diff-section">
+                                    <h5>指标差异</h5>
+                                    <div class="diff-row">
+                                        <span class="diff-label">Gini</span>
+                                        <span class="diff-value neutral" id="diff-gini">0.37</span>
+                                    </div>
+                                    <div class="diff-row">
+                                        <span class="diff-label">马太效应</span>
+                                        <span class="diff-value negative" id="diff-matthew">0.22</span>
+                                    </div>
+                                    <div class="diff-row">
+                                        <span class="diff-label">Shannon</span>
+                                        <span class="diff-value positive" id="diff-shannon">3.42</span>
+                                    </div>
+                                    <div class="diff-row">
+                                        <span class="diff-label">活跃节点</span>
+                                        <span class="diff-value neutral" id="diff-agents">23</span>
+                                    </div>
+                                </div>
+
+                                <div class="diff-section">
+                                    <h5>差异幅度（A vs B）</h5>
+                                    <div class="diff-row">
+                                        <span class="diff-label">Gini 差</span>
+                                        <span class="diff-value positive" id="diff-gini-delta">+0.00</span>
+                                    </div>
+                                    <div class="diff-row">
+                                        <span class="diff-label">马太差</span>
+                                        <span class="diff-value negative" id="diff-matthew-delta">0.00</span>
+                                    </div>
+                                    <div class="diff-row">
+                                        <span class="diff-label">Shannon 差</span>
+                                        <span class="diff-value positive" id="diff-shannon-delta">+0.00</span>
+                                    </div>
+                                </div>
+
+                                <div class="diff-section">
+                                    <h5>拓扑差异热力图</h5>
+                                    <div class="diff-bar-container">
+                                        <div class="diff-bar"><div class="diff-bar-fill red" id="bar-a" style="width:50%"></div></div>
+                                        <span class="diff-bar-label">A强</span>
+                                    </div>
+                                    <div class="diff-bar-container">
+                                        <div class="diff-bar"><div class="diff-bar-fill blue" id="bar-b" style="width:50%"></div></div>
+                                        <span class="diff-bar-label">B强</span>
+                                    </div>
+                                    <div class="diff-heatmap" id="diffHeatmap"></div>
+                                    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-faint);margin-top:4px;">
+                                        <span>A 优势</span><span>均衡</span><span>B 优势</span>
+                                    </div>
+                                </div>
+
+                                <div class="diff-section">
+                                    <h5>事件差异</h5>
+                                    <div id="diffEvents">
+                                        <div class="event-item">
+                                            <span class="event-icon">⏳</span>
+                                            <span class="event-desc">等待推演开始...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="compare-panel">
+                            <div class="compare-header">
+                                <span>方案 B：实验</span>
+                                <span class="compare-badge variant">实验</span>
+                            </div>
+                            <div class="compare-canvas" id="compareB"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Headless Mode -->
+                <div class="player-main hidden" id="player-headless">
+                    <div class="headless-panel">
+                        <h3 style="font-size:18px;margin-bottom:8px;">无头模式运行中</h3>
+                        <p style="color:var(--ink-faint);font-size:14px;">蒙特卡洛批量模拟 · <span id="batchTotal">100</span>次 × <span id="batchRounds">200</span>轮</p>
+                        <div class="progress-ring">
+                            <svg width="140" height="140">
+                                <circle cx="70" cy="70" r="62" fill="none" stroke="var(--border)" stroke-width="10"/>
+                                <circle cx="70" cy="70" r="62" fill="none" stroke="var(--sky)" stroke-width="10"
+                                    stroke-dasharray="389.557" stroke-dashoffset="389.557" stroke-linecap="round"
+                                    id="progressCircle"/>
+                            </svg>
+                            <div class="pct" id="progressPct">0%</div>
+                        </div>
+                        <div style="display:flex;gap:32px;justify-content:center;margin-top:8px;">
+                            <div style="text-align:center;">
+                                <div style="font-size:28px;font-weight:700;color:var(--sky-dark);" id="batchDone">0</div>
+                                <div style="font-size:12px;color:var(--ink-faint);">已完成</div>
+                            </div>
+                            <div style="text-align:center;">
+                                <div style="font-size:28px;font-weight:700;color:var(--gold);" id="batchAvgGini">--</div>
+                                <div style="font-size:12px;color:var(--ink-faint);">平均Gini</div>
+                            </div>
+                            <div style="text-align:center;">
+                                <div style="font-size:28px;font-weight:700;color:var(--cinnabar);" id="batchStd">--</div>
+                                <div style="font-size:12px;color:var(--ink-faint);">标准差</div>
+                            </div>
+                        </div>
+                        <div class="batch-list" id="batchList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Dashboard -->
+        <div id="page-dashboard" class="page-container hidden">
+            <div class="dashboard-grid">
+                <div class="dash-card">
+                    <div class="card-header">
+                        <h3>马太效应</h3>
+                        <span class="status good">健康</span>
+                    </div>
+                    <div class="dash-value">0.22</div>
+                    <div class="dash-chart">
+                        <div class="dash-bar" style="height:40%"></div><div class="dash-bar" style="height:45%"></div><div class="dash-bar" style="height:42%"></div>
+                        <div class="dash-bar" style="height:38%"></div><div class="dash-bar" style="height:35%"></div><div class="dash-bar" style="height:32%"></div>
+                        <div class="dash-bar" style="height:30%"></div><div class="dash-bar" style="height:28%"></div><div class="dash-bar" style="height:26%"></div>
+                        <div class="dash-bar" style="height:25%"></div><div class="dash-bar" style="height:24%"></div><div class="dash-bar" style="height:23%"></div>
+                        <div class="dash-bar" style="height:22%"></div><div class="dash-bar" style="height:22%"></div><div class="dash-bar" style="height:22%"></div>
+                    </div>
+                </div>
+                <div class="dash-card">
+                    <div class="card-header">
+                        <h3>生态多样性 (Shannon)</h3>
+                        <span class="status good">良好</span>
+                    </div>
+                    <div class="dash-value">3.42</div>
+                    <div class="dash-chart">
+                        <div class="dash-bar" style="height:30%"></div><div class="dash-bar" style="height:35%"></div><div class="dash-bar" style="height:40%"></div>
+                        <div class="dash-bar" style="height:38%"></div><div class="dash-bar" style="height:42%"></div><div class="dash-bar" style="height:45%"></div>
+                        <div class="dash-bar" style="height:48%"></div><div class="dash-bar" style="height:50%"></div><div class="dash-bar" style="height:52%"></div>
+                        <div class="dash-bar" style="height:55%"></div><div class="dash-bar" style="height:58%"></div><div class="dash-bar" style="height:60%"></div>
+                        <div class="dash-bar" style="height:62%"></div><div class="dash-bar" style="height:65%"></div><div class="dash-bar" style="height:68%"></div>
+                    </div>
+                </div>
+                <div class="dash-card">
+                    <div class="card-header">
+                        <h3>Gini 系数</h3>
+                        <span class="status good">适中</span>
+                    </div>
+                    <div class="dash-value">0.37</div>
+                    <div class="dash-chart">
+                        <div class="dash-bar" style="height:50%"></div><div class="dash-bar" style="height:48%"></div><div class="dash-bar" style="height:45%"></div>
+                        <div class="dash-bar" style="height:42%"></div><div class="dash-bar" style="height:40%"></div><div class="dash-bar" style="height:38%"></div>
+                        <div class="dash-bar" style="height:37%"></div><div class="dash-bar" style="height:37%"></div><div class="dash-bar" style="height:36%"></div>
+                        <div class="dash-bar" style="height:36%"></div><div class="dash-bar" style="height:37%"></div><div class="dash-bar" style="height:37%"></div>
+                        <div class="dash-bar" style="height:37%"></div><div class="dash-bar" style="height:37%"></div><div class="dash-bar" style="height:37%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <h3>📊 归因分析</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:16px;">
+                    <div>
+                        <h4 style="font-size:14px;margin-bottom:12px;color:var(--ink-light);">参数敏感性（龙卷风图）</h4>
+                        <div style="display:flex;flex-direction:column;gap:8px;">
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span style="width:80px;font-size:12px;">版税率</span>
+                                <div style="flex:1;height:20px;background:var(--paper);border-radius:4px;overflow:hidden;">
+                                    <div style="width:75%;height:100%;background:var(--cinnabar);border-radius:4px;"></div>
+                                </div>
+                                <span style="font-size:12px;color:var(--cinnabar);font-weight:600;">+0.08</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span style="width:80px;font-size:12px;">桥接密度 ρ</span>
+                                <div style="flex:1;height:20px;background:var(--paper);border-radius:4px;overflow:hidden;">
+                                    <div style="width:60%;height:100%;background:var(--sky);border-radius:4px;"></div>
+                                </div>
+                                <span style="font-size:12px;color:var(--sky);font-weight:600;">-0.05</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span style="width:80px;font-size:12px;">β 系数</span>
+                                <div style="flex:1;height:20px;background:var(--paper);border-radius:4px;overflow:hidden;">
+                                    <div style="width:40%;height:100%;background:var(--sky-light);border-radius:4px;"></div>
+                                </div>
+                                <span style="font-size:12px;color:var(--sky);font-weight:600;">-0.03</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span style="width:80px;font-size:12px;">冷却期</span>
+                                <div style="flex:1;height:20px;background:var(--paper);border-radius:4px;overflow:hidden;">
+                                    <div style="width:25%;height:100%;background:var(--gold);border-radius:4px;"></div>
+                                </div>
+                                <span style="font-size:12px;color:var(--gold);font-weight:600;">+0.02</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="font-size:14px;margin-bottom:12px;color:var(--ink-light);">关键发现</h4>
+                        <div style="background:var(--paper);border-radius:8px;padding:12px 16px;font-size:13px;line-height:1.8;">
+                            <p>🔍 <strong>版税率</strong> 对 Gini 影响最大（+0.08），降低版税率显著增加头部集中度</p>
+                            <p>🔍 <strong>桥接密度 ρ</strong> 与 Gini 负相关，提高 ρ 使生态更均匀</p>
+                            <p>🔍 当前配置下 <strong>基准组</strong> 马太效应 0.22，处于健康区间</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <h3>📄 自动报告</h3>
+                <div style="display:flex;gap:12px;margin-top:16px;">
+                    <button class="btn btn-primary">导出 PDF</button>
+                    <button class="btn btn-secondary">导出 Markdown</button>
+                    <button class="btn btn-secondary">同步到飞书</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== State =====
+        let currentPage = 'home';
+        let currentStep = 0;
+        let selectedMode = null;
+        let isPlaying = false;
+        let currentTime = 0;
+        let maxTime = 200;
+        let playInterval = null;
+        let currentView = 'network';
+        let simNodes = [];
+        let simEdges = [];
+        let simDataA = {};
+        let simDataB = {};
+        let batchProgress = 0;
+
+        // ===== Navigation =====
+        function showPage(page) {
+            document.querySelectorAll('.page-container').forEach(p => p.classList.add('hidden'));
+            document.getElementById('page-' + page).classList.remove('hidden');
+            document.querySelectorAll('.topbar-nav button').forEach(b => b.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+            currentPage = page;
+        }
+
+        // ===== Home Chat =====
+        const chatResponses = {
+            'default': `我理解了你的需求。基于 ECHO 当前机制，我建议以下实验方案：<br><br>
+                <div class="proposal-card">
+                    <h4>📋 推荐方案</h4>
+                    <div class="proposal-meta"><span>模式：可视模拟</span><span>时长：200轮</span></div>
+                    <div class="proposal-tags">
+                        <span class="tag mode">可视模式</span><span class="tag">β=0.01</span><span class="tag">ρ=50%</span>
+                    </div>
+                    <div class="proposal-actions">
+                        <button class="btn-sm" onclick="showPage('config')">调整参数</button>
+                        <button class="btn-sm primary" onclick="quickStart('visual')">一键启动</button>
+                    </div>
+                </div>`,
+            '降低版税': `建议用<strong>比较模拟</strong>对比两组规则：<br><br>
+                • 方案A（基线）：版税率 30%<br>• 方案B（实验）：版税率 15%<br><br>
+                预计关注点：小创作者留存率、头部集中度变化、整体生态多样性`,
+            '桥接密度': `推荐做<strong>参数扫描</strong>：<br><br>
+                • ρ = 10%, 30%, 50%, 70%, 90%<br>• 用<strong>无头模式</strong>批量跑，每组100次<br><br>
+                云子实验显示 ρ=50% 时 Gini≈0.37，可作为基准对照。`,
+            '冷却期': `冷却期目前为<strong>备用方案</strong>，仅在多样性显著下降时启用。<br><br>
+                建议先跑基准组（不加冷却期），观察 50 轮后的多样性指标。如果 Shannon < 2.5，再启用 C3/C5/C7 对比。<br><br>
+                注意：冷却期不是越长越好，C7 效果比 C3 差 5 倍（云子数据）。`
+        };
+
+        function sendChat() {
+            const input = document.getElementById('chatInput');
+            const body = document.getElementById('chatBody');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-msg user';
+            userMsg.textContent = text;
+            body.appendChild(userMsg);
+
+            setTimeout(() => {
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'chat-msg ai';
+                let response = chatResponses.default;
+                if (text.includes('版税') || text.includes('税率')) response = chatResponses['降低版税'];
+                else if (text.includes('桥接') || text.includes('ρ') || text.includes('rho')) response = chatResponses['桥接密度'];
+                else if (text.includes('冷却')) response = chatResponses['冷却期'];
+                aiMsg.innerHTML = response;
+                body.appendChild(aiMsg);
+                body.scrollTop = body.scrollHeight;
+            }, 600);
+
+            input.value = '';
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function quickStart(mode) {
+            selectMode(mode);
+            showPage('config');
+            setTimeout(() => {
+                currentStep = 5;
+                updateStepNav();
+                showStep(5);
+            }, 100);
+        }
+
+        function loadExperiment(id) {
+            showPage('player');
+        }
+
+        // ===== Config Wizard =====
+        function selectMode(mode) {
+            selectedMode = mode;
+            document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('mode-' + mode).classList.add('selected');
+
+            // Show/hide mode-specific config
+            const headlessConfig = document.getElementById('headless-batch-config');
+            const compareConfig = document.getElementById('compare-config-panel');
+            if (headlessConfig) headlessConfig.classList.add('hidden');
+            if (compareConfig) compareConfig.classList.add('hidden');
+            if (mode === 'headless' && headlessConfig) headlessConfig.classList.remove('hidden');
+            if (mode === 'compare' && compareConfig) compareConfig.classList.remove('hidden');
+        }
+
+        function updateStepNav() {
+            for (let i = 0; i <= 5; i++) {
+                const dot = document.getElementById('dot-' + i);
+                const line = document.getElementById('line-' + i);
+                dot.classList.remove('active', 'done');
+                if (line) line.classList.remove('done');
+                if (i < currentStep) {
+                    dot.classList.add('done');
+                    if (line) line.classList.add('done');
+                } else if (i === currentStep) {
+                    dot.classList.add('active');
+                }
+            }
+        }
+
+        function showStep(step) {
+            for (let i = 0; i <= 5; i++) {
+                document.getElementById('step-' + i).classList.add('hidden');
+            }
+            document.getElementById('step-' + step).classList.remove('hidden');
+        }
+
+        function nextStep() {
+            if (currentStep === 0 && !selectedMode) { alert('请先选择模拟模式'); return; }
+            if (currentStep < 5) { currentStep++; updateStepNav(); showStep(currentStep); }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) { currentStep--; updateStepNav(); showStep(currentStep); }
+        }
+
+        function startSimulation() {
+            showPage('player');
+            setTimeout(() => initPlayer(), 100);
+        }
+
+        // ===== Four Rights Six Levels =====
+        const levelSelections = { usage: 3, derivative: 3, extension: 3, revenue: 3 };
+        const levelNames = ['禁', '己', '亲', '约', '法', '公'];
+
+        function selectLevel(right, level) {
+            levelSelections[right] = level;
+            const container = document.getElementById(right + '-levels');
+            container.querySelectorAll('.level-btn').forEach((btn, i) => {
+                btn.classList.toggle('selected', i === level);
+            });
+        }
+
+        // ===== Parameters =====
+        function updateRoyaltyLabel(v) {
+            document.getElementById('royaltyLabel').textContent = v + '%';
+        }
+
+        function toggleAdvanced() {
+            const toggle = document.getElementById('advancedToggle');
+            const panel = document.getElementById('advancedPanel');
+            toggle.classList.toggle('open');
+            panel.classList.toggle('open');
+        }
+
+        // ===== Custom Agent Roles =====
+        function addRoleTemplate(name) {
+            document.querySelectorAll('.role-template').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            addCustomRole(name);
+        }
+
+        function addCustomRole(name) {
+            const input = document.getElementById('customRoleName');
+            const roleName = name || input.value.trim();
+            if (!roleName) return;
+            const list = document.getElementById('roleList');
+            const item = document.createElement('div');
+            item.className = 'role-item';
+            item.innerHTML = `<div class="role-name">${roleName}</div><div class="role-count"><input type="number" value="10" min="0" onchange="updateRoleRatio()"></div><div class="role-ratio">--</div><div class="role-delete" onclick="removeRole(this)">×</div>`;
+            list.appendChild(item);
+            updateRoleRatio();
+            input.value = '';
+        }
+
+        function removeRole(btn) { btn.parentElement.remove(); updateRoleRatio(); }
+
+        function updateRoleRatio() {
+            const items = document.querySelectorAll('.role-item');
+            let total = 0;
+            items.forEach(item => { total += parseInt(item.querySelector('input').value) || 0; });
+            items.forEach(item => {
+                const count = parseInt(item.querySelector('input').value) || 0;
+                const ratio = total > 0 ? Math.round(count / total * 100) : 0;
+                item.querySelector('.role-ratio').textContent = ratio + '%';
+            });
+        }
+
+        // ===== Player =====
+        function initPlayer() {
+            document.getElementById('player-normal').classList.add('hidden');
+            document.getElementById('player-compare').classList.add('hidden');
+            document.getElementById('player-headless').classList.add('hidden');
+
+            if (selectedMode === 'compare') {
+                document.getElementById('player-compare').classList.remove('hidden');
+                initCompareGraphs();
+                initDiffHeatmap();
+            } else if (selectedMode === 'headless') {
+                document.getElementById('player-headless').classList.remove('hidden');
+                startHeadlessProgress();
+            } else {
+                document.getElementById('player-normal').classList.remove('hidden');
+                initNetworkGraph();
+            }
+        }
+
+        // ===== Visual Mode: Dynamic Network =====
+        function initNetworkGraph() {
+            const container = document.getElementById('networkGraph');
+            container.innerHTML = '';
+            simNodes = [];
+            simEdges = [];
+            const nodeCount = 40;
+
+            for (let i = 0; i < nodeCount; i++) {
+                const node = document.createElement('div');
+                node.className = 'graph-node';
+                const size = 16 + Math.random() * 36;
+                node.style.width = size + 'px';
+                node.style.height = size + 'px';
+                node.dataset.x = 10 + Math.random() * 80;
+                node.dataset.y = 10 + Math.random() * 80;
+                node.dataset.vx = (Math.random() - 0.5) * 0.3;
+                node.dataset.vy = (Math.random() - 0.5) * 0.3;
+                node.style.left = node.dataset.x + '%';
+                node.style.top = node.dataset.y + '%';
+
+                // Color by tier
+                if (i < 5) node.style.background = 'var(--cinnabar)';
+                else if (i < 20) node.style.background = 'var(--sky)';
+                else node.style.background = 'var(--gold)';
+
+                node.textContent = i + 1;
+                container.appendChild(node);
+                simNodes.push(node);
+            }
+
+            // Create edges
+            for (let i = 0; i < nodeCount; i++) {
+                for (let j = i + 1; j < nodeCount; j++) {
+                    if (Math.random() < 0.12) {
+                        const edge = document.createElement('div');
+                        edge.className = 'graph-edge';
+                        updateEdge(edge, simNodes[i], simNodes[j]);
+                        container.appendChild(edge);
+                        simEdges.push({ el: edge, from: i, to: j });
+                    }
+                }
+            }
+        }
+
+        function updateEdge(edgeEl, n1, n2) {
+            const x1 = parseFloat(n1.style.left), y1 = parseFloat(n1.style.top);
+            const x2 = parseFloat(n2.style.left), y2 = parseFloat(n2.style.top);
+            const len = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+            const angle = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
+            edgeEl.style.left = x1 + '%';
+            edgeEl.style.top = y1 + '%';
+            edgeEl.style.width = len + '%';
+            edgeEl.style.transform = `rotate(${angle}deg)`;
+        }
+
+        // ===== Simulation Engine =====
+        function runSimulationStep() {
+            if (currentTime >= maxTime) { togglePlay(); return; }
+            currentTime++;
+
+            // Update metrics with realistic simulation
+            const progress = currentTime / maxTime;
+            const noise = () => (Math.random() - 0.5) * 0.04;
+
+            // Matthew effect: starts high, converges down
+            const matthew = 0.35 - progress * 0.13 + noise();
+            // Gini: starts high, stabilizes
+            const gini = 0.42 - progress * 0.08 + noise() * 0.5;
+            // Agents: grows then stabilizes
+            const agents = Math.min(100, 23 + currentTime * 0.4 + Math.random() * 3);
+
+            // Update metric displays with pop animation
+            const matthewEl = document.getElementById('metric-matthew');
+            const giniEl = document.getElementById('metric-gini');
+            const agentsEl = document.getElementById('metric-agents');
+
+            if (matthewEl) { matthewEl.textContent = Math.max(0.1, matthew).toFixed(2); matthewEl.classList.add('pop'); setTimeout(() => matthewEl.classList.remove('pop'), 300); }
+            if (giniEl) { giniEl.textContent = Math.max(0.2, Math.min(0.6, gini)).toFixed(2); giniEl.classList.add('pop'); setTimeout(() => giniEl.classList.remove('pop'), 300); }
+            if (agentsEl) { agentsEl.textContent = Math.floor(agents); agentsEl.classList.add('pop'); setTimeout(() => agentsEl.classList.remove('pop'), 300); }
+
+            // Animate nodes
+            if (selectedMode !== 'headless') {
+                simNodes.forEach((node, i) => {
+                    let x = parseFloat(node.dataset.x) + parseFloat(node.dataset.vx);
+                    let y = parseFloat(node.dataset.y) + parseFloat(node.dataset.vy);
+
+                    // Bounce off walls
+                    if (x < 5 || x > 90) { node.dataset.vx = -parseFloat(node.dataset.vx); x = Math.max(5, Math.min(90, x)); }
+                    if (y < 5 || y > 85) { node.dataset.vy = -parseFloat(node.dataset.vy); y = Math.max(5, Math.min(85, y)); }
+
+                    // Random perturbation
+                    x += (Math.random() - 0.5) * 0.5;
+                    y += (Math.random() - 0.5) * 0.5;
+
+                    node.dataset.x = x;
+                    node.dataset.y = y;
+                    node.style.left = x + '%';
+                    node.style.top = y + '%';
+
+                    // Occasional pulse on random nodes
+                    if (Math.random() < 0.05) {
+                        node.classList.add('pulsing');
+                        setTimeout(() => node.classList.remove('pulsing'), 1200);
+                    }
+                });
+
+                // Update edges
+                simEdges.forEach(edge => {
+                    updateEdge(edge.el, simNodes[edge.from], simNodes[edge.to]);
+                    // Randomly activate edges
+                    if (Math.random() < 0.08) {
+                        edge.el.classList.add('active');
+                        edge.el.style.background = 'var(--sky)';
+                        setTimeout(() => { edge.el.classList.remove('active'); edge.el.style.background = ''; }, 800);
+                    }
+                });
+
+                // Spawn transaction particles
+                if (Math.random() < 0.15) {
+                    spawnTransaction();
+                }
+            }
+
+            // Random events
+            if (Math.random() < 0.2) {
+                const events = [
+                    { icon: '🌱', desc: '新节点加入生态' },
+                    { icon: '🔗', desc: '编排关系建立' },
+                    { icon: '💰', desc: '版税分配完成' },
+                    { icon: '📈', desc: '势位更新' },
+                    { icon: '🔥', desc: '热门 Skill 涌现' }
+                ];
+                const ev = events[Math.floor(Math.random() * events.length)];
+                addEventLog(ev.icon, ev.desc);
+            }
+
+            // Compare mode: update diff panel
+            if (selectedMode === 'compare') {
+                updateDiffPanel();
+            }
+
+            updateTimeDisplay();
+        }
+
+        function spawnTransaction() {
+            const container = document.getElementById('networkGraph');
+            if (!container) return;
+            const particle = document.createElement('div');
+            particle.className = 'transaction-particle';
+            const startNode = simNodes[Math.floor(Math.random() * simNodes.length)];
+            const endNode = simNodes[Math.floor(Math.random() * simNodes.length)];
+            if (startNode === endNode) return;
+
+            const x1 = parseFloat(startNode.style.left), y1 = parseFloat(startNode.style.top);
+            const x2 = parseFloat(endNode.style.left), y2 = parseFloat(endNode.style.top);
+
+            particle.style.left = x1 + '%';
+            particle.style.top = y1 + '%';
+            container.appendChild(particle);
+
+            // Animate along edge
+            particle.animate([
+                { left: x1 + '%', top: y1 + '%', opacity: 1 },
+                { left: x2 + '%', top: y2 + '%', opacity: 0 }
+            ], { duration: 800, easing: 'ease-out' }).onfinish = () => particle.remove();
+        }
+
+        function addEventLog(icon, desc) {
+            const log = document.getElementById('eventLogContent');
+            if (!log) return;
+            const item = document.createElement('div');
+            item.className = 'event-item';
+            item.innerHTML = `<span class="event-icon">${icon}</span><span class="event-time">T=${currentTime}</span><span class="event-desc">${desc}</span>`;
+            log.insertBefore(item, log.firstChild);
+            if (log.children.length > 20) log.lastChild.remove();
+        }
+
+        // ===== Compare Mode =====
+        function initCompareGraphs() {
+            const a = document.getElementById('compareA');
+            const b = document.getElementById('compareB');
+            a.innerHTML = '';
+            b.innerHTML = '';
+
+            // Generate two different network states
+            for (let panel of [a, b]) {
+                const isB = panel === b;
+                for (let i = 0; i < 25; i++) {
+                    const node = document.createElement('div');
+                    node.style.cssText = `position:absolute;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:500;transition:all 0.5s;`;
+                    node.style.left = (8 + (i % 5) * 18) + '%';
+                    node.style.top = (8 + Math.floor(i / 5) * 18) + '%';
+
+                    // B panel has different distribution
+                    const size = isB ? 20 + Math.random() * 30 : 16 + Math.random() * 24;
+                    node.style.width = size + 'px';
+                    node.style.height = size + 'px';
+
+                    if (i < 3) node.style.background = 'var(--cinnabar)';
+                    else if (i < 12) node.style.background = 'var(--sky)';
+                    else node.style.background = 'var(--gold)';
+
+                    node.textContent = i + 1;
+                    panel.appendChild(node);
+                }
+            }
+        }
+
+        function initDiffHeatmap() {
+            const container = document.getElementById('diffHeatmap');
+            container.innerHTML = '';
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'diff-heatmap-cell';
+                cell.dataset.idx = i;
+                updateHeatmapCell(cell, 0);
+                container.appendChild(cell);
+            }
+        }
+
+        function updateHeatmapCell(cell, time) {
+            const idx = parseInt(cell.dataset.idx);
+            // Simulate evolving difference
+            const val = 0.3 + Math.sin(time / 20 + idx) * 0.3 + (Math.random() - 0.5) * 0.2;
+            if (val < 0.35) cell.style.background = 'var(--sky)';
+            else if (val > 0.65) cell.style.background = 'var(--cinnabar)';
+            else cell.style.background = 'var(--border)';
+        }
+
+        function updateDiffPanel() {
+            const progress = currentTime / maxTime;
+            const noise = () => (Math.random() - 0.5) * 0.03;
+
+            // A metrics
+            const giniA = 0.42 - progress * 0.08 + noise();
+            const matthewA = 0.35 - progress * 0.13 + noise();
+            const shannonA = 2.0 + progress * 1.5 + noise() * 2;
+
+            // B metrics (slightly different)
+            const giniB = 0.38 - progress * 0.12 + noise();
+            const matthewB = 0.30 - progress * 0.15 + noise();
+            const shannonB = 2.5 + progress * 1.2 + noise() * 2;
+
+            // Update diff values
+            const giniDiff = giniB - giniA;
+            const matthewDiff = matthewB - matthewA;
+            const shannonDiff = shannonB - shannonA;
+
+            document.getElementById('diff-gini').textContent = giniB.toFixed(2);
+            document.getElementById('diff-matthew').textContent = matthewB.toFixed(2);
+            document.getElementById('diff-shannon').textContent = shannonB.toFixed(2);
+            document.getElementById('diff-agents').textContent = Math.floor(20 + currentTime * 0.4);
+
+            document.getElementById('diff-gini-delta').textContent = (giniDiff >= 0 ? '+' : '') + giniDiff.toFixed(2);
+            document.getElementById('diff-gini-delta').className = 'diff-value ' + (giniDiff > 0.01 ? 'positive' : (giniDiff < -0.01 ? 'negative' : 'neutral'));
+
+            document.getElementById('diff-matthew-delta').textContent = (matthewDiff >= 0 ? '+' : '') + matthewDiff.toFixed(2);
+            document.getElementById('diff-matthew-delta').className = 'diff-value ' + (matthewDiff > 0.01 ? 'positive' : (matthewDiff < -0.01 ? 'negative' : 'neutral'));
+
+            document.getElementById('diff-shannon-delta').textContent = (shannonDiff >= 0 ? '+' : '') + shannonDiff.toFixed(2);
+            document.getElementById('diff-shannon-delta').className = 'diff-value ' + (shannonDiff > 0.1 ? 'positive' : (shannonDiff < -0.1 ? 'negative' : 'neutral'));
+
+            // Update bars
+            const aStrength = Math.min(100, Math.max(10, 50 + giniDiff * 500));
+            const bStrength = Math.min(100, Math.max(10, 50 - giniDiff * 500));
+            document.getElementById('bar-a').style.width = aStrength + '%';
+            document.getElementById('bar-b').style.width = bStrength + '%';
+
+            // Update heatmap
+            document.querySelectorAll('.diff-heatmap-cell').forEach(cell => updateHeatmapCell(cell, currentTime));
+
+            // Add diff events
+            if (Math.random() < 0.15) {
+                const diffEvents = document.getElementById('diffEvents');
+                const eventType = Math.random() < 0.5 ? 'A' : 'B';
+                const icons = { A: '🔥', B: '⚡' };
+                const descs = { A: '降档 ×' + Math.floor(Math.random()*3+1), B: '分叉 ×' + Math.floor(Math.random()*2+1) };
+                const item = document.createElement('div');
+                item.className = 'event-item';
+                item.innerHTML = `<span class="event-icon">${icons[eventType]}</span><span class="event-desc">T=${currentTime} ${eventType}${descs[eventType]}</span><span style="color:${eventType==='A'?'var(--cinnabar)':'var(--sky)'};font-size:11px;">${eventType==='A'?'B无':'A无'}</span>`;
+                diffEvents.insertBefore(item, diffEvents.firstChild);
+                if (diffEvents.children.length > 10) diffEvents.lastChild.remove();
+            }
+        }
+
+        // ===== Headless Mode =====
+        function startHeadlessProgress() {
+            batchProgress = 0;
+            const list = document.getElementById('batchList');
+            list.innerHTML = '';
+            const total = 100;
+
+            for (let i = 1; i <= total; i++) {
+                const item = document.createElement('div');
+                item.className = 'batch-item';
+                item.id = 'batch-' + i;
+                item.innerHTML = `<span>实验 #${i}</span><span>等待中</span>`;
+                list.appendChild(item);
+            }
+
+            const circumference = 389.557;
+            const circle = document.getElementById('progressCircle');
+            const pctText = document.getElementById('progressPct');
+            const doneText = document.getElementById('batchDone');
+            const avgText = document.getElementById('batchAvgGini');
+            const stdText = document.getElementById('batchStd');
+
+            let currentBatch = 0;
+            const results = [];
+
+            const interval = setInterval(() => {
+                currentBatch++;
+                if (currentBatch > total) { clearInterval(interval); return; }
+
+                // Mark previous as done
+                if (currentBatch > 1) {
+                    const prev = document.getElementById('batch-' + (currentBatch - 1));
+                    if (prev) { prev.className = 'batch-item done'; prev.querySelector('span:last-child').textContent = '✅ Gini=' + (0.35 + Math.random()*0.08).toFixed(2); }
+                }
+
+                // Mark current as running
+                const curr = document.getElementById('batch-' + currentBatch);
+                if (curr) { curr.className = 'batch-item running'; curr.querySelector('span:last-child').textContent = '运行中...'; }
+
+                // Update stats
+                const gini = 0.35 + Math.random() * 0.08;
+                results.push(gini);
+                const avg = results.reduce((a,b) => a+b, 0) / results.length;
+                const variance = results.reduce((sum, v) => sum + (v - avg)**2, 0) / results.length;
+                const std = Math.sqrt(variance);
+
+                const pct = (currentBatch / total) * 100;
+                const offset = circumference - (pct / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+                pctText.textContent = Math.floor(pct) + '%';
+                doneText.textContent = currentBatch;
+                avgText.textContent = avg.toFixed(3);
+                stdText.textContent = '±' + std.toFixed(3);
+
+            }, 200);
+        }
+
+        // ===== Player Controls =====
+        function togglePlay() {
+            const btn = document.getElementById('playBtn');
+            isPlaying = !isPlaying;
+            btn.textContent = isPlaying ? '⏸' : '▶';
+            if (isPlaying) {
+                playInterval = setInterval(() => {
+                    runSimulationStep();
+                }, 1000 / parseFloat(document.getElementById('speedSelect').value));
+            } else {
+                clearInterval(playInterval);
+            }
+        }
+
+        function stepBack() {
+            if (currentTime > 0) {
+                currentTime--;
+                updateTimeDisplay();
+            }
+        }
+
+        function stepForward() {
+            if (currentTime < maxTime) {
+                runSimulationStep();
+            }
+        }
+
+        function seekTime(t) {
+            currentTime = parseInt(t);
+            updateTimeDisplay();
+        }
+
+        function resetSim() {
+            currentTime = 0;
+            isPlaying = false;
+            document.getElementById('playBtn').textContent = '▶';
+            clearInterval(playInterval);
+            updateTimeDisplay();
+            // Reset metrics
+            document.getElementById('metric-matthew').textContent = '0.22';
+            document.getElementById('metric-gini').textContent = '0.37';
+            document.getElementById('metric-agents').textContent = '23';
+            document.getElementById('eventLogContent').innerHTML = '<div class="event-item"><span class="event-icon">🌱</span><span class="event-time">T=0</span><span class="event-desc">系统初始化完成</span></div>';
+        }
+
+        function updateTimeDisplay() {
+            document.getElementById('timeSlider').value = currentTime;
+            document.getElementById('timeDisplay').textContent = 'T=' + currentTime + '/' + maxTime;
+            const ct = document.getElementById('compareTime');
+            if (ct) ct.textContent = currentTime;
+        }
+
+        function setView(view) {
+            currentView = view;
+            document.querySelectorAll('.canvas-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            const canvas = document.getElementById('canvasView');
+            if (view === 'network') {
+                canvas.innerHTML = '<div class="network-graph" id="networkGraph"></div>';
+                initNetworkGraph();
+            } else if (view === 'domain') {
+                canvas.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink-faint);">中观领域视图<br>按 Skill 分类分组的柱状图<br><br>节点按领域聚类，颜色区分领域</div>';
+            } else {
+                canvas.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink-faint);">微观个体视图<br>单个 Agent 的第一人称决策链<br><br>选中节点后显示其势位、收益、连接详情</div>';
+            }
+        }
+
+        function injectEvent() {
+            const types = [
+                { icon: '⚡', desc: '分叉：创作者降档，下游选择离开' },
+                { icon: '🔥', desc: '降档：热门 Skill 势位崩塌' },
+                { icon: '🌱', desc: '新节点：新创作者加入生态' },
+                { icon: '📢', desc: '治理提案：社区发起参数调整' },
+                { icon: '💥', desc: '黑天鹅：外部冲击，全部节点重排' }
+            ];
+            const type = types[Math.floor(Math.random() * types.length)];
+            addEventLog(type.icon, type.desc);
+
+            // Visual effect
+            const container = document.getElementById('networkGraph');
+            if (container) {
+                const nodes = container.querySelectorAll('.graph-node');
+                if (nodes.length > 0) {
+                    const node = nodes[Math.floor(Math.random() * nodes.length)];
+                    node.classList.add('highlight');
+                    setTimeout(() => node.classList.remove('highlight'), 2000);
+
+                    const pulse = document.createElement('div');
+                    pulse.className = 'pulse-ring';
+                    pulse.style.width = '80px';
+                    pulse.style.height = '80px';
+                    pulse.style.left = (parseFloat(node.style.left) - 2) + '%';
+                    pulse.style.top = (parseFloat(node.style.top) - 2) + '%';
+                    container.appendChild(pulse);
+                    setTimeout(() => pulse.remove(), 1500);
+                }
+            }
+        }
+
+        // ===== Init =====
+        window.addEventListener('load', () => {
+            updateStepNav();
+            showStep(0);
+            updateRoleRatio();
+        });
+    </script>
+</body>
+</html>
