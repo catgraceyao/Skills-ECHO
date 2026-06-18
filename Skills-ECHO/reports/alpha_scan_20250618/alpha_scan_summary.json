@@ -1,0 +1,502 @@
+{
+  "2.0": {
+    "seeds": [
+      {
+        "seed": 1,
+        "gini_final": 0.15207780406890348,
+        "matthew_final": 4.674885292961434,
+        "shannon_final": 6.161744066017379,
+        "gini_stability": 0.008795487719279651,
+        "matthew_stability": 0.206195333135843,
+        "shannon_stability": 0.0038997295998002435
+      },
+      {
+        "seed": 2,
+        "gini_final": 0.17013631902000714,
+        "matthew_final": 7.891700839534939,
+        "shannon_final": 6.132954799547944,
+        "gini_stability": 0.010162452285164878,
+        "matthew_stability": 0.3815945781945106,
+        "shannon_stability": 0.005966323635729188
+      },
+      {
+        "seed": 3,
+        "gini_final": 0.1280069216656563,
+        "matthew_final": 3.7490923670996437,
+        "shannon_final": 6.179150887663379,
+        "gini_stability": 0.0073353086504588825,
+        "matthew_stability": 0.14917711134584774,
+        "shannon_stability": 0.0026218558197243394
+      },
+      {
+        "seed": 4,
+        "gini_final": 0.1838897566675992,
+        "matthew_final": 10.50137879431707,
+        "shannon_final": 6.110915781041133,
+        "gini_stability": 0.011079572950189503,
+        "matthew_stability": 0.5214160227196143,
+        "shannon_stability": 0.007560884329852867
+      },
+      {
+        "seed": 5,
+        "gini_final": 0.1416750077711677,
+        "matthew_final": 3.5256633895176623,
+        "shannon_final": 6.171045030429953,
+        "gini_stability": 0.008130033011433814,
+        "matthew_stability": 0.1378907778820585,
+        "shannon_stability": 0.0032034642752640542
+      },
+      {
+        "seed": 6,
+        "gini_final": 0.1607315207888369,
+        "matthew_final": 7.723569499745555,
+        "shannon_final": 6.14849682518963,
+        "gini_stability": 0.00961620901169351,
+        "matthew_stability": 0.3723055822062265,
+        "shannon_stability": 0.0048917104847261165
+      },
+      {
+        "seed": 7,
+        "gini_final": 0.1671043280582849,
+        "matthew_final": 5.995012450897579,
+        "shannon_final": 6.1458467773056284,
+        "gini_stability": 0.009920912277202284,
+        "matthew_stability": 0.27301537020950706,
+        "shannon_stability": 0.0050472621301659625
+      },
+      {
+        "seed": 8,
+        "gini_final": 0.19058724272374228,
+        "matthew_final": 18.424167427307054,
+        "shannon_final": 6.07881296829458,
+        "gini_stability": 0.011670829796603034,
+        "matthew_stability": 0.965822898689141,
+        "shannon_stability": 0.009827663296182811
+      },
+      {
+        "seed": 9,
+        "gini_final": 0.13586980880781896,
+        "matthew_final": 4.007414536952672,
+        "shannon_final": 6.173054263805549,
+        "gini_stability": 0.007826677292720905,
+        "matthew_stability": 0.1649370626755161,
+        "shannon_stability": 0.0030543421164511563
+      },
+      {
+        "seed": 10,
+        "gini_final": 0.20641864733565796,
+        "matthew_final": 11.546325575526767,
+        "shannon_final": 6.088042967244506,
+        "gini_stability": 0.012470624978246466,
+        "matthew_stability": 0.5827863415540488,
+        "shannon_stability": 0.00915407084634466
+      }
+    ],
+    "gini_mean": 0.1636497356907675,
+    "gini_std": 0.023845180404772563,
+    "matthew_mean": 7.8039210173860365,
+    "matthew_std": 4.430657578084011,
+    "shannon_mean": 6.139006436653967,
+    "shannon_std": 0.03390781117588338
+  },
+  "2.5": {
+    "seeds": [
+      {
+        "seed": 1,
+        "gini_final": 0.11382470434337444,
+        "matthew_final": 3.264779926479656,
+        "shannon_final": 6.186140184482535,
+        "gini_stability": 0.006483990108883495,
+        "matthew_stability": 0.12847028580356448,
+        "shannon_stability": 0.002107376257563501
+      },
+      {
+        "seed": 2,
+        "gini_final": 0.12229140578673325,
+        "matthew_final": 4.931272243456523,
+        "shannon_final": 6.174809243304109,
+        "gini_stability": 0.007183083884850874,
+        "matthew_stability": 0.21791207375406252,
+        "shannon_stability": 0.002934774288781968
+      },
+      {
+        "seed": 3,
+        "gini_final": 0.09705195524575871,
+        "matthew_final": 2.7428786885092484,
+        "shannon_final": 6.194875281524367,
+        "gini_stability": 0.005487408191080709,
+        "matthew_stability": 0.09428649688272661,
+        "shannon_stability": 0.0014623113026142856
+      },
+      {
+        "seed": 4,
+        "gini_final": 0.1281661995748753,
+        "matthew_final": 6.174546098712831,
+        "shannon_final": 6.1670527775850745,
+        "gini_stability": 0.007545763677372129,
+        "matthew_stability": 0.2838060260573614,
+        "shannon_stability": 0.0034944064371048122
+      },
+      {
+        "seed": 5,
+        "gini_final": 0.10746976307494727,
+        "matthew_final": 2.6497968820674145,
+        "shannon_final": 6.190488254450766,
+        "gini_stability": 0.006080228623292628,
+        "matthew_stability": 0.08970874532499454,
+        "shannon_stability": 0.0017765756764555147
+      },
+      {
+        "seed": 6,
+        "gini_final": 0.1175101618629053,
+        "matthew_final": 4.822791615175152,
+        "shannon_final": 6.181474996433234,
+        "gini_stability": 0.006910359610359684,
+        "matthew_stability": 0.21131424165254256,
+        "shannon_stability": 0.0024678573508247715
+      },
+      {
+        "seed": 7,
+        "gini_final": 0.1227707660705446,
+        "matthew_final": 3.9574542312662753,
+        "shannon_final": 6.179258837464982,
+        "gini_stability": 0.007178567250953663,
+        "matthew_stability": 0.16018244475324378,
+        "shannon_stability": 0.002606592201545247
+      },
+      {
+        "seed": 8,
+        "gini_final": 0.1283092168110076,
+        "matthew_final": 9.513737965161644,
+        "shannon_final": 6.160058245508528,
+        "gini_stability": 0.007646933554783786,
+        "matthew_stability": 0.47078782637598715,
+        "shannon_stability": 0.00397958241991449
+      },
+      {
+        "seed": 9,
+        "gini_final": 0.10208557626391923,
+        "matthew_final": 2.909526272131216,
+        "shannon_final": 6.192060035978252,
+        "gini_stability": 0.00578313751790672,
+        "matthew_stability": 0.10452344409923207,
+        "shannon_stability": 0.001659137924328206
+      },
+      {
+        "seed": 10,
+        "gini_final": 0.14361810602962932,
+        "matthew_final": 6.68489928750298,
+        "shannon_final": 6.156563233553067,
+        "gini_stability": 0.008483325240833384,
+        "matthew_stability": 0.3138837280265654,
+        "shannon_stability": 0.0042320928487593655
+      }
+    ],
+    "gini_mean": 0.1183097855063695,
+    "gini_std": 0.0131407153927035,
+    "matthew_mean": 4.7651683210462945,
+    "matthew_std": 2.0775698257249657,
+    "shannon_mean": 6.178278109028492,
+    "shannon_std": 0.012763345107599812
+  },
+  "3.0": {
+    "seeds": [
+      {
+        "seed": 1,
+        "gini_final": 0.090835943645168,
+        "matthew_final": 2.5786122058804697,
+        "shannon_final": 6.197000787168246,
+        "gini_stability": 0.005117853757111299,
+        "matthew_stability": 0.09088786234103109,
+        "shannon_stability": 0.0013050324978904687
+      },
+      {
+        "seed": 2,
+        "gini_final": 0.09540054969575995,
+        "matthew_final": 3.611578561485716,
+        "shannon_final": 6.191514837375626,
+        "gini_stability": 0.005538917015517489,
+        "matthew_stability": 0.14492878438035028,
+        "shannon_stability": 0.0017117419873215632
+      },
+      {
+        "seed": 3,
+        "gini_final": 0.0780429723434517,
+        "matthew_final": 2.2438470053299975,
+        "shannon_final": 6.202129749733948,
+        "gini_stability": 0.004368796530722366,
+        "matthew_stability": 0.06722598061476096,
+        "shannon_stability": 0.000925409646649217
+      },
+      {
+        "seed": 4,
+        "gini_final": 0.09829649594363721,
+        "matthew_final": 4.31928709283321,
+        "shannon_final": 6.18808407970781,
+        "gini_stability": 0.00569790265929622,
+        "matthew_stability": 0.18145922579576224,
+        "shannon_stability": 0.001958174071104733
+      },
+      {
+        "seed": 5,
+        "gini_final": 0.08652476855753855,
+        "matthew_final": 2.200225143314554,
+        "shannon_final": 6.19939845898485,
+        "gini_stability": 0.004843221689290647,
+        "matthew_stability": 0.06506386361825489,
+        "shannon_stability": 0.001119749890270615
+      },
+      {
+        "seed": 6,
+        "gini_final": 0.09267479363995124,
+        "matthew_final": 3.5405979773894147,
+        "shannon_final": 6.194916892418892,
+        "gini_stability": 0.0053864998160380135,
+        "matthew_stability": 0.1401620600013931,
+        "shannon_stability": 0.0014715069024645627
+      },
+      {
+        "seed": 7,
+        "gini_final": 0.09688164194306093,
+        "matthew_final": 3.0121835920743174,
+        "shannon_final": 6.1933640192736155,
+        "gini_stability": 0.005602560556109484,
+        "matthew_stability": 0.10799660874641731,
+        "shannon_stability": 0.0015688059657807452
+      },
+      {
+        "seed": 8,
+        "gini_final": 0.09699668343668288,
+        "matthew_final": 6.087457575803501,
+        "shannon_final": 6.186354305132724,
+        "gini_stability": 0.005681399029252647,
+        "matthew_stability": 0.2805959184991244,
+        "shannon_stability": 0.0020731312212321847
+      },
+      {
+        "seed": 9,
+        "gini_final": 0.08175116465831644,
+        "matthew_final": 2.3644031028764076,
+        "shannon_final": 6.2005638764893956,
+        "gini_stability": 0.004573165728735414,
+        "matthew_stability": 0.07461110142199096,
+        "shannon_stability": 0.0010323992694341497
+      },
+      {
+        "seed": 10,
+        "gini_final": 0.10968991497380531,
+        "matthew_final": 4.609860552105794,
+        "shannon_final": 6.182351591559405,
+        "gini_stability": 0.006381003496794188,
+        "matthew_stability": 0.19909804842949494,
+        "shannon_stability": 0.0023641955078941694
+      }
+    ],
+    "gini_mean": 0.09270949288373723,
+    "gini_std": 0.008599604310413518,
+    "matthew_mean": 3.456805280909338,
+    "matthew_std": 1.1931988215551301,
+    "shannon_mean": 6.1935678597844515,
+    "shannon_std": 0.00618077111090226
+  },
+  "3.5": {
+    "seeds": [
+      {
+        "seed": 1,
+        "gini_final": 0.07555635978379827,
+        "matthew_final": 2.1882855413308895,
+        "shannon_final": 6.202692226646548,
+        "gini_stability": 0.004220384090963363,
+        "matthew_stability": 0.06969272618770209,
+        "shannon_stability": 0.0008833530619916612
+      },
+      {
+        "seed": 2,
+        "gini_final": 0.07825804792049174,
+        "matthew_final": 2.906516941458542,
+        "shannon_final": 6.199636363150973,
+        "gini_stability": 0.004504129050416192,
+        "matthew_stability": 0.10597673200733489,
+        "shannon_stability": 0.0011129296245217957
+      },
+      {
+        "seed": 3,
+        "gini_final": 0.0652252730258367,
+        "matthew_final": 1.9548764052334482,
+        "shannon_final": 6.20603201556462,
+        "gini_stability": 0.003622391678504831,
+        "matthew_stability": 0.05168125927686567,
+        "shannon_stability": 0.000636205859162943
+      },
+      {
+        "seed": 4,
+        "gini_final": 0.07983480429351664,
+        "matthew_final": 3.3605108102836683,
+        "shannon_final": 6.197858323921421,
+        "gini_stability": 0.004576659504359981,
+        "matthew_stability": 0.12852788990070715,
+        "shannon_stability": 0.0012399173717928928
+      },
+      {
+        "seed": 5,
+        "gini_final": 0.07241505514872104,
+        "matthew_final": 1.9344447945959158,
+        "shannon_final": 6.204167331240997,
+        "gini_stability": 0.004018021333721299,
+        "matthew_stability": 0.05061636963451535,
+        "shannon_stability": 0.0007675600347241784
+      },
+      {
+        "seed": 6,
+        "gini_final": 0.07658923946418472,
+        "matthew_final": 2.856993559027732,
+        "shannon_final": 6.201598074846526,
+        "gini_stability": 0.004413147862483307,
+        "matthew_stability": 0.10228296623474802,
+        "shannon_stability": 0.000973769200160923
+      },
+      {
+        "seed": 7,
+        "gini_final": 0.0799984973242871,
+        "matthew_final": 2.49274346165515,
+        "shannon_final": 6.200498122756958,
+        "gini_stability": 0.004586329259615354,
+        "matthew_stability": 0.07943484943344942,
+        "shannon_stability": 0.0010417616006424817
+      },
+      {
+        "seed": 8,
+        "gini_final": 0.0782278822779221,
+        "matthew_final": 4.447932606387127,
+        "shannon_final": 6.197520153184008,
+        "gini_stability": 0.004525787978378262,
+        "matthew_stability": 0.18968940901075673,
+        "shannon_stability": 0.0012579840877208427
+      },
+      {
+        "seed": 9,
+        "gini_final": 0.06820113477500356,
+        "matthew_final": 2.048876373875472,
+        "shannon_final": 6.205046052905268,
+        "gini_stability": 0.003775954731636954,
+        "matthew_stability": 0.05738314256371839,
+        "shannon_stability": 0.0007015122410201874
+      },
+      {
+        "seed": 10,
+        "gini_final": 0.08871666878438833,
+        "matthew_final": 3.545049919515124,
+        "shannon_final": 6.1943246811323585,
+        "gini_stability": 0.005103364618122625,
+        "matthew_stability": 0.14024346431101167,
+        "shannon_stability": 0.0014911027070522507
+      }
+    ],
+    "gini_mean": 0.07630229627981502,
+    "gini_std": 0.006259941443664426,
+    "matthew_mean": 2.7736230413363065,
+    "matthew_std": 0.780307495566286,
+    "shannon_mean": 6.200937334534967,
+    "shannon_std": 0.003515060419659178
+  },
+  "4.0": {
+    "seeds": [
+      {
+        "seed": 1,
+        "gini_final": 0.06468164740975357,
+        "matthew_final": 1.9416511881299823,
+        "shannon_final": 6.206023908953233,
+        "gini_stability": 0.0035872046315080235,
+        "matthew_stability": 0.05642074642703859,
+        "shannon_stability": 0.0006361774820699491
+      },
+      {
+        "seed": 2,
+        "gini_final": 0.06638339309567853,
+        "matthew_final": 2.481009970173626,
+        "shannon_final": 6.204145073254902,
+        "gini_stability": 0.0037938197210325903,
+        "matthew_stability": 0.0825332878553076,
+        "shannon_stability": 0.000779002477324163
+      },
+      {
+        "seed": 3,
+        "gini_final": 0.05601002274130873,
+        "matthew_final": 1.7695152467024238,
+        "shannon_final": 6.208360710817897,
+        "gini_stability": 0.003090136211648661,
+        "matthew_stability": 0.04181053754073511,
+        "shannon_stability": 0.00046357394348035
+      },
+      {
+        "seed": 4,
+        "gini_final": 0.06729864271158936,
+        "matthew_final": 2.797285906879385,
+        "shannon_final": 6.203113301249912,
+        "gini_stability": 0.0038256348151081373,
+        "matthew_stability": 0.09747729144244198,
+        "shannon_stability": 0.0008522179786703007
+      },
+      {
+        "seed": 5,
+        "gini_final": 0.062275405669441675,
+        "matthew_final": 1.7615802302300112,
+        "shannon_final": 6.207003405165651,
+        "gini_stability": 0.0034292686709432576,
+        "matthew_stability": 0.04131169682784724,
+        "shannon_stability": 0.0005580304590824792
+      },
+      {
+        "seed": 6,
+        "gini_final": 0.06532268333035729,
+        "matthew_final": 2.44455885399199,
+        "shannon_final": 6.205378158168286,
+        "gini_stability": 0.0037381915833651193,
+        "matthew_stability": 0.07949605735239279,
+        "shannon_stability": 0.0006913437769575264
+      },
+      {
+        "seed": 7,
+        "gini_final": 0.06814069599566519,
+        "matthew_final": 2.1728843167565857,
+        "shannon_final": 6.204572537100158,
+        "gini_stability": 0.0038786411352576293,
+        "matthew_stability": 0.061941618597349576,
+        "shannon_stability": 0.0007401427982300767
+      },
+      {
+        "seed": 8,
+        "gini_final": 0.06568545956106431,
+        "matthew_final": 3.5373728581889923,
+        "shannon_final": 6.203190943437133,
+        "gini_stability": 0.0037637914451165576,
+        "matthew_stability": 0.13927760301118994,
+        "shannon_stability": 0.0008417699861177681
+      },
+      {
+        "seed": 9,
+        "gini_final": 0.05853550647220218,
+        "matthew_final": 1.8466012771183524,
+        "shannon_final": 6.207683557993009,
+        "gini_stability": 0.0032118021650956925,
+        "matthew_stability": 0.04641628606609751,
+        "shannon_stability": 0.0005067458960875422
+      },
+      {
+        "seed": 10,
+        "gini_final": 0.07451343682061684,
+        "matthew_final": 2.9238346638665065,
+        "shannon_final": 6.200745415245577,
+        "gini_stability": 0.004248988209802306,
+        "matthew_stability": 0.10596459343099303,
+        "shannon_stability": 0.0010206584962403383
+      }
+    ],
+    "gini_mean": 0.06488468938076777,
+    "gini_std": 0.0048799808454828035,
+    "matthew_mean": 2.3676294512037854,
+    "matthew_std": 0.5565008165168969,
+    "shannon_mean": 6.205021701138575,
+    "shannon_std": 0.0022258393975252266
+  }
+}
