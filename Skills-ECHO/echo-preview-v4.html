@@ -689,6 +689,8 @@ function setPowerLevel(power, level) {
     var info = POWER_DESCS[power][level];
     desc.innerHTML = '<span class="level-name">' + info.name + '</span><br>' + info.desc;
   }
+  // 重新渲染定价输入（档位变化时）
+  renderPricingInputs();
   updatePreview();
 }
 
@@ -1676,7 +1678,7 @@ function drawGraph(containerId, result, dataRounds) {
 
   var nodes = [];
   nodeMap.forEach(function(d) {
-    var r = d.type === 'creator' ? 14 : d.type === 'consumer' ? 9 : d.type === 'mediator' ? 11 : d.type === 'governance' ? 11 : Math.max(6, Math.min(18, 6 + (d.usage_count || 0) / 2));
+    var r = d.type === 'creator' ? 22 : d.type === 'consumer' ? 16 : d.type === 'mediator' ? 18 : d.type === 'governance' ? 18 : Math.max(10, Math.min(26, 10 + (d.usage_count || 0) / 2));
     var color = d.typeColor || colors[d.type] || '#999';
     nodes.push({ id: d.id, type: d.type, typeName: d.typeName, typeIcon: d.typeIcon, name: d.name, generation: d.generation, parent: d.parent, creator_id: d.creator_id, creator_name: d.creator_name, birthRound: d.birthRound, usage_count: d.usage_count || 0, derive_count: d.derive_count || 0, extend_count: d.extend_count || 0, revenue: d.revenue || 0, price: d.price || 0, balance: d.balance || 0, potential: d.potential || 0, r: r, color: color, isNew: d.birthRound === currentRound });
   });
@@ -1774,11 +1776,11 @@ function drawGraph(containerId, result, dataRounds) {
     }
   });
 
-  // 固定创作者位置
+  // 固定创作者位置（扩大轨道半径）
   var creators = nodes.filter(function(d) { return d.type === 'creator'; });
   creators.forEach(function(d, i) {
-    d.fx = width * 0.5 + Math.cos(i * Math.PI * 2 / Math.max(1, creators.length)) * 100;
-    d.fy = height * 0.5 + Math.sin(i * Math.PI * 2 / Math.max(1, creators.length)) * 70;
+    d.fx = width * 0.5 + Math.cos(i * Math.PI * 2 / Math.max(1, creators.length)) * 180;
+    d.fy = height * 0.5 + Math.sin(i * Math.PI * 2 / Math.max(1, creators.length)) * 130;
   });
 
   // --- 连线增量更新 ---
@@ -1846,8 +1848,8 @@ function drawGraph(containerId, result, dataRounds) {
       html += '<div class="tt-row"><span class="tt-label">使用次数</span><span class="tt-value">' + (d.usage_count || 0) + '</span></div>';
       html += '<div class="tt-row"><span class="tt-label">衍生次数</span><span class="tt-value">' + (d.derive_count || 0) + '</span></div>';
       html += '<div class="tt-row"><span class="tt-label">编排次数</span><span class="tt-value">' + (d.extend_count || 0) + '</span></div>';
-      html += '<div class="tt-row"><span class="tt-label">价格</span><span class="tt-value">' + (d.price || 0).toFixed(1) + ' ETH</span></div>';
-      html += '<div class="tt-row"><span class="tt-label">累计收益</span><span class="tt-value">' + (d.revenue || 0).toFixed(1) + ' ETH</span></div>';
+      html += '<div class="tt-row"><span class="tt-label">价格</span><span class="tt-value">' + (d.price || 0).toFixed(1) + ' ECHO</span></div>';
+      html += '<div class="tt-row"><span class="tt-label">累计收益</span><span class="tt-value">' + (d.revenue || 0).toFixed(1) + ' ECHO</span></div>';
       if (d.generation > 0) {
         html += '<div class="tt-row"><span class="tt-label">世代</span><span class="tt-value">第 ' + d.generation + ' 代</span></div>';
         html += '<div class="tt-row"><span class="tt-label">父节点</span><span class="tt-value">' + (d.parent || '—') + '</span></div>';
@@ -1861,6 +1863,7 @@ function drawGraph(containerId, result, dataRounds) {
     tooltip.classed('visible', false);
   });
 
+  // 主圆
   nodeEnter.append('circle')
     .attr('r', 0)
     .attr('fill', function(d) { return d.color; })
@@ -1872,14 +1875,28 @@ function drawGraph(containerId, result, dataRounds) {
     .attr('r', function(d) { return d.r; })
     .attr('opacity', 0.9);
 
+  // 图标（在圆内）
+  nodeEnter.filter(function(d) { return d.typeIcon && d.typeIcon !== ''; }).append('text')
+    .text(function(d) { return d.typeIcon; })
+    .attr('font-size', function(d) { return Math.max(10, d.r * 0.6); })
+    .attr('fill', 'white')
+    .attr('text-anchor', 'middle')
+    .attr('dy', function(d) { return d.r * 0.25; })
+    .style('pointer-events', 'none')
+    .style('font-weight', 'bold')
+    .attr('opacity', 0)
+    .transition().duration(600).ease(d3.easeCubicOut).delay(400)
+    .attr('opacity', 1);
+
   nodeEnter.filter(function(d) { return d.isNew && d.type === 'derived'; }).append('circle')
     .attr('r', 0).attr('fill', 'none').attr('stroke', '#E8A59E').attr('stroke-width', 1.5).attr('opacity', 0.6)
     .transition().duration(1500).ease(d3.easeCubicOut).delay(400)
-    .attr('r', function(d) { return d.r + 12; }).attr('opacity', 0).remove();
+    .attr('r', function(d) { return d.r + 16; }).attr('opacity', 0).remove();
 
-  nodeEnter.filter(function(d) { return d.type === 'creator' || d.type === 'derived' || (d.usage_count || 0) > 2; }).append('text')
-    .text(function(d) { return d.name; }).attr('font-size', 10).attr('fill', '#2D3436')
-    .attr('dy', function(d) { return d.r + 14; }).attr('text-anchor', 'middle').style('pointer-events', 'none')
+  // 名称标签
+  nodeEnter.filter(function(d) { return d.type !== 'skill' && d.type !== 'derived'; }).append('text')
+    .text(function(d) { return d.name; }).attr('font-size', 12).attr('fill', '#2D3436')
+    .attr('dy', function(d) { return d.r + 16; }).attr('text-anchor', 'middle').style('pointer-events', 'none')
     .attr('opacity', 0)
     .transition().duration(600).ease(d3.easeCubicOut).delay(500)
     .attr('opacity', 1);
@@ -1892,11 +1909,17 @@ function drawGraph(containerId, result, dataRounds) {
       return d.name + ' (使用 ' + (d.usage_count || 0) + ' 次' + (d.generation > 0 ? ' · 衍生' : '') + ')';
     });
 
-  // 更新现有节点半径
+  // 更新现有节点半径和颜色
   nodeSel.select('circle')
     .transition().duration(600).ease(d3.easeCubicOut)
     .attr('r', function(d) { return d.r; })
     .attr('fill', function(d) { return d.color; });
+  
+  // 更新图标大小
+  nodeSel.selectAll('text').filter(function() { return d3.select(this).text() && d3.select(this).attr('fill') === 'white'; })
+    .transition().duration(600)
+    .attr('font-size', function(d) { return Math.max(10, d.r * 0.6); })
+    .attr('dy', function(d) { return d.r * 0.25; });
 
   // 力导向模拟
   if (inst.simulation) {
@@ -1906,10 +1929,10 @@ function drawGraph(containerId, result, dataRounds) {
     inst.simulation.alpha(0.3).restart();
   } else {
     inst.simulation = d3.forceSimulation(nodes)
-      .force('link', d3.forceLink(links).id(function(d) { return d.id; }).distance(function(d) { return d.type === 'create' ? 50 : d.type === 'derive' ? 35 : 70; }))
-      .force('charge', d3.forceManyBody().strength(-120))
+      .force('link', d3.forceLink(links).id(function(d) { return d.id; }).distance(function(d) { return d.type === 'create' ? 80 : d.type === 'derive' ? 60 : 100; }))
+      .force('charge', d3.forceManyBody().strength(-200))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide().radius(function(d) { return d.r + 4; }));
+      .force('collision', d3.forceCollide().radius(function(d) { return d.r + 10; }));
 
     inst.simulation.on('tick', function() {
       nodes.forEach(function(d) { nodePositions[d.id] = { x: d.x, y: d.y }; });
