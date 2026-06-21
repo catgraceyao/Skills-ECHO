@@ -139,7 +139,36 @@
     .event-item.tag.extend { background-color: rgba(99,110,114,0.15); color: var(--ink-muted); }
     .event-item.tag.revenue { background-color: rgba(74,124,89,0.15); color: #4A7C59; }
 
-    @media (max-width: 768px) {
+    /* 图标选择器 */
+    .icon-picker { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: rgba(255,255,255,0.5); border: 1px solid var(--border-light); border-radius: 2px; max-height: 120px; overflow-y: auto; }
+    .icon-option { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-light); border-radius: 2px; cursor: pointer; font-size: 18px; transition: all 0.2s; background: white; }
+    .icon-option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .icon-option.selected { border-color: var(--accent); background: var(--accent); color: white; }
+    .agent-role-card { position: relative; }
+    .agent-role-card .role-remove { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border: 1px solid var(--cinnabar); color: var(--cinnabar); background: transparent; cursor: pointer; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 14px; opacity: 0.6; transition: all 0.2s; }
+    .agent-role-card .role-remove:hover { opacity: 1; background: var(--cinnabar); color: white; }
+    .role-icon-display { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border-light); border-radius: 50%; cursor: pointer; font-size: 20px; transition: all 0.3s; background: white; }
+    .role-icon-display:hover { border-color: var(--accent); transform: scale(1.1); }
+    .add-role-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; border: 2px dashed var(--border-light); border-radius: 2px; cursor: pointer; transition: all 0.3s; color: var(--ink-muted); font-size: 14px; }
+    .add-role-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    /* 节点详情弹窗 */
+    .node-tooltip { position: absolute; background: white; border: 1px solid var(--border-light); border-radius: 2px; padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 100; min-width: 220px; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+    .node-tooltip.visible { opacity: 1; pointer-events: auto; }
+    .node-tooltip .tt-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
+    .node-tooltip .tt-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 16px; }
+    .node-tooltip .tt-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; }
+    .node-tooltip .tt-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; }
+    .node-tooltip .tt-label { color: var(--ink-muted); }
+    .node-tooltip .tt-value { color: var(--ink); font-weight: 500; }
+    .zoom-controls { position: absolute; bottom: 12px; right: 12px; display: flex; flex-direction: column; gap: 4px; z-index: 10; }
+    .zoom-btn { width: 32px; height: 32px; border: 1px solid var(--border-light); background: rgba(255,255,255,0.9); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; border-radius: 2px; transition: all 0.2s; }
+    .zoom-btn:hover { border-color: var(--accent); background: var(--accent-light); }
+    /* 定价配置 */
+    .pricing-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .pricing-row .level-badge { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; border: 2px solid var(--border-light); flex-shrink: 0; }
+    .pricing-row .level-badge.active { background: var(--accent); border-color: var(--accent); color: white; }
+    .pricing-input { width: 80px; padding: 4px 8px; border: 1px solid var(--border-light); font-size: 13px; border-radius: 2px; }
+
       .grid-4 { grid-template-columns: 1fr 1fr; } .grid-3 { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; }
       .compare-split { grid-template-columns: 1fr; } .nav-inner { padding: 12px 16px; } .scroll-page { padding: 24px 16px; }
     }
@@ -251,305 +280,280 @@
       <p class="font-sans-sc" style="font-size: 14px; color: var(--ink-muted); margin-top: 8px;">五步向导 · 先选模式，再定参数</p>
       <div class="ink-divider-short"></div>
     </div>
-    <div class="step-wizard" id="stepWizard">
-      <div class="step-item active" data-step="0" onclick="goToStep(0)"><div class="step-num">0</div><div class="step-label">选择模式</div></div>
-      <div class="step-arrow">→</div>
-      <div class="step-item" data-step="1" onclick="goToStep(1)"><div class="step-num">1</div><div class="step-label">基础设置</div></div>
-      <div class="step-arrow">→</div>
-      <div class="step-item" data-step="2" onclick="goToStep(2)"><div class="step-num">2</div><div class="step-label">Agent</div></div>
-      <div class="step-arrow">→</div>
-      <div class="step-item" data-step="3" onclick="goToStep(3)"><div class="step-num">3</div><div class="step-label">Skill</div></div>
-      <div class="step-arrow">→</div>
-      <div class="step-item" data-step="4" onclick="goToStep(4)"><div class="step-num">4</div><div class="step-label">四权配置</div></div>
-      <div class="step-arrow">→</div>
-      <div class="step-item" data-step="5" onclick="goToStep(5)"><div class="step-num">5</div><div class="step-label">预览</div></div>
-    </div>
+    <!-- 修改后的步骤向导：移除 Step 3 Skill -->
+  <div class="step-wizard" id="stepWizard">
+    <div class="step-item active" data-step="0" onclick="goToStep(0)"><div class="step-num">0</div><div class="step-label">选择模式</div></div>
+    <div class="step-arrow">→</div>
+    <div class="step-item" data-step="1" onclick="goToStep(1)"><div class="step-num">1</div><div class="step-label">基础设置</div></div>
+    <div class="step-arrow">→</div>
+    <div class="step-item" data-step="2" onclick="goToStep(2)"><div class="step-num">2</div><div class="step-label">Agent 部署</div></div>
+    <div class="step-arrow">→</div>
+    <div class="step-item" data-step="3" onclick="goToStep(3)"><div class="step-num">3</div><div class="step-label">四权配置</div></div>
+    <div class="step-arrow">→</div>
+    <div class="step-item" data-step="4" onclick="goToStep(4)"><div class="step-num">4</div><div class="step-label">预览</div></div>
+  </div>
 
-    <!-- Step 0 -->
-    <div class="step-content active" data-step="0">
-      <div style="text-align: center; margin-bottom: 32px;">
-        <div class="font-serif-sc" style="font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 8px;">选择模拟模式</div>
-        <div class="font-sans-sc" style="font-size: 14px; color: var(--ink-muted);">模式决定推演播放器的呈现方式，配置完成后不可更改</div>
-      </div>
-      <div class="grid-3" style="margin-bottom: 32px;">
-        <div class="mode-card active" data-mode="visual" onclick="setMode('visual')">
-          <div class="mode-symbol">视</div>
-          <div class="mode-label">可视模拟</div>
-          <div class="mode-desc">观察 Skill 全生命周期<br>诞生→使用→衍生→扩展→收益<br>实时渲染网络演化</div>
-        </div>
-        <div class="mode-card" data-mode="compare" onclick="setMode('compare')">
-          <div class="mode-symbol">比</div>
-          <div class="mode-label">比较模拟</div>
-          <div class="mode-desc">不同四权配置对比<br>观察演化路径差异<br>量化生命周期变化</div>
-        </div>
-        <div class="mode-card" data-mode="headless" onclick="setMode('headless')">
-          <div class="mode-symbol">算</div>
-          <div class="mode-label">无头模式</div>
-          <div class="mode-desc">Monte Carlo 批量跑<br>统计平均 + 置信区间<br>验证假设稳定性</div>
-        </div>
-      </div>
-      <div style="text-align: right;"><button class="btn-bi" onclick="goToStep(1)">下一步 →</button></div>
+  <!-- Step 0: 选择模式 -->
+  <div class="step-content active" data-step="0">
+    <div style="text-align: center; margin-bottom: 32px;">
+      <div class="font-serif-sc" style="font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 8px;">选择模拟模式</div>
+      <div class="font-sans-sc" style="font-size: 14px; color: var(--ink-muted);">模式决定推演播放器的呈现方式，配置完成后不可更改</div>
     </div>
-
-    <!-- Step 1 -->
-    <div class="step-content" data-step="1">
-      <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 16px;">基础设置</div>
-      <div class="ink-divider-short" style="margin-bottom: 20px;"></div>
-      <div class="grid-2" style="gap: 16px;">
-        <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">实验名称</label><input class="input-paper" id="expName" value="实验 2026-06-20"></div>
-        <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">运行时长（轮）</label><input type="number" class="input-paper" id="rounds" value="200" min="10" max="1000"></div>
-        <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">步长（tick/轮）</label><input type="number" class="input-paper" id="stepSize" value="1" min="1" max="10"></div>
-        <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">随机种子</label><input type="number" class="input-paper" id="seed" value="42"></div>
+    <div class="grid-3" style="margin-bottom: 32px;">
+      <div class="mode-card active" data-mode="visual" onclick="setMode('visual')">
+        <div class="mode-symbol">视</div>
+        <div class="mode-label">可视模拟</div>
+        <div class="mode-desc">观察 Skill 全生命周期<br>诞生→使用→衍生→扩展→收益<br>实时渲染网络演化</div>
       </div>
-      <div style="margin-top: 24px; display: flex; justify-content: space-between;">
-        <button class="btn-bi outline" onclick="goToStep(0)">← 上一步</button>
-        <button class="btn-bi" onclick="goToStep(2)">下一步 →</button>
+      <div class="mode-card" data-mode="compare" onclick="setMode('compare')">
+        <div class="mode-symbol">比</div>
+        <div class="mode-label">比较模拟</div>
+        <div class="mode-desc">不同四权配置对比<br>观察演化路径差异<br>量化生命周期变化</div>
+      </div>
+      <div class="mode-card" data-mode="headless" onclick="setMode('headless')">
+        <div class="mode-symbol">算</div>
+        <div class="mode-label">无头模式</div>
+        <div class="mode-desc">Monte Carlo 批量跑<br>统计平均 + 置信区间<br>验证假设稳定性</div>
       </div>
     </div>
+    <div style="text-align: right;"><button class="btn-bi" onclick="goToStep(1)">下一步 →</button></div>
+  </div>
 
-    <!-- Step 2 -->
-    <div class="step-content" data-step="2">
-      <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px;">Agent 部署</div>
-      <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 16px;">配置每种角色类型的名称和数量</div>
-      <div class="ink-divider-short" style="margin-bottom: 20px;"></div>
-      <div class="grid-2" style="gap: 16px; margin-bottom: 24px;">
-        <div class="paper-card" style="padding: 16px; border-left: 3px solid var(--accent);">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;"><span style="font-size: 18px; color: var(--accent);">△</span><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink);">角色名称</label></div>
-          <input class="input-paper" id="creatorName" value="创作者" style="margin-bottom: 12px;">
-          <label class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); display: block; margin-bottom: 6px;">部署数量（个）</label>
-          <input type="number" class="input-paper" id="creatorCount" value="5" min="1" max="50">
-        </div>
-        <div class="paper-card" style="padding: 16px; border-left: 3px solid var(--jade);">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;"><span style="font-size: 18px; color: var(--jade);">○</span><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink);">角色名称</label></div>
-          <input class="input-paper" id="consumerName" value="消费者" style="margin-bottom: 12px;">
-          <label class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); display: block; margin-bottom: 6px;">部署数量（个）</label>
-          <input type="number" class="input-paper" id="consumerCount" value="15" min="1" max="50">
-        </div>
-        <div class="paper-card" style="padding: 16px; border-left: 3px solid var(--gold);">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;"><span style="font-size: 18px; color: var(--gold);">◇</span><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink);">角色名称</label></div>
-          <input class="input-paper" id="mediatorName" value="中介" style="margin-bottom: 12px;">
-          <label class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); display: block; margin-bottom: 6px;">部署数量（个）</label>
-          <input type="number" class="input-paper" id="mediatorCount" value="2" min="1" max="50">
-        </div>
-        <div class="paper-card" style="padding: 16px; border-left: 3px solid var(--ink-muted);">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;"><span style="font-size: 18px; color: var(--ink-muted);">□</span><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink);">角色名称</label></div>
-          <input class="input-paper" id="governanceName" value="治理" style="margin-bottom: 12px;">
-          <label class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); display: block; margin-bottom: 6px;">部署数量（个）</label>
-          <input type="number" class="input-paper" id="governanceCount" value="1" min="1" max="50">
-        </div>
-      </div>
-      <div style="margin-top: 24px; display: flex; justify-content: space-between;">
-        <button class="btn-bi outline" onclick="goToStep(1)">← 上一步</button>
-        <button class="btn-bi" onclick="goToStep(3)">下一步 →</button>
-      </div>
+  <!-- Step 1: 基础设置（增加初始 Skill 数） -->
+  <div class="step-content" data-step="1">
+    <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 16px;">基础设置</div>
+    <div class="ink-divider-short" style="margin-bottom: 20px;"></div>
+    <div class="grid-2" style="gap: 16px;">
+      <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">实验名称</label><input class="input-paper" id="expName" value="实验 2026-06-20"></div>
+      <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">运行时长（轮）</label><input type="number" class="input-paper" id="rounds" value="200" min="10" max="1000"></div>
+      <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">步长（tick/轮）</label><input type="number" class="input-paper" id="stepSize" value="1" min="1" max="10"></div>
+      <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">随机种子</label><input type="number" class="input-paper" id="seed" value="42"></div>
+      <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">初始 Skill 数</label><input type="number" class="input-paper" id="initialSkills" value="10" min="5" max="50"></div>
     </div>
-
-    <!-- Step 3 -->
-    <div class="step-content" data-step="3">
-      <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px;">Skill 市场</div>
-      <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 16px;">配置初始 Skill 资产和定价机制</div>
-      <div class="ink-divider-short" style="margin-bottom: 20px;"></div>
-      <div class="grid-2" style="gap: 16px; margin-bottom: 24px;">
-        <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">初始 Skill 数</label><input type="number" class="input-paper" id="initialSkills" value="10" min="5" max="50"></div>
-        <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">定价规则</label><select class="input-paper" id="pricingRule"><option value="fixed">固定价格</option><option value="dynamic">动态定价</option><option value="auction">拍卖</option></select></div>
-      </div>
-      <div style="margin-top: 24px; display: flex; justify-content: space-between;">
-        <button class="btn-bi outline" onclick="goToStep(2)">← 上一步</button>
-        <button class="btn-bi" onclick="goToStep(4)">下一步 →</button>
-      </div>
-    </div>
-
-    <!-- Step 4: 四权配置 -->
-    <div class="step-content" data-step="4">
-      <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px;">四权配置</div>
-      <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 16px;">Skill 所有权的四项权利，每权 0-5 级，决定资产开放程度与生命周期演化</div>
-      <div class="ink-divider-short" style="margin-bottom: 20px;"></div>
-      <div class="grid-2" style="gap: 16px; margin-bottom: 24px;">
-        <!-- 使用权 -->
-        <div class="power-card" id="power-card-use">
-          <div class="power-title">👤 使用权</div>
-          <div class="power-subtitle">什么条件下可以使用我的内容？控制传播范围 D</div>
-          <div class="power-labels"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
-          <div class="power-slider-track" id="slider-use">
-            <div class="power-dot active" onclick="setPowerLevel('use', 0)">0</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('use', 1)">1</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('use', 2)">2</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('use', 3)">3</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('use', 4)">4</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('use', 5)">5</div>
-          </div>
-          <div class="power-current" id="power-desc-use"><span class="level-name">0 禁 — 完全禁用</span><br>内容存在但不可见，D=0，无任何传播</div>
-        </div>
-        <!-- 衍生权 -->
-        <div class="power-card" id="power-card-derive">
-          <div class="power-title">🔄 衍生权</div>
-          <div class="power-subtitle">内容可以被怎样改造和再创作？</div>
-          <div class="power-labels"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
-          <div class="power-slider-track" id="slider-derive">
-            <div class="power-dot active" onclick="setPowerLevel('derive', 0)">0</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('derive', 1)">1</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('derive', 2)">2</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('derive', 3)">3</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('derive', 4)">4</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('derive', 5)">5</div>
-          </div>
-          <div class="power-current" id="power-desc-derive"><span class="level-name">0 禁 — 禁止衍生</span><br>不允许基于该 Skill 创建任何衍生作品</div>
-        </div>
-        <!-- 扩展权 -->
-        <div class="power-card" id="power-card-extend">
-          <div class="power-title">🔧 扩展权</div>
-          <div class="power-subtitle">内容可以被怎样封装使用？（原内容不变）控制方法多样性 K</div>
-          <div class="power-labels"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
-          <div class="power-slider-track" id="slider-extend">
-            <div class="power-dot active" onclick="setPowerLevel('extend', 0)">0</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('extend', 1)">1</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('extend', 2)">2</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('extend', 3)">3</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('extend', 4)">4</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('extend', 5)">5</div>
-          </div>
-          <div class="power-current" id="power-desc-extend"><span class="level-name">0 禁 — 禁止编排</span><br>不允许将内容编排进任何方法/工具/协议</div>
-        </div>
-        <!-- 收益权 -->
-        <div class="power-card" id="power-card-revenue">
-          <div class="power-title">💰 收益权</div>
-          <div class="power-subtitle">内容产生收益后，怎么分配？</div>
-          <div class="power-labels"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
-          <div class="power-slider-track" id="slider-revenue">
-            <div class="power-dot active" onclick="setPowerLevel('revenue', 0)">0</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('revenue', 1)">1</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('revenue', 2)">2</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('revenue', 3)">3</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('revenue', 4)">4</div><div class="power-dot-line"></div>
-            <div class="power-dot" onclick="setPowerLevel('revenue', 5)">5</div>
-          </div>
-          <div class="power-current" id="power-desc-revenue"><span class="level-name">0 禁 — 无收益</span><br>纯礼物经济，无直接收益，创作者零分成</div>
-        </div>
-      </div>
-      <div class="paper-card" style="padding: 16px; margin-bottom: 24px;">
-        <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); line-height: 2;">
-          <strong style="color: var(--ink);">四权与算场模型耦合：</strong><br>
-          <span style="color: var(--accent);">使用权</span> → D（扩散系数）：用权越高 → 传播越广 → 被引用越多 → 虹吸增益越大<br>
-          <span style="color: var(--accent);">扩展权</span> → K（方法多样性）：扩权越高 → 可被编排进越多方法 → 生态复杂度越高<br>
-          <span style="color: var(--accent);">衍生权</span> → 改编/分叉概率：衍权越高 → 二次创作越活跃 → 生态多样性越高<br>
-          <span style="color: var(--accent);">收益权</span> → 分配比例：益权越高 → 创作者激励越强 → 马太效应可能加剧<br><br>
-          四权独立配置：高用权+低扩权 = 开放可见但不可编排（只能看，不能集成）<br>
-          低用权+高扩权 = 私密但方法可复用（自己用，但方法开源）
-        </div>
-      </div>
-      <div id="compareOptions" class="hidden">
-        <div class="paper-card" style="padding: 16px; margin-bottom: 24px; border-color: var(--accent);">
-          <div class="font-sans-sc" style="font-size: 13px; color: var(--accent); font-weight: 500; margin-bottom: 8px;">比较模式：需要定义两套对比方案</div>
-          <div class="grid-2" style="margin-bottom: 16px;">
-            <div><label class="font-sans-sc" style="font-size: 12px; color: var(--ink); display: block; margin-bottom: 4px;">A 方案标签</label><input class="input-paper" id="aLabel" value="开放配置"></div>
-            <div><label class="font-sans-sc" style="font-size: 12px; color: var(--ink); display: block; margin-bottom: 4px;">B 方案标签</label><input class="input-paper" id="bLabel" value="封闭配置"></div>
-          </div>
-        </div>
-        <!-- B方案四权配置 -->
-        <div class="paper-card" style="padding: 16px; margin-bottom: 24px; border-color: var(--cinnabar);">
-          <div class="font-sans-sc" style="font-size: 13px; color: var(--cinnabar); font-weight: 500; margin-bottom: 12px;">B 方案 — 四权配置</div>
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-            <div class="power-card" id="power-card-b-use">
-              <div class="power-title" style="font-size: 13px;">👤 使用权（B）</div>
-              <div class="power-labels" style="font-size: 10px;"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
-              <div class="power-slider-track" id="slider-b-use">
-                <div class="power-dot active" onclick="setBPowerLevel('use', 0)">0</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('use', 1)">1</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('use', 2)">2</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('use', 3)">3</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('use', 4)">4</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('use', 5)">5</div>
-              </div>
-            </div>
-            <div class="power-card" id="power-card-b-derive">
-              <div class="power-title" style="font-size: 13px;">🔄 衍生权（B）</div>
-              <div class="power-labels" style="font-size: 10px;"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
-              <div class="power-slider-track" id="slider-b-derive">
-                <div class="power-dot active" onclick="setBPowerLevel('derive', 0)">0</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('derive', 1)">1</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('derive', 2)">2</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('derive', 3)">3</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('derive', 4)">4</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('derive', 5)">5</div>
-              </div>
-            </div>
-            <div class="power-card" id="power-card-b-extend">
-              <div class="power-title" style="font-size: 13px;">🔧 扩展权（B）</div>
-              <div class="power-labels" style="font-size: 10px;"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
-              <div class="power-slider-track" id="slider-b-extend">
-                <div class="power-dot active" onclick="setBPowerLevel('extend', 0)">0</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('extend', 1)">1</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('extend', 2)">2</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('extend', 3)">3</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('extend', 4)">4</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('extend', 5)">5</div>
-              </div>
-            </div>
-            <div class="power-card" id="power-card-b-revenue">
-              <div class="power-title" style="font-size: 13px;">💰 收益权（B）</div>
-              <div class="power-labels" style="font-size: 10px;"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
-              <div class="power-slider-track" id="slider-b-revenue">
-                <div class="power-dot active" onclick="setBPowerLevel('revenue', 0)">0</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('revenue', 1)">1</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('revenue', 2)">2</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('revenue', 3)">3</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('revenue', 4)">4</div><div class="power-dot-line"></div>
-                <div class="power-dot" onclick="setBPowerLevel('revenue', 5)">5</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="headlessOptions" class="hidden">
-        <div class="paper-card" style="padding: 16px; margin-bottom: 24px; border-color: var(--accent);">
-          <div class="font-sans-sc" style="font-size: 13px; color: var(--accent); font-weight: 500; margin-bottom: 8px;">无头模式：批量运行参数</div>
-          <div class="grid-2">
-            <div><label class="font-sans-sc" style="font-size: 12px; color: var(--ink); display: block; margin-bottom: 4px;">批量次数</label><input type="number" class="input-paper" id="batchCount" value="100" min="10" max="10000"></div>
-            <div><label class="font-sans-sc" style="font-size: 12px; color: var(--ink); display: block; margin-bottom: 4px;">置信区间</label><select class="input-paper" id="confidence"><option value="90">90%</option><option value="95" selected>95%</option><option value="99">99%</option></select></div>
-          </div>
-        </div>
-      </div>
-      <div style="margin-top: 24px; display: flex; justify-content: space-between;">
-        <button class="btn-bi outline" onclick="goToStep(3)">← 上一步</button>
-        <button class="btn-bi" onclick="goToStep(5)">下一步 →</button>
-      </div>
-    </div>
-
-    <!-- Step 5 -->
-    <div class="step-content" data-step="5">
-      <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px;">预览确认</div>
-      <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 16px;">确认实验参数，准备启动</div>
-      <div class="ink-divider-short" style="margin-bottom: 20px;"></div>
-      <div class="paper-card" style="padding: 24px; margin-bottom: 24px;">
-        <div class="grid-2" style="font-size: 14px; line-height: 2.2;">
-          <div>
-            <div><strong style="color: var(--accent);">模式：</strong><span id="previewMode">可视模拟</span></div>
-            <div><strong>名称：</strong><span id="previewName">实验 2026-06-20</span></div>
-            <div><strong>时长：</strong><span id="previewRounds">200</span> 轮</div>
-            <div><strong>种子：</strong><span id="previewSeed">42</span></div>
-          </div>
-          <div>
-            <div><strong>Agent：</strong><span id="previewCreatorName">创作者</span> <span id="previewCreator">5</span> / <span id="previewConsumerName">消费者</span> <span id="previewConsumer">15</span> / <span id="previewMediatorName">中介</span> <span id="previewMediator">2</span> / <span id="previewGovernanceName">治理</span> <span id="previewGovernance">1</span></div>
-            <div><strong>Skill：</strong><span id="previewSkills">10</span> 个初始</div>
-            <div><strong>定价：</strong><span id="previewPricing">固定价格</span></div>
-          </div>
-        </div>
-        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-light);">
-          <div class="font-serif-sc" style="font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">四权配置</div>
-          <div class="grid-4" style="font-size: 13px; line-height: 2; gap: 12px;">
-            <div><strong style="color: var(--accent);">使用权</strong> <span id="previewUsePower">0禁</span></div>
-            <div><strong style="color: var(--accent);">衍生权</strong> <span id="previewDerivePower">0禁</span></div>
-            <div><strong style="color: var(--accent);">扩展权</strong> <span id="previewExtendPower">0禁</span></div>
-            <div><strong style="color: var(--accent);">收益权</strong> <span id="previewRevenuePower">0禁</span></div>
-          </div>
-        </div>
-      </div>
-      <div style="margin-top: 24px; display: flex; justify-content: space-between;">
-        <button class="btn-bi outline" onclick="goToStep(4)">← 上一步</button>
-        <button class="btn-bi" onclick="startSimulation()">▶ 启动模拟</button>
-      </div>
+    <div style="margin-top: 24px; display: flex; justify-content: space-between;">
+      <button class="btn-bi outline" onclick="goToStep(0)">← 上一步</button>
+      <button class="btn-bi" onclick="goToStep(2)">下一步 →</button>
     </div>
   </div>
+
+  <!-- Step 2: 动态角色部署 -->
+  <div class="step-content" data-step="2">
+    <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px;">Agent 部署</div>
+    <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 16px;">配置角色类型，点击图标可更换，可自由添加或删除角色</div>
+    <div class="ink-divider-short" style="margin-bottom: 20px;"></div>
+    <div id="agentRolesContainer" class="grid-2" style="gap: 16px; margin-bottom: 24px;">
+      <!-- 动态角色卡片由 JS 生成 -->
+    </div>
+    <div class="add-role-btn" onclick="addAgentRole()" id="addRoleBtn">
+      <span style="font-size: 20px;">+</span> 添加新角色
+    </div>
+    <div style="margin-top: 24px; display: flex; justify-content: space-between;">
+      <button class="btn-bi outline" onclick="goToStep(1)">← 上一步</button>
+      <button class="btn-bi" onclick="goToStep(3)">下一步 →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: 四权配置（含定价） -->
+  <div class="step-content" data-step="3">
+    <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px;">四权配置</div>
+    <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 16px;">Skill 所有权的四项权利，每权 0-5 级，每级对应定价策略</div>
+    <div class="ink-divider-short" style="margin-bottom: 20px;"></div>
+    <div class="grid-2" style="gap: 16px; margin-bottom: 24px;">
+      <!-- 使用权 -->
+      <div class="power-card" id="power-card-use">
+        <div class="power-title">👤 使用权</div>
+        <div class="power-subtitle">什么条件下可以使用我的内容？控制传播范围 D</div>
+        <div class="power-labels"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
+        <div class="power-slider-track" id="slider-use">
+          <div class="power-dot active" onclick="setPowerLevel('use', 0)">0</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('use', 1)">1</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('use', 2)">2</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('use', 3)">3</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('use', 4)">4</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('use', 5)">5</div>
+        </div>
+        <div class="power-current" id="power-desc-use"><span class="level-name">0 禁 — 完全禁用</span><br>内容存在但不可见，D=0，无任何传播</div>
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-light);">
+          <div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); margin-bottom: 8px;">各档定价（使用费）</div>
+          <div id="pricing-use"></div>
+        </div>
+      </div>
+      <!-- 衍生权 -->
+      <div class="power-card" id="power-card-derive">
+        <div class="power-title">🔄 衍生权</div>
+        <div class="power-subtitle">内容可以被怎样改造和再创作？</div>
+        <div class="power-labels"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
+        <div class="power-slider-track" id="slider-derive">
+          <div class="power-dot active" onclick="setPowerLevel('derive', 0)">0</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('derive', 1)">1</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('derive', 2)">2</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('derive', 3)">3</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('derive', 4)">4</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('derive', 5)">5</div>
+        </div>
+        <div class="power-current" id="power-desc-derive"><span class="level-name">0 禁 — 禁止衍生</span><br>不允许基于该 Skill 创建任何衍生作品</div>
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-light);">
+          <div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); margin-bottom: 8px;">各档定价（衍生授权费）</div>
+          <div id="pricing-derive"></div>
+        </div>
+      </div>
+      <!-- 扩展权 -->
+      <div class="power-card" id="power-card-extend">
+        <div class="power-title">🔧 扩展权</div>
+        <div class="power-subtitle">内容可以被怎样封装使用？控制方法多样性 K</div>
+        <div class="power-labels"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
+        <div class="power-slider-track" id="slider-extend">
+          <div class="power-dot active" onclick="setPowerLevel('extend', 0)">0</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('extend', 1)">1</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('extend', 2)">2</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('extend', 3)">3</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('extend', 4)">4</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('extend', 5)">5</div>
+        </div>
+        <div class="power-current" id="power-desc-extend"><span class="level-name">0 禁 — 禁止编排</span><br>不允许将内容编排进任何方法/工具/协议</div>
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-light);">
+          <div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); margin-bottom: 8px;">各档定价（编排授权费）</div>
+          <div id="pricing-extend"></div>
+        </div>
+      </div>
+      <!-- 收益权 -->
+      <div class="power-card" id="power-card-revenue">
+        <div class="power-title">💰 收益权</div>
+        <div class="power-subtitle">内容产生收益后，怎么分配？</div>
+        <div class="power-labels"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
+        <div class="power-slider-track" id="slider-revenue">
+          <div class="power-dot active" onclick="setPowerLevel('revenue', 0)">0</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('revenue', 1)">1</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('revenue', 2)">2</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('revenue', 3)">3</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('revenue', 4)">4</div><div class="power-dot-line"></div>
+          <div class="power-dot" onclick="setPowerLevel('revenue', 5)">5</div>
+        </div>
+        <div class="power-current" id="power-desc-revenue"><span class="level-name">0 禁 — 无收益</span><br>纯礼物经济，无直接收益，创作者零分成</div>
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-light);">
+          <div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); margin-bottom: 8px;">各档定价（创作者分成比例 %）</div>
+          <div id="pricing-revenue"></div>
+        </div>
+      </div>
+    </div>
+    <div class="paper-card" style="padding: 16px; margin-bottom: 24px;">
+      <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); line-height: 2;">
+        <strong style="color: var(--ink);">四权与算场模型耦合：</strong><br>
+        <span style="color: var(--accent);">使用权</span> → D（扩散系数）：用权越高 → 传播越广 → 被引用越多 → 虹吸增益越大<br>
+        <span style="color: var(--accent);">扩展权</span> → K（方法多样性）：扩权越高 → 可被编排进越多方法 → 生态复杂度越高<br>
+        <span style="color: var(--accent);">衍生权</span> → 改编/分叉概率：衍权越高 → 二次创作越活跃 → 生态多样性越高<br>
+        <span style="color: var(--accent);">收益权</span> → 分配比例：益权越高 → 创作者激励越强 → 马太效应可能加剧<br><br>
+        四权独立配置：高用权+低扩权 = 开放可见但不可编排（只能看，不能集成）<br>
+        低用权+高扩权 = 私密但方法可复用（自己用，但方法开源）
+      </div>
+    </div>
+    <div id="compareOptions" class="hidden">
+      <div class="paper-card" style="padding: 16px; margin-bottom: 24px; border-color: var(--accent);">
+        <div class="font-sans-sc" style="font-size: 13px; color: var(--accent); font-weight: 500; margin-bottom: 8px;">比较模式：需要定义两套对比方案</div>
+        <div class="grid-2" style="margin-bottom: 16px;">
+          <div><label class="font-sans-sc" style="font-size: 12px; color: var(--ink); display: block; margin-bottom: 4px;">A 方案标签</label><input class="input-paper" id="aLabel" value="开放配置"></div>
+          <div><label class="font-sans-sc" style="font-size: 12px; color: var(--ink); display: block; margin-bottom: 4px;">B 方案标签</label><input class="input-paper" id="bLabel" value="封闭配置"></div>
+        </div>
+      </div>
+      <!-- B方案四权配置 -->
+      <div class="paper-card" style="padding: 16px; margin-bottom: 24px; border-color: var(--cinnabar);">
+        <div class="font-sans-sc" style="font-size: 13px; color: var(--cinnabar); font-weight: 500; margin-bottom: 12px;">B 方案 — 四权配置</div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+          <div class="power-card" id="power-card-b-use">
+            <div class="power-title" style="font-size: 13px;">👤 使用权（B）</div>
+            <div class="power-labels" style="font-size: 10px;"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
+            <div class="power-slider-track" id="slider-b-use">
+              <div class="power-dot active" onclick="setBPowerLevel('use', 0)">0</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('use', 1)">1</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('use', 2)">2</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('use', 3)">3</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('use', 4)">4</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('use', 5)">5</div>
+            </div>
+          </div>
+          <div class="power-card" id="power-card-b-derive">
+            <div class="power-title" style="font-size: 13px;">🔄 衍生权（B）</div>
+            <div class="power-labels" style="font-size: 10px;"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
+            <div class="power-slider-track" id="slider-b-derive">
+              <div class="power-dot active" onclick="setBPowerLevel('derive', 0)">0</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('derive', 1)">1</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('derive', 2)">2</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('derive', 3)">3</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('derive', 4)">4</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('derive', 5)">5</div>
+            </div>
+          </div>
+          <div class="power-card" id="power-card-b-extend">
+            <div class="power-title" style="font-size: 13px;">🔧 扩展权（B）</div>
+            <div class="power-labels" style="font-size: 10px;"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
+            <div class="power-slider-track" id="slider-b-extend">
+              <div class="power-dot active" onclick="setBPowerLevel('extend', 0)">0</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('extend', 1)">1</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('extend', 2)">2</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('extend', 3)">3</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('extend', 4)">4</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('extend', 5)">5</div>
+            </div>
+          </div>
+          <div class="power-card" id="power-card-b-revenue">
+            <div class="power-title" style="font-size: 13px;">💰 收益权（B）</div>
+            <div class="power-labels" style="font-size: 10px;"><span>禁</span><span>己</span><span>亲</span><span>约</span><span>法</span><span>公</span></div>
+            <div class="power-slider-track" id="slider-b-revenue">
+              <div class="power-dot active" onclick="setBPowerLevel('revenue', 0)">0</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('revenue', 1)">1</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('revenue', 2)">2</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('revenue', 3)">3</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('revenue', 4)">4</div><div class="power-dot-line"></div>
+              <div class="power-dot" onclick="setBPowerLevel('revenue', 5)">5</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="headlessOptions" class="hidden">
+      <div class="paper-card" style="padding: 16px; margin-bottom: 24px; border-color: var(--accent);">
+        <div class="font-sans-sc" style="font-size: 13px; color: var(--accent); font-weight: 500; margin-bottom: 8px;">无头模式：批量运行参数</div>
+        <div class="grid-2">
+          <div><label class="font-sans-sc" style="font-size: 12px; color: var(--ink); display: block; margin-bottom: 4px;">批量次数</label><input type="number" class="input-paper" id="batchCount" value="100" min="10" max="10000"></div>
+          <div><label class="font-sans-sc" style="font-size: 12px; color: var(--ink); display: block; margin-bottom: 4px;">置信区间</label><select class="input-paper" id="confidence"><option value="90">90%</option><option value="95" selected>95%</option><option value="99">99%</option></select></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top: 24px; display: flex; justify-content: space-between;">
+      <button class="btn-bi outline" onclick="goToStep(2)">← 上一步</button>
+      <button class="btn-bi" onclick="goToStep(4)">下一步 →</button>
+    </div>
+  </div>
+
+  <!-- Step 4: 预览确认 -->
+  <div class="step-content" data-step="4">
+    <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px;">预览确认</div>
+    <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 16px;">确认实验参数，准备启动</div>
+    <div class="ink-divider-short" style="margin-bottom: 20px;"></div>
+    <div class="paper-card" style="padding: 24px; margin-bottom: 24px;">
+      <div class="grid-2" style="font-size: 14px; line-height: 2.2;">
+        <div>
+          <div><strong style="color: var(--accent);">模式：</strong><span id="previewMode">可视模拟</span></div>
+          <div><strong>名称：</strong><span id="previewName">实验 2026-06-20</span></div>
+          <div><strong>时长：</strong><span id="previewRounds">200</span> 轮</div>
+          <div><strong>种子：</strong><span id="previewSeed">42</span></div>
+          <div><strong>初始 Skill：</strong><span id="previewSkills">10</span> 个</div>
+        </div>
+        <div>
+          <div id="previewAgentRoles"><strong>Agent：</strong>加载中...</div>
+          <div><strong>使用权：</strong><span id="previewUsePower">0禁</span></div>
+          <div><strong>衍生权：</strong><span id="previewDerivePower">0禁</span></div>
+          <div><strong>扩展权：</strong><span id="previewExtendPower">0禁</span></div>
+          <div><strong>收益权：</strong><span id="previewRevenuePower">0禁</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top: 24px; display: flex; justify-content: space-between;">
+      <button class="btn-bi outline" onclick="goToStep(3)">← 上一步</button>
+      <button class="btn-bi" onclick="startSimulation()">▶ 启动模拟</button>
+    </div>
+  </div>
+</div>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════ -->
@@ -574,10 +578,30 @@ let simulationResult = null;
 let currentRound = 0;
 let isPlaying = false;
 let playInterval = null;
-let simulateDomReady = false; // 标记 simulate 页面 DOM 是否已初始化
-
-// 每个图形容器的独立实例
+let simulateDomReady = false;
 const graphInstances = {};
+
+// 图标库
+const ICON_LIBRARY = ['△','○','◇','□','☆','✦','♦','♠','♣','♥','◐','●','◆','▲','▼','◀','▶','✿','❀','✪','⚡','🔥','🌟','💎','🎯','🎨','🔮','📡','🧬','🧠'];
+
+// 动态角色类型配置
+let agentTypes = [
+  { id: 'creator', name: '创作者', icon: '△', color: '#5AA4AE', count: 5, canRemove: false },
+  { id: 'consumer', name: '消费者', icon: '○', color: '#4A7C59', count: 15, canRemove: true },
+  { id: 'mediator', name: '中介', icon: '◇', color: '#B8860B', count: 2, canRemove: true },
+  { id: 'governance', name: '治理', icon: '□', color: '#636E72', count: 1, canRemove: true }
+];
+
+// 四权定价配置（每权每档的定价）
+let powerPricing = {
+  use:      [0, 5, 10, 20, 30, 50],   // 使用费
+  derive:   [0, 10, 25, 50, 100, 200], // 衍生授权费
+  extend:   [0, 5, 15, 30, 60, 100],  // 编排授权费
+  revenue:  [0, 20, 40, 60, 80, 100]  // 创作者分成比例 %
+};
+
+// 当前正在编辑图标的角色索引
+let editingIconRole = -1;
 
 const POWER_LABELS = ['禁','己','亲','约','法','公'];
 const POWER_DESCS = {
@@ -636,6 +660,8 @@ function goToStep(step) {
   document.querySelectorAll('.step-content').forEach(function(c) { c.classList.remove('active'); });
   var el = document.querySelector('.step-content[data-step="' + step + '"]');
   if (el) el.classList.add('active');
+  if (step === 2) renderAgentRoles(); // 刷新角色列表
+  if (step === 3) renderPricingInputs(); // 刷新定价输入
   updatePreview();
 }
 
@@ -707,19 +733,19 @@ function updatePreview() {
   if (el('previewName')) el('previewName').textContent = el('expName') ? el('expName').value : '';
   if (el('previewRounds')) el('previewRounds').textContent = el('rounds') ? el('rounds').value : '';
   if (el('previewSeed')) el('previewSeed').textContent = el('seed') ? el('seed').value : '';
-  if (el('previewCreatorName')) el('previewCreatorName').textContent = el('creatorName') ? el('creatorName').value : '创作者';
-  if (el('previewConsumerName')) el('previewConsumerName').textContent = el('consumerName') ? el('consumerName').value : '消费者';
-  if (el('previewMediatorName')) el('previewMediatorName').textContent = el('mediatorName') ? el('mediatorName').value : '中介';
-  if (el('previewGovernanceName')) el('previewGovernanceName').textContent = el('governanceName') ? el('governanceName').value : '治理';
-  if (el('previewCreator')) el('previewCreator').textContent = el('creatorCount') ? el('creatorCount').value : '';
-  if (el('previewConsumer')) el('previewConsumer').textContent = el('consumerCount') ? el('consumerCount').value : '';
-  if (el('previewMediator')) el('previewMediator').textContent = el('mediatorCount') ? el('mediatorCount').value : '';
-  if (el('previewGovernance')) el('previewGovernance').textContent = el('governanceCount') ? el('governanceCount').value : '';
   if (el('previewSkills')) el('previewSkills').textContent = el('initialSkills') ? el('initialSkills').value : '';
-  if (el('previewPricing')) {
-    var sel = el('pricingRule');
-    el('previewPricing').textContent = sel && sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+  
+  // 动态角色预览
+  var agentPreview = document.getElementById('previewAgentRoles');
+  if (agentPreview && agentTypes) {
+    var agentText = agentTypes.map(function(t) {
+      var countInput = document.getElementById('role-count-' + agentTypes.indexOf(t));
+      var count = countInput ? countInput.value : t.count;
+      return t.icon + ' ' + t.name + ' ' + count;
+    }).join(' / ');
+    agentPreview.innerHTML = '<strong>Agent：</strong>' + agentText;
   }
+  
   var useLevel = getPowerLevel('use');
   var deriveLevel = getPowerLevel('derive');
   var extendLevel = getPowerLevel('extend');
@@ -778,7 +804,114 @@ function useTemplate(type) {
   updatePreview();
 }
 
+// ===== 动态角色管理 =====
+function renderAgentRoles() {
+  var container = document.getElementById('agentRolesContainer');
+  if (!container) return;
+  container.innerHTML = agentTypes.map(function(type, idx) {
+    var iconPickerHTML = '<div class="icon-picker" id="icon-picker-' + idx + '" style="display:none; margin-top:8px;">' +
+      ICON_LIBRARY.map(function(ic) {
+        return '<div class="icon-option ' + (ic === type.icon ? 'selected' : '') + '" onclick="selectIcon(' + idx + ', \'' + ic + '\')">' + ic + '</div>';
+      }).join('') + '</div>';
+    return '<div class="paper-card agent-role-card" style="padding: 16px; border-left: 3px solid ' + type.color + ';">' +
+      (type.canRemove ? '<button class="role-remove" onclick="removeAgentRole(' + idx + ')" title="删除">×</button>' : '') +
+      '<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">' +
+      '<div class="role-icon-display" onclick="toggleIconPicker(' + idx + ')" id="role-icon-' + idx + '" style="border-color:' + type.color + ';">' + type.icon + '</div>' +
+      '<div style="flex:1;"><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink);">角色名称</label></div>' +
+      '</div>' + iconPickerHTML +
+      '<input class="input-paper" id="role-name-' + idx + '" value="' + type.name + '" style="margin-bottom: 12px;" onchange="updateRoleName(' + idx + ', this.value)">' +
+      '<label class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); display: block; margin-bottom: 6px;">部署数量（个）</label>' +
+      '<input type="number" class="input-paper" id="role-count-' + idx + '" value="' + type.count + '" min="1" max="50" onchange="updateRoleCount(' + idx + ', parseInt(this.value))">' +
+      '</div>';
+  }).join('');
+}
+
+function toggleIconPicker(idx) {
+  var picker = document.getElementById('icon-picker-' + idx);
+  if (!picker) return;
+  var allPickers = document.querySelectorAll('.icon-picker');
+  allPickers.forEach(function(p) { if (p !== picker) p.style.display = 'none'; });
+  picker.style.display = picker.style.display === 'none' ? 'flex' : 'none';
+}
+
+function selectIcon(idx, icon) {
+  agentTypes[idx].icon = icon;
+  var display = document.getElementById('role-icon-' + idx);
+  if (display) display.textContent = icon;
+  var picker = document.getElementById('icon-picker-' + idx);
+  if (picker) {
+    picker.querySelectorAll('.icon-option').forEach(function(el) {
+      el.classList.toggle('selected', el.textContent === icon);
+    });
+  }
+}
+
+function updateRoleName(idx, name) {
+  agentTypes[idx].name = name;
+}
+
+function updateRoleCount(idx, count) {
+  agentTypes[idx].count = Math.max(1, Math.min(50, count || 1));
+}
+
+function addAgentRole() {
+  if (agentTypes.length >= 8) {
+    alert('最多支持 8 种角色类型');
+    return;
+  }
+  var usedIcons = agentTypes.map(function(t) { return t.icon; });
+  var available = ICON_LIBRARY.filter(function(ic) { return usedIcons.indexOf(ic) === -1; });
+  var icon = available.length > 0 ? available[0] : ICON_LIBRARY[agentTypes.length % ICON_LIBRARY.length];
+  var colors = ['#5AA4AE', '#4A7C59', '#B8860B', '#636E72', '#C85A54', '#8B5A2B', '#483D8B', '#2E8B57'];
+  agentTypes.push({
+    id: 'role_' + agentTypes.length,
+    name: '新角色',
+    icon: icon,
+    color: colors[agentTypes.length % colors.length],
+    count: 5,
+    canRemove: true
+  });
+  renderAgentRoles();
+}
+
+function removeAgentRole(idx) {
+  if (agentTypes.length <= 1) {
+    alert('至少需要保留一种角色');
+    return;
+  }
+  if (agentTypes[idx].canRemove) {
+    agentTypes.splice(idx, 1);
+    renderAgentRoles();
+  }
+}
+
+// ===== 四权定价管理 =====
+function renderPricingInputs() {
+  ['use', 'derive', 'extend', 'revenue'].forEach(function(power) {
+    var container = document.getElementById('pricing-' + power);
+    if (!container) return;
+    var labels = { use: '使用费', derive: '衍生授权费', extend: '编排授权费', revenue: '创作者分成%' };
+    var unit = { use: 'ETH', derive: 'ETH', extend: 'ETH', revenue: '%' };
+    container.innerHTML = '<div style="font-size: 12px; color: var(--ink-muted); margin-bottom: 8px;">' + labels[power] + ' 各档设置</div>' +
+      [0,1,2,3,4,5].map(function(lvl) {
+        var isActive = getPowerLevel(power) === lvl;
+        return '<div class="pricing-row">' +
+          '<div class="level-badge ' + (isActive ? 'active' : '') + '">' + lvl + '</div>' +
+          '<div class="font-sans-sc" style="font-size: 11px; color: var(--ink-muted); width: 50px;">' + POWER_LABELS[lvl] + '</div>' +
+          '<input type="number" class="pricing-input" id="price-' + power + '-' + lvl + '" value="' + powerPricing[power][lvl] + '" onchange="updatePricing(\'' + power + '\', ' + lvl + ', this.value)"' + (isActive ? ' style="border-color: var(--accent);"' : '') + '>' +
+          '<span class="font-sans-sc" style="font-size: 11px; color: var(--ink-muted);">' + unit[power] + '</span>' +
+          '</div>';
+      }).join('');
+  });
+}
+
+function updatePricing(power, level, value) {
+  var val = parseFloat(value) || 0;
+  powerPricing[power][level] = Math.max(0, val);
+}
+
 // ===== 带种子的伪随机数生成器（Mulberry32） =====
+
 function makeRng(seed) {
   var s = seed >>> 0;
   return function() {
@@ -805,10 +938,7 @@ function revenueLevelToShare(level) {
 // ===== 核心模拟引擎 =====
 function runSimulation(config) {
   var totalRounds = config.totalRounds || 200;
-  var creatorCount = config.creatorCount || 5;
-  var consumerCount = config.consumerCount || 15;
-  var mediatorCount = config.mediatorCount || 2;
-  var governanceCount = config.governanceCount || 1;
+  var roleConfig = config.roleConfig || [];
   var initialSkillCount = config.initialSkillCount || 10;
   var useLevel = config.useLevel || 0;
   var deriveLevel = config.deriveLevel || 0;
@@ -822,24 +952,34 @@ function runSimulation(config) {
   var deriveProb = deriveLevel > 0 ? 0.3 * (deriveLevel / 5) : 0;
   var extendProb = extendLevel > 0 ? 0.2 * (extendLevel / 5) : 0;
 
-  // 初始化 Agents
+  // 初始化 Agents（动态角色类型）
   var agents = [];
   var agentId = 0;
-  for (var i = 0; i < creatorCount; i++) {
-    agents.push({ id: 'c' + i, type: 'creator', name: '创作者' + i, potential: 20 + rng() * 15, balance: 100, revenue: 0, skills: [] });
-  }
-  for (var i = 0; i < consumerCount; i++) {
-    agents.push({ id: 'u' + i, type: 'consumer', name: '消费者' + i, potential: 10 + rng() * 10, balance: 80, skills: [] });
-  }
-  for (var i = 0; i < mediatorCount; i++) {
-    agents.push({ id: 'm' + i, type: 'mediator', name: '中介' + i, potential: 25 + rng() * 15, balance: 120, skills: [] });
-  }
-  for (var i = 0; i < governanceCount; i++) {
-    agents.push({ id: 'g' + i, type: 'governance', name: '治理' + i, potential: 30 + rng() * 20, balance: 150, skills: [] });
+  var allRoles = [];
+  for (var ri = 0; ri < roleConfig.length; ri++) {
+    var rc = roleConfig[ri];
+    var count = rc.count || 1;
+    for (var i = 0; i < count; i++) {
+      var basePotential = ri === 0 ? 20 + rng() * 15 : (ri === 1 ? 10 + rng() * 10 : 15 + rng() * 12);
+      var baseBalance = ri === 0 ? 100 : (ri === 1 ? 80 : 90);
+      agents.push({
+        id: rc.id + '-' + i,
+        type: rc.id,
+        typeName: rc.name,
+        typeIcon: rc.icon,
+        typeColor: rc.color,
+        name: rc.name + i,
+        potential: basePotential,
+        balance: baseBalance,
+        revenue: 0,
+        skills: []
+      });
+    }
   }
 
-  var creators = agents.filter(function(a) { return a.type === 'creator'; });
-  var consumers = agents.filter(function(a) { return a.type === 'consumer'; });
+  // 第一个角色类型作为创作者，第二个作为消费者（如果存在）
+  var creators = agents.filter(function(a) { return a.type === (roleConfig[0] ? roleConfig[0].id : 'creator'); });
+  var consumers = agents.filter(function(a) { return a.type === (roleConfig[1] ? roleConfig[1].id : roleConfig[0] ? roleConfig[0].id : 'consumer'); });
 
   // 初始化 Skills
   var skills = [];
@@ -903,12 +1043,13 @@ function runSimulation(config) {
       }
     }
 
-    // --- 2. 消费者使用 Skills ---
-    // 按热度（usage_count）构建加权概率分布
+    // --- 2. 消费者使用 Skills（所有非创作者角色） ---
+    var nonCreators = agents.filter(function(a) { return a.type !== (roleConfig[0] ? roleConfig[0].id : 'creator'); });
+    if (nonCreators.length === 0) nonCreators = agents; // 如果只有一类角色，全员参与
     var activeSkills = skills.filter(function(s) { return s.status === 'active'; });
     if (activeSkills.length > 0) {
-      for (var ci = 0; ci < consumers.length; ci++) {
-        // 消费者接触到新 skill 的概率 = D
+      for (var ci = 0; ci < nonCreators.length; ci++) {
+        // 使用者接触到新 skill 的概率 = D
         if (rng() < D) {
           // 按热度偏好选择 skill
           var totalWeight = 0;
@@ -926,9 +1067,9 @@ function runSimulation(config) {
           }
 
           chosen.usage_count++;
-          var consumer = consumers[ci];
-          transactions.push({ type: 'usage', skill: chosen, consumer: consumer, round: round, amount: chosen.price });
-          events.push({ type: 'trade', skill: chosen, consumer: consumer, round: round, description: consumer.name + ' 使用了 ' + chosen.name });
+          var user = nonCreators[ci];
+          transactions.push({ type: 'usage', skill: chosen, consumer: user, round: round, amount: chosen.price });
+          events.push({ type: 'trade', skill: chosen, consumer: user, round: round, description: user.name + ' 使用了 ' + chosen.name });
 
           // 收益分配
           var rev = chosen.price;
@@ -985,12 +1126,12 @@ function runSimulation(config) {
 
     // --- 5. 新 Agent 加入（概率与总 skill 数正相关） ---
     var newConsumerProb = Math.min(0.3, activeSkills.length * 0.005);
-    if (rng() < newConsumerProb) {
-      var newId = 'u' + consumers.length;
-      var newConsumer = { id: newId, type: 'consumer', name: '消费者' + consumers.length, potential: 10 + rng() * 10, balance: 80, skills: [] };
+    if (rng() < newConsumerProb && roleConfig.length > 1) {
+      var newId = roleConfig[1].id + '-' + consumers.length;
+      var newConsumer = { id: newId, type: roleConfig[1].id, typeName: roleConfig[1].name, typeIcon: roleConfig[1].icon, typeColor: roleConfig[1].color, name: roleConfig[1].name + consumers.length, potential: 10 + rng() * 10, balance: 80, skills: [] };
       agents.push(newConsumer);
       consumers.push(newConsumer);
-      events.push({ type: 'birth', agent: newConsumer, round: round, description: '新消费者 ' + newConsumer.name + ' 加入生态' });
+      events.push({ type: 'birth', agent: newConsumer, round: round, description: '新' + roleConfig[1].name + ' ' + newConsumer.name + ' 加入生态' });
     }
 
     // --- 6. 周期性收益报告 ---
@@ -1082,24 +1223,31 @@ function runSimulation(config) {
 // ===== 读取配置并生成模拟数据 =====
 function generateMockData() {
   var totalRounds = parseInt(document.getElementById('rounds').value) || 200;
-  var creatorCount = parseInt(document.getElementById('creatorCount').value) || 5;
-  var consumerCount = parseInt(document.getElementById('consumerCount').value) || 15;
-  var mediatorCount = parseInt(document.getElementById('mediatorCount').value) || 2;
-  var governanceCount = parseInt(document.getElementById('governanceCount').value) || 1;
-  var initialSkillCount = parseInt(document.getElementById('initialSkills').value) || 10;
   var seed = parseInt(document.getElementById('seed').value) || 42;
+  var initialSkillCount = parseInt(document.getElementById('initialSkills').value) || 10;
 
   var aUseLevel = getPowerLevel('use');
   var aDeriveLevel = getPowerLevel('derive');
   var aExtendLevel = getPowerLevel('extend');
   var aRevenueLevel = getPowerLevel('revenue');
 
+  // 构建动态角色配置
+  var roleConfig = agentTypes.map(function(t) {
+    // 从页面读取最新值（如果页面已渲染）
+    var nameInput = document.getElementById('role-name-' + agentTypes.indexOf(t));
+    var countInput = document.getElementById('role-count-' + agentTypes.indexOf(t));
+    return {
+      id: t.id,
+      name: (nameInput ? nameInput.value : t.name) || t.name,
+      icon: t.icon,
+      color: t.color,
+      count: countInput ? (parseInt(countInput.value) || t.count) : t.count
+    };
+  });
+
   var aResult = runSimulation({
     totalRounds: totalRounds,
-    creatorCount: creatorCount,
-    consumerCount: consumerCount,
-    mediatorCount: mediatorCount,
-    governanceCount: governanceCount,
+    roleConfig: roleConfig,
     initialSkillCount: initialSkillCount,
     useLevel: aUseLevel,
     deriveLevel: aDeriveLevel,
@@ -1113,7 +1261,8 @@ function generateMockData() {
     skills: aResult.skills,
     agents: aResult.agents,
     final_metrics: aResult.metrics,
-    mode: currentMode
+    mode: currentMode,
+    roleConfig: roleConfig
   };
 
   if (currentMode === 'compare') {
@@ -1124,10 +1273,7 @@ function generateMockData() {
 
     var bResult = runSimulation({
       totalRounds: totalRounds,
-      creatorCount: creatorCount,
-      consumerCount: consumerCount,
-      mediatorCount: mediatorCount,
-      governanceCount: governanceCount,
+      roleConfig: roleConfig,
       initialSkillCount: initialSkillCount,
       useLevel: bUseLevel,
       deriveLevel: bDeriveLevel,
@@ -1163,6 +1309,7 @@ function generateMockData() {
 
   return result;
 }
+
 
 function startSimulation() {
   simulationResult = generateMockData();
@@ -1475,22 +1622,29 @@ function drawGraph(containerId, result, dataRounds) {
     for (var ai = 0; ai < round.agents.length; ai++) {
       var a = round.agents[ai];
       if (!nodeMap.has(a.id)) {
-        nodeMap.set(a.id, { id: a.id, type: a.type, name: a.name, birthRound: 0 });
+        nodeMap.set(a.id, { id: a.id, type: a.type, typeName: a.typeName || a.type, typeIcon: a.typeIcon || '', typeColor: a.typeColor || '#999', name: a.name, birthRound: 0, balance: a.balance, revenue: a.revenue, potential: a.potential });
+      } else {
+        var existing = nodeMap.get(a.id);
+        existing.balance = a.balance;
+        existing.revenue = a.revenue;
       }
     }
     for (var si = 0; si < round.skills.length; si++) {
       var s = round.skills[si];
       if (!nodeMap.has(s.id)) {
-        nodeMap.set(s.id, { id: s.id, type: s.generation > 0 ? 'derived' : 'skill', name: s.name, generation: s.generation, parent: s.parent, creator_id: s.creator_id, birthRound: r, usage_count: s.usage_count });
+        nodeMap.set(s.id, { id: s.id, type: s.generation > 0 ? 'derived' : 'skill', name: s.name, generation: s.generation, parent: s.parent, creator_id: s.creator_id, creator_name: s.creator_name, birthRound: r, usage_count: s.usage_count, derive_count: s.derive_count, extend_count: s.extend_count, revenue: s.revenue, price: s.price, status: s.status });
       } else {
         nodeMap.get(s.id).usage_count = s.usage_count;
+        nodeMap.get(s.id).revenue = s.revenue;
+        nodeMap.get(s.id).derive_count = s.derive_count;
+        nodeMap.get(s.id).extend_count = s.extend_count;
       }
     }
     for (var ti = 0; ti < round.transactions.length; ti++) {
       var t = round.transactions[ti];
       var linkId = t.consumer.id + '-' + t.skill.id;
       if (!linkMap.has(linkId)) {
-        linkMap.set(linkId, { source: t.consumer.id, target: t.skill.id, type: 'usage', birthRound: r });
+        linkMap.set(linkId, { source: t.consumer.id, target: t.skill.id, type: 'usage', birthRound: r, amount: t.amount });
       }
     }
     for (var si = 0; si < round.skills.length; si++) {
@@ -1508,17 +1662,28 @@ function drawGraph(containerId, result, dataRounds) {
     }
   }
 
-  var colors = { creator: '#5AA4AE', consumer: '#4A7C59', mediator: '#B8860B', governance: '#636E72', skill: '#C4B8A0', derived: '#E8A59E' };
+  var colors = {};
+  // 动态角色颜色
+  if (result.roleConfig) {
+    result.roleConfig.forEach(function(rc) { colors[rc.id] = rc.color; });
+  }
+  colors.creator = colors.creator || '#5AA4AE';
+  colors.consumer = colors.consumer || '#4A7C59';
+  colors.mediator = colors.mediator || '#B8860B';
+  colors.governance = colors.governance || '#636E72';
+  colors.skill = '#C4B8A0';
+  colors.derived = '#E8A59E';
 
   var nodes = [];
   nodeMap.forEach(function(d) {
     var r = d.type === 'creator' ? 14 : d.type === 'consumer' ? 9 : d.type === 'mediator' ? 11 : d.type === 'governance' ? 11 : Math.max(6, Math.min(18, 6 + (d.usage_count || 0) / 2));
-    nodes.push({ id: d.id, type: d.type, name: d.name, generation: d.generation, parent: d.parent, creator_id: d.creator_id, birthRound: d.birthRound, usage_count: d.usage_count || 0, r: r, color: colors[d.type] || '#999', isNew: d.birthRound === currentRound });
+    var color = d.typeColor || colors[d.type] || '#999';
+    nodes.push({ id: d.id, type: d.type, typeName: d.typeName, typeIcon: d.typeIcon, name: d.name, generation: d.generation, parent: d.parent, creator_id: d.creator_id, creator_name: d.creator_name, birthRound: d.birthRound, usage_count: d.usage_count || 0, derive_count: d.derive_count || 0, extend_count: d.extend_count || 0, revenue: d.revenue || 0, price: d.price || 0, balance: d.balance || 0, potential: d.potential || 0, r: r, color: color, isNew: d.birthRound === currentRound });
   });
 
   var links = [];
   linkMap.forEach(function(d) {
-    links.push({ source: d.source, target: d.target, type: d.type, value: d.type === 'create' ? 0.8 : d.type === 'derive' ? 0.6 : 0.3, isNew: d.birthRound === currentRound });
+    links.push({ source: d.source, target: d.target, type: d.type, value: d.type === 'create' ? 0.8 : d.type === 'derive' ? 0.6 : 0.3, amount: d.amount || 0, isNew: d.birthRound === currentRound });
   });
 
   // 获取或创建图形实例
@@ -1528,18 +1693,51 @@ function drawGraph(containerId, result, dataRounds) {
     var svg = d3.select('#' + containerId).append('svg')
       .attr('width', width).attr('height', height)
       .attr('viewBox', '0 0 ' + width + ' ' + height);
-    var linkG = svg.append('g').attr('class', 'links');
-    var nodeG = svg.append('g').attr('class', 'nodes');
-
-    svg.append('circle')
+    
+    // 缩放容器
+    var zoomG = svg.append('g').attr('class', 'zoom-group');
+    var linkG = zoomG.append('g').attr('class', 'links');
+    var nodeG = zoomG.append('g').attr('class', 'nodes');
+    
+    // 背景圆环
+    zoomG.append('circle')
       .attr('cx', width / 2).attr('cy', height / 2)
       .attr('r', Math.min(width, height) * 0.4)
       .attr('fill', 'none').attr('stroke', '#C4B8A0').attr('stroke-opacity', 0.06).attr('stroke-width', 1);
 
+    // 缩放行为
+    var zoom = d3.zoom()
+      .scaleExtent([0.3, 5])
+      .on('zoom', function(event) {
+        zoomG.attr('transform', event.transform);
+      });
+    svg.call(zoom);
+
+    // 缩放控制按钮
+    var zoomControls = d3.select('#' + containerId).append('div')
+      .attr('class', 'zoom-controls');
+    zoomControls.append('button').attr('class', 'zoom-btn').text('+').on('click', function() {
+      zoom.scaleBy(svg.transition().duration(300), 1.3);
+    });
+    zoomControls.append('button').attr('class', 'zoom-btn').text('−').on('click', function() {
+      zoom.scaleBy(svg.transition().duration(300), 0.7);
+    });
+    zoomControls.append('button').attr('class', 'zoom-btn').text('⟲').on('click', function() {
+      svg.transition().duration(300).call(zoom.transform, d3.zoomIdentity);
+    });
+
+    // 节点详情弹窗（tooltip）
+    var tooltip = d3.select('body').append('div')
+      .attr('class', 'node-tooltip')
+      .attr('id', 'tooltip-' + containerId);
+
     inst = {
       svg: svg,
+      zoomG: zoomG,
       linkG: linkG,
       nodeG: nodeG,
+      zoom: zoom,
+      tooltip: tooltip,
       simulation: null,
       nodePositions: {}
     };
@@ -1549,9 +1747,12 @@ function drawGraph(containerId, result, dataRounds) {
   }
 
   var svg = inst.svg;
+  var zoomG = inst.zoomG;
   var linkG = inst.linkG;
   var nodeG = inst.nodeG;
+  var tooltip = inst.tooltip;
   var nodePositions = inst.nodePositions;
+  var zoom = inst.zoom;
 
   // 为节点分配初始位置
   nodes.forEach(function(d) {
@@ -1624,6 +1825,41 @@ function drawGraph(containerId, result, dataRounds) {
       if (!event.active && inst.simulation) inst.simulation.alphaTarget(0);
       d.fx = null; d.fy = null;
     }));
+
+  // 点击显示节点详情弹窗
+  nodeEnter.on('click', function(event, d) {
+    event.stopPropagation();
+    var tt = tooltip;
+    var isAgent = d.type !== 'skill' && d.type !== 'derived';
+    var iconColor = d.color || '#999';
+    var html = '<div class="tt-header"><div class="tt-icon" style="background:' + iconColor + '20;color:' + iconColor + ';">' + (d.typeIcon || (isAgent ? '●' : '◆')) + '</div><div class="tt-title">' + d.name + '</div></div>';
+    if (isAgent) {
+      html += '<div class="tt-row"><span class="tt-label">角色类型</span><span class="tt-value">' + (d.typeName || d.type) + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-label">ECHO ID</span><span class="tt-value">' + d.id + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-label">势位</span><span class="tt-value">' + (d.potential || 0).toFixed(1) + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-label">余额</span><span class="tt-value">' + (d.balance || 0).toFixed(1) + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-label">累计收益</span><span class="tt-value">' + (d.revenue || 0).toFixed(1) + '</span></div>';
+    } else {
+      html += '<div class="tt-row"><span class="tt-label">类型</span><span class="tt-value">' + (d.type === 'derived' ? '衍生作品' : '原创作品') + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-label">ECHO ID</span><span class="tt-value">' + d.id + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-label">创作者</span><span class="tt-value">' + (d.creator_name || d.creator_id || '未知') + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-label">使用次数</span><span class="tt-value">' + (d.usage_count || 0) + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-label">衍生次数</span><span class="tt-value">' + (d.derive_count || 0) + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-label">编排次数</span><span class="tt-value">' + (d.extend_count || 0) + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-label">价格</span><span class="tt-value">' + (d.price || 0).toFixed(1) + ' ETH</span></div>';
+      html += '<div class="tt-row"><span class="tt-label">累计收益</span><span class="tt-value">' + (d.revenue || 0).toFixed(1) + ' ETH</span></div>';
+      if (d.generation > 0) {
+        html += '<div class="tt-row"><span class="tt-label">世代</span><span class="tt-value">第 ' + d.generation + ' 代</span></div>';
+        html += '<div class="tt-row"><span class="tt-label">父节点</span><span class="tt-value">' + (d.parent || '—') + '</span></div>';
+      }
+    }
+    tt.html(html).style('left', (event.pageX + 16) + 'px').style('top', (event.pageY - 10) + 'px').classed('visible', true);
+  });
+
+  // 点击背景关闭 tooltip
+  d3.select('body').on('click.tooltip-' + containerId, function() {
+    tooltip.classed('visible', false);
+  });
 
   nodeEnter.append('circle')
     .attr('r', 0)
