@@ -174,8 +174,30 @@
 
       .grid-4 { grid-template-columns: 1fr 1fr; } .grid-3 { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; }
       .compare-split { grid-template-columns: 1fr; } .nav-inner { padding: 12px 16px; } .scroll-page { padding: 24px 16px; }
+      .home-layout { grid-template-columns: 1fr; } .big-char-grid { grid-template-columns: repeat(2, 1fr); } .mode-big-grid { grid-template-columns: 1fr; }
     }
-  </style>
+      .home-layout { display: grid; grid-template-columns: 3fr 2fr; gap: 24px; min-height: calc(100vh - 180px); }
+    .big-char-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .big-char-card { background-color: rgba(255,255,255,0.6); border: 1px solid var(--border-light); border-radius: 2px; padding: 20px 12px; text-align: center; cursor: pointer; transition: all 0.3s ease; position: relative; }
+    .big-char-card:hover { background-color: rgba(255,255,255,0.9); border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .big-char { font-family: 'Noto Serif SC', serif; font-size: 42px; font-weight: 700; color: var(--ink); margin-bottom: 8px; line-height: 1; }
+    .big-char-label { font-family: 'Noto Sans SC', sans-serif; font-size: 12px; color: var(--ink-muted); }
+    .big-char-card:hover .big-char { color: var(--accent); }
+    .mode-big-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; }
+    .mode-big-card { background-color: rgba(255,255,255,0.6); border: 1px solid var(--border-light); border-radius: 2px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.3s ease; position: relative; }
+    .mode-big-card:hover { background-color: rgba(255,255,255,0.9); border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .mode-big-card.active { background-color: rgba(255,255,255,0.85); border: 2px solid var(--accent); }
+    .mode-big-char { font-family: 'Noto Serif SC', serif; font-size: 56px; font-weight: 700; color: var(--ink); margin-bottom: 12px; line-height: 1; }
+    .mode-big-card:hover .mode-big-char { color: var(--accent); }
+    .mode-big-card.active .mode-big-char { color: var(--accent); }
+    .mode-big-card .mode-desc-hover { opacity: 0; position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; font-size: 12px; color: var(--ink-muted); transition: opacity 0.3s; }
+    .mode-big-card:hover .mode-desc-hover { opacity: 1; }
+    .mode-big-label { font-family: 'Noto Sans SC', sans-serif; font-size: 16px; font-weight: 500; color: var(--ink); margin-top: 8px; }
+    .mode-big-card.active .mode-big-label { color: var(--accent); }
+    .mode-big-card .mode-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-light); margin: 12px auto 0; display: flex; align-items: center; justify-content: center; }
+    .mode-big-card.active .mode-check { border-color: var(--accent); }
+    .mode-big-card.active .mode-check::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+</style>
 </head>
 <body>
 
@@ -195,18 +217,19 @@
 </nav>
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<!-- 首页：意图层                                            -->
+<!-- 首页：意图层（左侧主角 + 右侧入口） -->
 <!-- ═══════════════════════════════════════════════════════ -->
 <section id="page-home" class="page-section active">
   <div class="scroll-page">
-    <div class="grid-2" style="min-height: calc(100vh - 180px); gap: 32px;">
-      <div class="paper-card" style="padding: 24px; display: flex; flex-direction: column;">
+    <div class="home-layout">
+      <!-- 左侧：意图捕获（视觉主角） -->
+      <div class="paper-card" style="padding: 28px; display: flex; flex-direction: column; min-height: calc(100vh - 200px);">
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
           <span class="seal seal-small">AI 助手</span>
-          <span class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); letter-spacing: 0.05em;">意图捕获</span>
+          <span class="font-serif-sc" style="font-size: 20px; font-weight: 700; color: var(--ink); letter-spacing: 0.05em;">意图捕获</span>
         </div>
         <div class="ink-divider-short" style="margin-bottom: 20px;"></div>
-        <div class="chat-container" id="chatContainer" style="flex: 1; overflow-y: auto; max-height: 400px; padding: 8px;">
+        <div class="chat-container" id="chatContainer" style="flex: 1; overflow-y: auto; padding: 8px; min-height: 300px;">
           <div class="chat-msg ai">
             <div class="font-sans-sc">你好，我是 ECHO 模拟助手。你想验证什么假设？</div>
             <div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); margin-top: 8px;">
@@ -219,50 +242,49 @@
           <button class="btn-bi small" onclick="sendChat()">发送</button>
         </div>
       </div>
-      <div style="display: flex; flex-direction: column; gap: 24px;">
-        <div class="paper-card" style="padding: 24px;">
-          <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px; letter-spacing: 0.05em;">快捷通道</div>
-          <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 16px;">选择适合你的实验模板</div>
-          <div class="grid-2" style="gap: 12px;">
-            <div class="template-card" onclick="useTemplate('newbie')">
-              <div class="template-icon">初</div>
-              <div class="template-title">新手体验</div>
-              <div class="template-desc">运行一次默认可视模拟，观察 Skill 生命周期</div>
+      <!-- 右侧：上下结构 -->
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- 上：四个大字入口 -->
+        <div class="paper-card" style="padding: 20px; flex: 1;">
+          <div class="font-serif-sc" style="font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 4px; letter-spacing: 0.05em;">快捷通道</div>
+          <div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); margin-bottom: 16px;">悬停查看，点击选择模板</div>
+          <div class="big-char-grid">
+            <div class="big-char-card" onclick="useTemplate('newbie')" title="运行一次默认可视模拟，观察 Skill 全生命周期">
+              <div class="big-char">初</div>
+              <div class="big-char-label">新手体验</div>
             </div>
-            <div class="template-card" onclick="useTemplate('researcher')">
-              <div class="template-icon">研</div>
-              <div class="template-title">研究者模板</div>
-              <div class="template-desc">参数敏感性分析 · 无头模式 · 100次批量</div>
+            <div class="big-char-card" onclick="useTemplate('researcher')" title="参数敏感性分析 · 无头模式 · 100次批量">
+              <div class="big-char">研</div>
+              <div class="big-char-label">研究者</div>
             </div>
-            <div class="template-card" onclick="useTemplate('governance')">
-              <div class="template-icon">治</div>
-              <div class="template-title">治理者模板</div>
-              <div class="template-desc">四权 A/B 测试 · 比较模拟 · 观察演化差异</div>
+            <div class="big-char-card" onclick="useTemplate('governance')" title="四权 A/B 测试 · 比较模拟 · 观察演化差异">
+              <div class="big-char">治</div>
+              <div class="big-char-label">治理者</div>
             </div>
-            <div class="template-card" onclick="useTemplate('creator')">
-              <div class="template-icon">创</div>
-              <div class="template-title">创作者模板</div>
-              <div class="template-desc">收益权影响 · 可视推演 · 关注收益分配</div>
+            <div class="big-char-card" onclick="useTemplate('creator')" title="收益权影响 · 可视推演 · 关注收益分配">
+              <div class="big-char">创</div>
+              <div class="big-char-label">创作者</div>
             </div>
           </div>
         </div>
-        <div class="paper-card" style="padding: 24px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-            <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); letter-spacing: 0.05em;">最近实验</div>
-            <span class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted);">3 个实验</span>
+        <!-- 下：最近实验 -->
+        <div class="paper-card" style="padding: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div class="font-serif-sc" style="font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: 0.05em;">最近实验</div>
+            <span class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted);">3 个</span>
           </div>
           <div>
-            <div style="padding: 12px; border-bottom: 1px solid var(--border-light); cursor: pointer;">
+            <div style="padding: 10px; border-bottom: 1px solid var(--border-light); cursor: pointer;">
               <div class="font-sans-sc" style="font-size: 14px; font-weight: 500; color: var(--ink);">使用权开放 vs 私密对比</div>
-              <div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); margin-top: 4px;">比较模式 · 200轮 · 用5 vs 用1</div>
+              <div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); margin-top: 2px;">比较模式 · 200轮 · 用5 vs 用1</div>
             </div>
-            <div style="padding: 12px; border-bottom: 1px solid var(--border-light); cursor: pointer;">
+            <div style="padding: 10px; border-bottom: 1px solid var(--border-light); cursor: pointer;">
               <div class="font-sans-sc" style="font-size: 14px; font-weight: 500; color: var(--ink);">默认可视推演 #7</div>
-              <div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); margin-top: 4px;">可视模式 · 50轮 · 23 Agent</div>
+              <div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); margin-top: 2px;">可视模式 · 50轮 · 23 Agent</div>
             </div>
-            <div style="padding: 12px; cursor: pointer;">
+            <div style="padding: 10px; cursor: pointer;">
               <div class="font-sans-sc" style="font-size: 14px; font-weight: 500; color: var(--ink);">Shi-Graph 基准验证</div>
-              <div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); margin-top: 4px;">无头模式 · 100次 · 50轮</div>
+              <div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); margin-top: 2px;">无头模式 · 100次 · 50轮</div>
             </div>
           </div>
         </div>
@@ -296,55 +318,37 @@
     <div class="step-item" data-step="4" onclick="goToStep(4)"><div class="step-num">4</div><div class="step-label">预览</div></div>
   </div>
 
-  <!-- Step 0: 选择模式（左右互换：卡片左，标题右） -->
+  <!-- Step 0: 选择模拟模式（平铺大字） -->
   <div class="step-content active" data-step="0">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
-      <!-- 左边：模式卡片（紧凑垂直排列） -->
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        <div class="mode-card-compact active" data-mode="visual" onclick="setMode('visual')">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div class="mode-symbol" style="margin: 0; flex-shrink: 0;">视</div>
-            <div style="flex: 1;">
-              <div class="mode-label" style="font-size: 15px; margin-bottom: 2px;">可视模拟</div>
-              <div class="mode-desc" style="font-size: 12px; line-height: 1.5;">观察 Skill 全生命周期 · 实时渲染网络演化</div>
-            </div>
-            <div style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center;">
-              <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent);"></div>
-            </div>
-          </div>
-        </div>
-        <div class="mode-card-compact" data-mode="compare" onclick="setMode('compare')">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div class="mode-symbol" style="margin: 0; flex-shrink: 0;">比</div>
-            <div style="flex: 1;">
-              <div class="mode-label" style="font-size: 15px; margin-bottom: 2px;">比较模拟</div>
-              <div class="mode-desc" style="font-size: 12px; line-height: 1.5;">不同四权配置对比 · 量化演化路径差异</div>
-            </div>
-            <div style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-light);"></div>
-          </div>
-        </div>
-        <div class="mode-card-compact" data-mode="headless" onclick="setMode('headless')">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div class="mode-symbol" style="margin: 0; flex-shrink: 0;">算</div>
-            <div style="flex: 1;">
-              <div class="mode-label" style="font-size: 15px; margin-bottom: 2px;">无头模式</div>
-              <div class="mode-desc" style="font-size: 12px; line-height: 1.5;">Monte Carlo 批量跑 · 统计平均 + 置信区间</div>
-            </div>
-            <div style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-light);"></div>
-          </div>
-        </div>
+    <div style="margin-bottom: 32px;">
+      <div class="font-serif-sc" style="font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 8px;">选择模拟模式</div>
+      <div class="font-sans-sc" style="font-size: 14px; color: var(--ink-muted);">悬停查看详情，点击选中</div>
+      <div class="ink-divider-short" style="margin-top: 16px;"></div>
+    </div>
+
+    <div class="mode-big-grid">
+      <div class="mode-big-card active" data-mode="visual" onclick="setMode('visual')">
+        <div class="mode-big-char">视</div>
+        <div class="mode-big-label">可视模拟</div>
+        <div class="mode-desc-hover">观察 Skill 全生命周期 · 实时渲染网络演化</div>
+        <div class="mode-check"></div>
       </div>
-      <!-- 右边：标题 + 说明 + 按钮 -->
-      <div style="padding-top: 40px; text-align: right;">
-        <div class="font-serif-sc" style="font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">选择模拟模式</div>
-        <div class="font-sans-sc" style="font-size: 14px; color: var(--ink-muted); line-height: 1.8; margin-bottom: 24px;">
-          模式决定推演播放器的呈现方式，配置完成后不可更改。<br>
-          三种模式覆盖不同使用场景。
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 12px;">
-          <button class="btn-bi" onclick="goToStep(1)">下一步 →</button>
-        </div>
+      <div class="mode-big-card" data-mode="compare" onclick="setMode('compare')">
+        <div class="mode-big-char">比</div>
+        <div class="mode-big-label">比较模拟</div>
+        <div class="mode-desc-hover">不同四权配置对比 · 量化演化路径差异</div>
+        <div class="mode-check"></div>
       </div>
+      <div class="mode-big-card" data-mode="headless" onclick="setMode('headless')">
+        <div class="mode-big-char">算</div>
+        <div class="mode-big-label">无头模式</div>
+        <div class="mode-desc-hover">Monte Carlo 批量跑 · 统计平均 + 置信区间</div>
+        <div class="mode-check"></div>
+      </div>
+    </div>
+
+    <div style="text-align: right; margin-top: 24px;">
+      <button class="btn-bi" onclick="goToStep(1)">下一步 →</button>
     </div>
   </div>
 
@@ -720,8 +724,8 @@ function goToStep(step) {
 
 function setMode(mode) {
   currentMode = mode;
-  document.querySelectorAll('.mode-card, .mode-card-compact').forEach(function(c) { c.classList.remove('active'); });
-  var card = document.querySelector('.mode-card[data-mode="' + mode + '"], .mode-card-compact[data-mode="' + mode + '"]');
+  document.querySelectorAll('.mode-card, .mode-card-compact, .mode-big-card').forEach(function(c) { c.classList.remove('active'); });
+  var card = document.querySelector('.mode-card[data-mode="' + mode + '"], .mode-card-compact[data-mode="' + mode + '"], .mode-big-card[data-mode="' + mode + '"]');
   if (card) card.classList.add('active');
   var compareEl = document.getElementById('compareOptions');
   var headlessEl = document.getElementById('headlessOptions');
