@@ -296,21 +296,10 @@
     <div class="step-item" data-step="4" onclick="goToStep(4)"><div class="step-num">4</div><div class="step-label">预览</div></div>
   </div>
 
-  <!-- Step 0: 选择模式（左右布局） -->
+  <!-- Step 0: 选择模式（左右互换：卡片左，标题右） -->
   <div class="step-content active" data-step="0">
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
-      <!-- 左边：标题 + 说明 -->
-      <div style="padding-top: 40px;">
-        <div class="font-serif-sc" style="font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">选择模拟模式</div>
-        <div class="font-sans-sc" style="font-size: 14px; color: var(--ink-muted); line-height: 1.8; margin-bottom: 24px;">
-          模式决定推演播放器的呈现方式，配置完成后不可更改。<br>
-          三种模式覆盖不同使用场景。
-        </div>
-        <div style="display: flex; gap: 12px;">
-          <button class="btn-bi" onclick="goToStep(1)">下一步 →</button>
-        </div>
-      </div>
-      <!-- 右边：模式卡片（紧凑垂直排列） -->
+      <!-- 左边：模式卡片（紧凑垂直排列） -->
       <div style="display: flex; flex-direction: column; gap: 10px;">
         <div class="mode-card-compact active" data-mode="visual" onclick="setMode('visual')">
           <div style="display: flex; align-items: center; gap: 12px;">
@@ -345,6 +334,17 @@
           </div>
         </div>
       </div>
+      <!-- 右边：标题 + 说明 + 按钮 -->
+      <div style="padding-top: 40px; text-align: right;">
+        <div class="font-serif-sc" style="font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">选择模拟模式</div>
+        <div class="font-sans-sc" style="font-size: 14px; color: var(--ink-muted); line-height: 1.8; margin-bottom: 24px;">
+          模式决定推演播放器的呈现方式，配置完成后不可更改。<br>
+          三种模式覆盖不同使用场景。
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+          <button class="btn-bi" onclick="goToStep(1)">下一步 →</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -376,20 +376,33 @@
     </div>
   </div>
 
-  <!-- Step 2: 动态角色部署 -->
+  <!-- Step 2: Agent部署（左右布局） -->
   <div class="step-content" data-step="2">
-    <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px;">Agent 部署</div>
-    <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 16px;">配置角色类型，点击图标可更换，可自由添加或删除角色</div>
-    <div class="ink-divider-short" style="margin-bottom: 20px;"></div>
-    <div id="agentRolesContainer" class="grid-2" style="gap: 16px; margin-bottom: 24px;">
-      <!-- 动态角色卡片由 JS 生成 -->
-    </div>
-    <div class="add-role-btn" onclick="addAgentRole()" id="addRoleBtn">
-      <span style="font-size: 20px;">+</span> 添加新角色
-    </div>
-    <div style="margin-top: 24px; display: flex; justify-content: space-between;">
-      <button class="btn-bi outline" onclick="goToStep(1)">← 上一步</button>
-      <button class="btn-bi" onclick="goToStep(3)">下一步 →</button>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+      <!-- 左边：角色列表 -->
+      <div class="paper-card" style="padding: 20px;">
+        <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px;">Agent 部署</div>
+        <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 16px;">配置角色类型，点击图标可更换，可自由添加或删除角色</div>
+        <div class="ink-divider-short" style="margin-bottom: 20px;"></div>
+        <div id="agentRolesContainer" class="grid-2" style="gap: 12px; margin-bottom: 16px;">
+          <!-- 动态角色卡片由 JS 生成 -->
+        </div>
+        <div class="add-role-btn" onclick="addAgentRole()" id="addRoleBtn">
+          <span style="font-size: 20px;">+</span> 添加新角色
+        </div>
+      </div>
+      <!-- 右边：标题 + 说明 + 按钮 -->
+      <div style="padding-top: 40px; text-align: right;">
+        <div class="font-serif-sc" style="font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">Agent 部署</div>
+        <div class="font-sans-sc" style="font-size: 14px; color: var(--ink-muted); line-height: 1.8; margin-bottom: 24px;">
+          角色决定参与生态的 Agent 类型和数量。<br>
+          不同角色有不同的行为模式和能力。
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+          <button class="btn-bi outline" onclick="goToStep(1)">← 上一步</button>
+          <button class="btn-bi" onclick="goToStep(3)">下一步 →</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -708,7 +721,7 @@ function goToStep(step) {
 function setMode(mode) {
   currentMode = mode;
   document.querySelectorAll('.mode-card, .mode-card-compact').forEach(function(c) { c.classList.remove('active'); });
-  var card = document.querySelector('.mode-card[data-mode="' + mode + '"]');
+  var card = document.querySelector('.mode-card[data-mode="' + mode + '"], .mode-card-compact[data-mode="' + mode + '"]');
   if (card) card.classList.add('active');
   var compareEl = document.getElementById('compareOptions');
   var headlessEl = document.getElementById('headlessOptions');
