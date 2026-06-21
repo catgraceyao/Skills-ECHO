@@ -896,35 +896,25 @@ function renderPricingInputs() {
     var labels = { use: '使用费', derive: '衍生授权费', extend: '编排授权费', revenue: '创作者分成比例' };
     var unit = { use: 'ECHO', derive: 'ECHO', extend: 'ECHO', revenue: '%' };
     
-    var html = '<div style="font-size: 12px; color: var(--ink-muted); margin-bottom: 8px;">' + labels[power] + ' · 当前档位 <strong style="color: var(--accent);">' + currentLevel + ' ' + POWER_LABELS[currentLevel] + '</strong> 的定价</div>';
+    var html = '';
     
     if (currentLevel === 0) {
-      html += '<div class="pricing-row" style="opacity: 0.5;">' +
+      // 0禁：锁定，不显示输入框
+      html += '<div style="font-size: 12px; color: var(--ink-muted); margin-bottom: 8px;">' + labels[power] + ' · 当前档位</div>' +
+        '<div class="pricing-row" style="opacity: 0.5;">' +
         '<div class="level-badge active">0</div>' +
         '<div class="font-sans-sc" style="font-size: 11px; color: var(--ink-muted); width: 50px;">' + POWER_LABELS[0] + '</div>' +
-        '<input type="number" class="pricing-input" value="0" disabled style="background: var(--border-light); cursor: not-allowed;">' +
-        '<span class="font-sans-sc" style="font-size: 11px; color: var(--ink-muted);">' + unit[power] + '</span>' +
         '<span class="font-sans-sc" style="font-size: 11px; color: var(--cinnabar); margin-left: 8px;">🔒 禁用</span>' +
         '</div>';
     } else {
-      html += '<div class="pricing-row">' +
+      // 只显示当前选中档位的输入框
+      html += '<div style="font-size: 12px; color: var(--ink-muted); margin-bottom: 8px;">' + labels[power] + ' · 当前档位</div>' +
+        '<div class="pricing-row">' +
         '<div class="level-badge active">' + currentLevel + '</div>' +
         '<div class="font-sans-sc" style="font-size: 11px; color: var(--ink-muted); width: 50px;">' + POWER_LABELS[currentLevel] + '</div>' +
         '<input type="number" class="pricing-input" id="price-' + power + '-' + currentLevel + '" value="' + powerPricing[power][currentLevel] + '" onchange="updatePricing(\'' + power + '\', ' + currentLevel + ', this.value)" style="border-color: var(--accent);">' +
         '<span class="font-sans-sc" style="font-size: 11px; color: var(--ink-muted);">' + unit[power] + '</span>' +
         '</div>';
-      html += '<div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-light);">' +
-        '<div class="font-sans-sc" style="font-size: 11px; color: var(--ink-faint); margin-bottom: 4px;">其他档位参考</div>';
-      for (var lvl = 1; lvl <= 5; lvl++) {
-        if (lvl !== currentLevel) {
-          html += '<div style="display: flex; align-items: center; gap: 8px; padding: 2px 0; font-size: 11px; color: var(--ink-faint);">' +
-            '<span style="width: 16px; text-align: center;">' + lvl + '</span>' +
-            '<span style="width: 40px;">' + POWER_LABELS[lvl] + '</span>' +
-            '<span>' + powerPricing[power][lvl] + ' ' + unit[power] + '</span>' +
-            '</div>';
-        }
-      }
-      html += '</div>';
     }
     
     container.innerHTML = html;
