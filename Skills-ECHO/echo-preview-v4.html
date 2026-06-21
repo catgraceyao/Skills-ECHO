@@ -55,6 +55,9 @@
     .metric-tile { background-color: rgba(255,255,255,0.5); border-left: 3px solid var(--border-ink); padding: 16px 20px; transition: all 0.3s ease; }
     .metric-tile:hover { background-color: rgba(255,255,255,0.8); }
 
+    .mode-card-compact { background-color: rgba(255,255,255,0.5); border: 1px solid var(--border-light); border-radius: 2px; padding: 16px 20px; cursor: pointer; transition: all 0.3s ease; }
+    .mode-card-compact:hover { background-color: rgba(255,255,255,0.7); border-color: var(--border); }
+    .mode-card-compact.active { background-color: rgba(255,255,255,0.85); border: 1px solid var(--accent); border-left: 4px solid var(--accent); }
     .mode-card { background-color: rgba(255,255,255,0.5); border: 1px solid var(--border-light); border-radius: 2px; padding: 24px; cursor: pointer; text-align: center; transition: all 0.3s ease; }
     .mode-card.active { background-color: rgba(255,255,255,0.85); border: 1px solid var(--accent); border-bottom: 3px solid var(--accent); }
     .mode-symbol { width: 48px; height: 48px; margin: 0 auto 12px; border: 2px solid var(--border-ink); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 700; color: var(--border-ink); transition: all 0.3s ease; }
@@ -293,46 +296,83 @@
     <div class="step-item" data-step="4" onclick="goToStep(4)"><div class="step-num">4</div><div class="step-label">预览</div></div>
   </div>
 
-  <!-- Step 0: 选择模式 -->
+  <!-- Step 0: 选择模式（左右布局） -->
   <div class="step-content active" data-step="0">
-    <div style="text-align: center; margin-bottom: 32px;">
-      <div class="font-serif-sc" style="font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 8px;">选择模拟模式</div>
-      <div class="font-sans-sc" style="font-size: 14px; color: var(--ink-muted);">模式决定推演播放器的呈现方式，配置完成后不可更改</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+      <!-- 左边：标题 + 说明 -->
+      <div style="padding-top: 40px;">
+        <div class="font-serif-sc" style="font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">选择模拟模式</div>
+        <div class="font-sans-sc" style="font-size: 14px; color: var(--ink-muted); line-height: 1.8; margin-bottom: 24px;">
+          模式决定推演播放器的呈现方式，配置完成后不可更改。<br>
+          三种模式覆盖不同使用场景。
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <button class="btn-bi" onclick="goToStep(1)">下一步 →</button>
+        </div>
+      </div>
+      <!-- 右边：模式卡片（紧凑垂直排列） -->
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div class="mode-card-compact active" data-mode="visual" onclick="setMode('visual')">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="mode-symbol" style="margin: 0; flex-shrink: 0;">视</div>
+            <div style="flex: 1;">
+              <div class="mode-label" style="font-size: 15px; margin-bottom: 2px;">可视模拟</div>
+              <div class="mode-desc" style="font-size: 12px; line-height: 1.5;">观察 Skill 全生命周期 · 实时渲染网络演化</div>
+            </div>
+            <div style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center;">
+              <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent);"></div>
+            </div>
+          </div>
+        </div>
+        <div class="mode-card-compact" data-mode="compare" onclick="setMode('compare')">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="mode-symbol" style="margin: 0; flex-shrink: 0;">比</div>
+            <div style="flex: 1;">
+              <div class="mode-label" style="font-size: 15px; margin-bottom: 2px;">比较模拟</div>
+              <div class="mode-desc" style="font-size: 12px; line-height: 1.5;">不同四权配置对比 · 量化演化路径差异</div>
+            </div>
+            <div style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-light);"></div>
+          </div>
+        </div>
+        <div class="mode-card-compact" data-mode="headless" onclick="setMode('headless')">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="mode-symbol" style="margin: 0; flex-shrink: 0;">算</div>
+            <div style="flex: 1;">
+              <div class="mode-label" style="font-size: 15px; margin-bottom: 2px;">无头模式</div>
+              <div class="mode-desc" style="font-size: 12px; line-height: 1.5;">Monte Carlo 批量跑 · 统计平均 + 置信区间</div>
+            </div>
+            <div style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-light);"></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="grid-3" style="margin-bottom: 32px;">
-      <div class="mode-card active" data-mode="visual" onclick="setMode('visual')">
-        <div class="mode-symbol">视</div>
-        <div class="mode-label">可视模拟</div>
-        <div class="mode-desc">观察 Skill 全生命周期<br>诞生→使用→衍生→扩展→收益<br>实时渲染网络演化</div>
-      </div>
-      <div class="mode-card" data-mode="compare" onclick="setMode('compare')">
-        <div class="mode-symbol">比</div>
-        <div class="mode-label">比较模拟</div>
-        <div class="mode-desc">不同四权配置对比<br>观察演化路径差异<br>量化生命周期变化</div>
-      </div>
-      <div class="mode-card" data-mode="headless" onclick="setMode('headless')">
-        <div class="mode-symbol">算</div>
-        <div class="mode-label">无头模式</div>
-        <div class="mode-desc">Monte Carlo 批量跑<br>统计平均 + 置信区间<br>验证假设稳定性</div>
-      </div>
-    </div>
-    <div style="text-align: right;"><button class="btn-bi" onclick="goToStep(1)">下一步 →</button></div>
   </div>
 
-  <!-- Step 1: 基础设置（增加初始 Skill 数） -->
+  <!-- Step 1: 基础设置（左右布局） -->
   <div class="step-content" data-step="1">
-    <div class="font-serif-sc" style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 16px;">基础设置</div>
-    <div class="ink-divider-short" style="margin-bottom: 20px;"></div>
-    <div class="grid-2" style="gap: 16px;">
-      <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">实验名称</label><input class="input-paper" id="expName" value="实验 2026-06-20"></div>
-      <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">运行时长（轮）</label><input type="number" class="input-paper" id="rounds" value="200" min="10" max="1000"></div>
-      <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">步长（tick/轮）</label><input type="number" class="input-paper" id="stepSize" value="1" min="1" max="10"></div>
-      <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">随机种子</label><input type="number" class="input-paper" id="seed" value="42"></div>
-      <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">初始 Skill 数</label><input type="number" class="input-paper" id="initialSkills" value="10" min="5" max="50"></div>
-    </div>
-    <div style="margin-top: 24px; display: flex; justify-content: space-between;">
-      <button class="btn-bi outline" onclick="goToStep(0)">← 上一步</button>
-      <button class="btn-bi" onclick="goToStep(2)">下一步 →</button>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+      <!-- 左边：标题 + 说明 -->
+      <div style="padding-top: 40px;">
+        <div class="font-serif-sc" style="font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">基础设置</div>
+        <div class="font-sans-sc" style="font-size: 14px; color: var(--ink-muted); line-height: 1.8; margin-bottom: 24px;">
+          设定实验的基本参数，影响模拟的运行规模和随机性。<br>
+          种子固定可复现相同结果。
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <button class="btn-bi outline" onclick="goToStep(0)">← 上一步</button>
+          <button class="btn-bi" onclick="goToStep(2)">下一步 →</button>
+        </div>
+      </div>
+      <!-- 右边：表单 -->
+      <div class="paper-card" style="padding: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">实验名称</label><input class="input-paper" id="expName" value="实验 2026-06-20"></div>
+          <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">运行时长（轮）</label><input type="number" class="input-paper" id="rounds" value="200" min="10" max="1000"></div>
+          <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">步长（tick/轮）</label><input type="number" class="input-paper" id="stepSize" value="1" min="1" max="10"></div>
+          <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">随机种子</label><input type="number" class="input-paper" id="seed" value="42"></div>
+          <div><label class="font-sans-sc" style="font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px;">初始 Skill 数</label><input type="number" class="input-paper" id="initialSkills" value="10" min="5" max="50"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -667,7 +707,7 @@ function goToStep(step) {
 
 function setMode(mode) {
   currentMode = mode;
-  document.querySelectorAll('.mode-card').forEach(function(c) { c.classList.remove('active'); });
+  document.querySelectorAll('.mode-card, .mode-card-compact').forEach(function(c) { c.classList.remove('active'); });
   var card = document.querySelector('.mode-card[data-mode="' + mode + '"]');
   if (card) card.classList.add('active');
   var compareEl = document.getElementById('compareOptions');
@@ -1343,6 +1383,10 @@ function renderSimulate() {
   const currentState = result.rounds[currentRound];
   
   if (currentMode === 'compare') {
+    // 清除对比模式图形的缓存，避免 innerHTML 重建后 DOM 被删除但引用仍在
+    delete graphInstances['graph-a'];
+    delete graphInstances['graph-b'];
+    
     const aLabel = document.getElementById('aLabel')?.value || 'A 方案';
     const bLabel = document.getElementById('bLabel')?.value || 'B 方案';
     const aMetrics = result.a_result?.final_metrics || {};
