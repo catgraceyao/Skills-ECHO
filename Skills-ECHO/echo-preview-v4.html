@@ -574,9 +574,10 @@ let simulationResult = null;
 let currentRound = 0;
 let isPlaying = false;
 let playInterval = null;
+let simulateDomReady = false; // 标记 simulate 页面 DOM 是否已初始化
 
-// 全局节点位置缓存（保持生长连续性）
-const nodePositions = {};
+// 每个图形容器的独立实例
+const graphInstances = {};
 
 const POWER_LABELS = ['禁','己','亲','约','法','公'];
 const POWER_DESCS = {
@@ -614,11 +615,12 @@ const POWER_DESCS = {
   ]
 };
 
+// ===== 页面导航 =====
 function showPage(page) {
-  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.querySelectorAll('.page-section').forEach(function(s) { s.classList.remove('active'); });
+  document.querySelectorAll('.nav-link').forEach(function(l) { l.classList.remove('active'); });
   document.getElementById('page-' + page).classList.add('active');
-  const navLink = document.querySelector('.nav-link[data-page="' + page + '"]');
+  var navLink = document.querySelector('.nav-link[data-page="' + page + '"]');
   if (navLink) navLink.classList.add('active');
   if (page === 'simulate' && simulationResult) renderSimulate();
   if (page === 'dashboard' && simulationResult) renderDashboard();
@@ -626,48 +628,50 @@ function showPage(page) {
 
 function goToStep(step) {
   currentStep = step;
-  document.querySelectorAll('.step-item').forEach((item, i) => {
+  document.querySelectorAll('.step-item').forEach(function(item, i) {
     item.classList.remove('active', 'done');
     if (i < step) item.classList.add('done');
     if (i === step) item.classList.add('active');
   });
-  document.querySelectorAll('.step-content').forEach(c => c.classList.remove('active'));
-  document.querySelector('.step-content[data-step="' + step + '"]').classList.add('active');
+  document.querySelectorAll('.step-content').forEach(function(c) { c.classList.remove('active'); });
+  var el = document.querySelector('.step-content[data-step="' + step + '"]');
+  if (el) el.classList.add('active');
   updatePreview();
 }
 
 function setMode(mode) {
   currentMode = mode;
-  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
-  document.querySelector('.mode-card[data-mode="' + mode + '"]').classList.add('active');
-  const compareEl = document.getElementById('compareOptions');
-  const headlessEl = document.getElementById('headlessOptions');
+  document.querySelectorAll('.mode-card').forEach(function(c) { c.classList.remove('active'); });
+  var card = document.querySelector('.mode-card[data-mode="' + mode + '"]');
+  if (card) card.classList.add('active');
+  var compareEl = document.getElementById('compareOptions');
+  var headlessEl = document.getElementById('headlessOptions');
   if (compareEl) compareEl.classList.toggle('hidden', mode !== 'compare');
   if (headlessEl) headlessEl.classList.toggle('hidden', mode !== 'headless');
   updatePreview();
 }
 
 function setPowerLevel(power, level) {
-  const track = document.getElementById('slider-' + power);
+  var track = document.getElementById('slider-' + power);
   if (!track) return;
-  const dots = track.querySelectorAll('.power-dot');
-  const lines = track.querySelectorAll('.power-dot-line');
-  dots.forEach((d, i) => d.classList.toggle('active', i <= level));
-  lines.forEach((l, i) => l.classList.toggle('active', i < level));
-  const desc = document.getElementById('power-desc-' + power);
+  var dots = track.querySelectorAll('.power-dot');
+  var lines = track.querySelectorAll('.power-dot-line');
+  dots.forEach(function(d, i) { d.classList.toggle('active', i <= level); });
+  lines.forEach(function(l, i) { l.classList.toggle('active', i < level); });
+  var desc = document.getElementById('power-desc-' + power);
   if (desc && POWER_DESCS[power]) {
-    const info = POWER_DESCS[power][level];
+    var info = POWER_DESCS[power][level];
     desc.innerHTML = '<span class="level-name">' + info.name + '</span><br>' + info.desc;
   }
   updatePreview();
 }
 
 function getPowerLevel(power) {
-  const track = document.getElementById('slider-' + power);
+  var track = document.getElementById('slider-' + power);
   if (!track) return 0;
-  const dots = track.querySelectorAll('.power-dot');
-  let level = 0;
-  for (let i = 0; i < dots.length; i++) {
+  var dots = track.querySelectorAll('.power-dot');
+  var level = 0;
+  for (var i = 0; i < dots.length; i++) {
     if (dots[i].classList.contains('active')) level = i;
     else break;
   }
@@ -675,21 +679,21 @@ function getPowerLevel(power) {
 }
 
 function setBPowerLevel(power, level) {
-  const track = document.getElementById('slider-b-' + power);
+  var track = document.getElementById('slider-b-' + power);
   if (!track) return;
-  const dots = track.querySelectorAll('.power-dot');
-  const lines = track.querySelectorAll('.power-dot-line');
-  dots.forEach((d, i) => d.classList.toggle('active', i <= level));
-  lines.forEach((l, i) => l.classList.toggle('active', i < level));
+  var dots = track.querySelectorAll('.power-dot');
+  var lines = track.querySelectorAll('.power-dot-line');
+  dots.forEach(function(d, i) { d.classList.toggle('active', i <= level); });
+  lines.forEach(function(l, i) { l.classList.toggle('active', i < level); });
   updatePreview();
 }
 
 function getBPowerLevel(power) {
-  const track = document.getElementById('slider-b-' + power);
+  var track = document.getElementById('slider-b-' + power);
   if (!track) return 0;
-  const dots = track.querySelectorAll('.power-dot');
-  let level = 0;
-  for (let i = 0; i < dots.length; i++) {
+  var dots = track.querySelectorAll('.power-dot');
+  var level = 0;
+  for (var i = 0; i < dots.length; i++) {
     if (dots[i].classList.contains('active')) level = i;
     else break;
   }
@@ -697,194 +701,444 @@ function getBPowerLevel(power) {
 }
 
 function updatePreview() {
-  const modeNames = { visual: '可视模拟', compare: '比较模拟', headless: '无头模式' };
-  const el = (id) => document.getElementById(id);
+  var modeNames = { visual: '可视模拟', compare: '比较模拟', headless: '无头模式' };
+  var el = function(id) { return document.getElementById(id); };
   if (el('previewMode')) el('previewMode').textContent = modeNames[currentMode] || currentMode;
-  if (el('previewName')) el('previewName').textContent = el('expName')?.value || '';
-  if (el('previewRounds')) el('previewRounds').textContent = el('rounds')?.value || '';
-  if (el('previewSeed')) el('previewSeed').textContent = el('seed')?.value || '';
-  if (el('previewCreatorName')) el('previewCreatorName').textContent = el('creatorName')?.value || '创作者';
-  if (el('previewConsumerName')) el('previewConsumerName').textContent = el('consumerName')?.value || '消费者';
-  if (el('previewMediatorName')) el('previewMediatorName').textContent = el('mediatorName')?.value || '中介';
-  if (el('previewGovernanceName')) el('previewGovernanceName').textContent = el('governanceName')?.value || '治理';
-  if (el('previewCreator')) el('previewCreator').textContent = el('creatorCount')?.value || '';
-  if (el('previewConsumer')) el('previewConsumer').textContent = el('consumerCount')?.value || '';
-  if (el('previewMediator')) el('previewMediator').textContent = el('mediatorCount')?.value || '';
-  if (el('previewGovernance')) el('previewGovernance').textContent = el('governanceCount')?.value || '';
-  if (el('previewSkills')) el('previewSkills').textContent = el('initialSkills')?.value || '';
-  if (el('previewPricing')) el('previewPricing').textContent = el('pricingRule')?.options[el('pricingRule')?.selectedIndex]?.text || '';
-  
-  const useLevel = getPowerLevel('use');
-  const deriveLevel = getPowerLevel('derive');
-  const extendLevel = getPowerLevel('extend');
-  const revenueLevel = getPowerLevel('revenue');
+  if (el('previewName')) el('previewName').textContent = el('expName') ? el('expName').value : '';
+  if (el('previewRounds')) el('previewRounds').textContent = el('rounds') ? el('rounds').value : '';
+  if (el('previewSeed')) el('previewSeed').textContent = el('seed') ? el('seed').value : '';
+  if (el('previewCreatorName')) el('previewCreatorName').textContent = el('creatorName') ? el('creatorName').value : '创作者';
+  if (el('previewConsumerName')) el('previewConsumerName').textContent = el('consumerName') ? el('consumerName').value : '消费者';
+  if (el('previewMediatorName')) el('previewMediatorName').textContent = el('mediatorName') ? el('mediatorName').value : '中介';
+  if (el('previewGovernanceName')) el('previewGovernanceName').textContent = el('governanceName') ? el('governanceName').value : '治理';
+  if (el('previewCreator')) el('previewCreator').textContent = el('creatorCount') ? el('creatorCount').value : '';
+  if (el('previewConsumer')) el('previewConsumer').textContent = el('consumerCount') ? el('consumerCount').value : '';
+  if (el('previewMediator')) el('previewMediator').textContent = el('mediatorCount') ? el('mediatorCount').value : '';
+  if (el('previewGovernance')) el('previewGovernance').textContent = el('governanceCount') ? el('governanceCount').value : '';
+  if (el('previewSkills')) el('previewSkills').textContent = el('initialSkills') ? el('initialSkills').value : '';
+  if (el('previewPricing')) {
+    var sel = el('pricingRule');
+    el('previewPricing').textContent = sel && sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+  }
+  var useLevel = getPowerLevel('use');
+  var deriveLevel = getPowerLevel('derive');
+  var extendLevel = getPowerLevel('extend');
+  var revenueLevel = getPowerLevel('revenue');
   if (el('previewUsePower')) el('previewUsePower').textContent = useLevel + POWER_LABELS[useLevel];
   if (el('previewDerivePower')) el('previewDerivePower').textContent = deriveLevel + POWER_LABELS[deriveLevel];
   if (el('previewExtendPower')) el('previewExtendPower').textContent = extendLevel + POWER_LABELS[extendLevel];
   if (el('previewRevenuePower')) el('previewRevenuePower').textContent = revenueLevel + POWER_LABELS[revenueLevel];
 }
 
-document.addEventListener('input', (e) => { if (e.target.classList.contains('input-paper')) updatePreview(); });
+document.addEventListener('input', function(e) {
+  if (e.target.classList.contains('input-paper')) updatePreview();
+});
 
 function sendChat() {
-  const input = document.getElementById('chatInput');
-  const container = document.getElementById('chatContainer');
-  const text = input.value.trim();
+  var input = document.getElementById('chatInput');
+  var container = document.getElementById('chatContainer');
+  var text = input.value.trim();
   if (!text) return;
   container.innerHTML += '<div class="chat-msg user"><div class="font-sans-sc">' + escapeHtml(text) + '</div></div>';
   input.value = '';
   container.scrollTop = container.scrollHeight;
-  setTimeout(() => {
-    const responses = {
-      '开放': '收到！你想验证"开放使用权后 Skill 传播速度的变化"。<br><br>AI 推荐：<br>• 需求类型：传播效果对比<br>• 推荐模式：<strong>比较模拟</strong>（用5 vs 用1）<br>• 推荐时长：200 轮<br>• 观察指标：Skill 诞生速度、传播范围、生态规模<br><br><button class="btn-bi small" onclick="useAIPlan()">使用此方案</button>',
-      '收益': '收到！你想了解"收益权对创作者激励的影响"。<br><br>AI 推荐：<br>• 推荐模式：<strong>可视模拟</strong><br>• 推荐时长：100 轮<br>• 观察指标：创作者收益、Skill 产出量、生态参与度<br><br><button class="btn-bi small" onclick="useAIPlan()">使用此方案</button>',
-      '默认': '收到！让我为你分析这个需求...<br><br>AI 推荐：<br>• 需求类型：假设验证<br>• 推荐模式：<strong>可视模拟</strong>（建立直觉）<br>• 推荐时长：50 轮<br>• 可以先用小样本快速探索，确认方向后再批量验证<br><br><button class="btn-bi small" onclick="useAIPlan()">使用此方案</button>'
-    };
-    let response = responses.default;
-    if (text.includes('开放') || text.includes('使用权') || text.includes('传播')) response = responses['开放'];
-    else if (text.includes('收益') || text.includes('分成') || text.includes('激励')) response = responses['收益'];
+  setTimeout(function() {
+    var response;
+    if (text.indexOf('开放') !== -1 || text.indexOf('使用权') !== -1 || text.indexOf('传播') !== -1) {
+      response = '收到！你想验证"开放使用权后 Skill 传播速度的变化"。<br><br>AI 推荐：<br>• 需求类型：传播效果对比<br>• 推荐模式：<strong>比较模拟</strong>（用5 vs 用1）<br>• 推荐时长：200 轮<br>• 观察指标：Skill 诞生速度、传播范围、生态规模<br><br><button class="btn-bi small" onclick="useAIPlan()">使用此方案</button>';
+    } else if (text.indexOf('收益') !== -1 || text.indexOf('分成') !== -1 || text.indexOf('激励') !== -1) {
+      response = '收到！你想了解"收益权对创作者激励的影响"。<br><br>AI 推荐：<br>• 推荐模式：<strong>可视模拟</strong><br>• 推荐时长：100 轮<br>• 观察指标：创作者收益、Skill 产出量、生态参与度<br><br><button class="btn-bi small" onclick="useAIPlan()">使用此方案</button>';
+    } else {
+      response = '收到！让我为你分析这个需求...<br><br>AI 推荐：<br>• 需求类型：假设验证<br>• 推荐模式：<strong>可视模拟</strong>（建立直觉）<br>• 推荐时长：50 轮<br>• 可以先用小样本快速探索，确认方向后再批量验证<br><br><button class="btn-bi small" onclick="useAIPlan()">使用此方案</button>';
+    }
     container.innerHTML += '<div class="chat-msg ai"><div class="font-sans-sc">' + response + '</div></div>';
     container.scrollTop = container.scrollHeight;
   }, 800);
 }
-function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-function useAIPlan() { showPage('configure'); goToStep(0); setMode('compare'); }
+
+function escapeHtml(text) {
+  var div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function useAIPlan() {
+  showPage('configure');
+  goToStep(0);
+  setMode('compare');
+}
+
 function useTemplate(type) {
-  showPage('configure'); goToStep(0);
-  const presets = { newbie: { mode: 'visual', rounds: 50 }, researcher: { mode: 'headless', rounds: 100 }, governance: { mode: 'compare', rounds: 200 }, creator: { mode: 'visual', rounds: 100 } };
-  const p = presets[type] || presets.newbie;
+  showPage('configure');
+  goToStep(0);
+  var presets = { newbie: { mode: 'visual', rounds: 50 }, researcher: { mode: 'headless', rounds: 100 }, governance: { mode: 'compare', rounds: 200 }, creator: { mode: 'visual', rounds: 100 } };
+  var p = presets[type] || presets.newbie;
   setMode(p.mode);
   document.getElementById('rounds').value = p.rounds;
   updatePreview();
 }
 
-// ===== Skill 生命周期模拟数据生成 =====
-function runSimulation(config) {
-  const { totalRounds, creatorCount, consumerCount, mediatorCount, governanceCount, initialSkillCount, useLevel, deriveLevel, extendLevel, revenueLevel } = config;
-  
-  const D = useLevel / 5;
-  const K = extendLevel / 5;
-  const deriveProb = deriveLevel / 5;
-  
-  let idx = 0;
-  const agents = [];
-  for (let i = 0; i < creatorCount; i++) agents.push({ id: 'c' + i, type: 'creator', name: '创作者' + i, potential: 20 + Math.random() * 15, balance: 100, revenue: 0, skills: [] });
-  for (let i = 0; i < consumerCount; i++) agents.push({ id: 'u' + i, type: 'consumer', name: '消费者' + i, potential: 10 + Math.random() * 10, balance: 80, skills: [] });
-  for (let i = 0; i < mediatorCount; i++) agents.push({ id: 'm' + i, type: 'mediator', name: '中介' + i, potential: 25 + Math.random() * 15, balance: 120, skills: [] });
-  for (let i = 0; i < governanceCount; i++) agents.push({ id: 'g' + i, type: 'governance', name: '治理' + i, potential: 30 + Math.random() * 20, balance: 150, skills: [] });
-  
-  const skills = [];
-  for (let i = 0; i < initialSkillCount; i++) {
-    const creator = agents[i % creatorCount];
-    skills.push({ id: 's' + i, name: 'Skill' + i, category: 'base', potential: 15 + Math.random() * 10, price: 10 + Math.random() * 20, creator_id: creator.id, creator_name: creator.name, generation: 0, parent: null, usage_count: 0, derive_count: 0, extend_count: 0, revenue: 0, status: 'active' });
-  }
-  
-  let skillCounter = initialSkillCount;
-  const rounds = [];
-  
-  for (let round = 0; round < totalRounds; round++) {
-    const events = [];
-    const transactions = [];
-    
-    const createProb = Math.max(0.2, 0.15 * (1 + D * 0.5));
-    for (let i = 0; i < creatorCount; i++) {
-      if (Math.random() < createProb) {
-        const creator = agents[i];
-        const newSkill = { id: 's' + (skillCounter++), name: 'Skill' + skillCounter, category: 'new', potential: 15 + Math.random() * 10, price: 10 + Math.random() * 20, creator_id: creator.id, creator_name: creator.name, generation: 0, parent: null, usage_count: 0, derive_count: 0, extend_count: 0, revenue: 0, status: 'active' };
-        skills.push(newSkill);
-        events.push({ type: 'birth', skill: newSkill, creator: creator, round, description: creator.name + ' 创作了 ' + newSkill.name });
-      }
-    }
-    
-    const usageProb = Math.max(0.15, D * 0.5);
-    for (let i = 0; i < consumerCount; i++) {
-      if (Math.random() < usageProb && skills.length > 0) {
-        const skill = skills[Math.floor(Math.random() * skills.length)];
-        skill.usage_count++;
-        const consumer = agents[creatorCount + i];
-        transactions.push({ type: 'usage', skill: skill, consumer: consumer, round, amount: skill.price });
-        events.push({ type: 'trade', skill: skill, consumer: consumer, round, description: consumer.name + ' 使用了 ' + skill.name });
-        const revenue = skill.price;
-        const creatorShare = revenueLevel >= 4 ? 0.9 : revenueLevel >= 3 ? 0.7 : revenueLevel >= 2 ? 0.5 : revenueLevel >= 1 ? 0.8 : 0;
-        const creator = agents.find(a => a.id === skill.creator_id);
-        if (creator) { creator.balance += revenue * creatorShare; creator.revenue += revenue * creatorShare; skill.revenue += revenue * creatorShare; }
-      }
-    }
-    
-    const deriveBase = Math.max(0.1, deriveProb * 0.3);
-    for (const skill of skills) {
-      if (skill.usage_count > 0 && Math.random() < deriveBase * Math.min(1, skill.usage_count / 3)) {
-        const parentGen = skill.generation;
-        const newSkill = { id: 's' + (skillCounter++), name: skill.name + '-v' + (parentGen + 2), category: 'derived', potential: skill.potential * (0.8 + Math.random() * 0.4), price: skill.price * (0.7 + Math.random() * 0.3), creator_id: skill.creator_id, creator_name: skill.creator_name, generation: parentGen + 1, parent: skill.id, usage_count: 0, derive_count: 0, extend_count: 0, revenue: 0, status: 'active' };
-        skills.push(newSkill);
-        skill.derive_count++;
-        events.push({ type: 'derive', skill: newSkill, parent: skill, round, description: skill.name + ' 被衍生为 ' + newSkill.name });
-      }
-    }
-    
-    const extendBase = Math.max(0.08, K * 0.2);
-    for (const skill of skills) {
-      if (skill.usage_count > 0 && Math.random() < extendBase) {
-        skill.extend_count++;
-        events.push({ type: 'extend', skill: skill, round, description: skill.name + ' 被编排进新方法 Method-' + Math.floor(Math.random() * 100) });
-      }
-    }
-    
-    if (round > 0 && round % 5 === 0) {
-      const totalRevenue = skills.reduce((sum, s) => sum + s.revenue, 0);
-      if (totalRevenue > 0) {
-        events.push({ type: 'revenue', round, description: '本轮生态总收益: ' + totalRevenue.toFixed(1) + ' 单位' });
-      } else {
-        events.push({ type: 'revenue', round, description: '本轮生态暂无收益' });
-      }
-    }
-    
-    rounds.push({ round, agents: agents.map(a => ({...a})), skills: skills.map(s => ({...s})), transactions, events });
-  }
-  
-  const totalSkills = skills.length;
-  const derivedSkills = skills.filter(s => s.generation > 0).length;
-  const extendedSkills = skills.filter(s => s.extend_count > 0).length;
-  const totalRevenue = skills.reduce((sum, s) => sum + s.revenue, 0);
-  const avgUsage = skills.reduce((sum, s) => sum + s.usage_count, 0) / totalSkills;
-  const gini = 0.35 + (1 - D) * 0.15 + (revenueLevel / 5) * 0.1;
-  const matthew = 0.3 + (1 - D) * 0.2 + deriveProb * 0.1;
-  const shannon = 1.0 + D * 1.5 + deriveProb * 0.5;
-  const rho = 0.3 + K * 0.3 + deriveProb * 0.1;
-  
-  const metrics = { gini, matthew, shannon, rho, totalSkills, derivedSkills, extendedSkills, totalRevenue, avgUsage, useLevel, deriveLevel, extendLevel, revenueLevel };
-  
-  return { rounds, skills, agents, metrics };
+// ===== 带种子的伪随机数生成器（Mulberry32） =====
+function makeRng(seed) {
+  var s = seed >>> 0;
+  return function() {
+    s += 0x6D2B79F5;
+    var t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
+// ===== 使用权等级 → 传播概率 D =====
+function useLevelToD(level) {
+  var map = [0.0, 0.1, 0.3, 0.5, 0.8, 1.0];
+  return map[level] || 0;
+}
+
+// ===== 收益权等级 → 创作者分成比例 =====
+function revenueLevelToShare(level) {
+  var map = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
+  return map[level] || 0;
+}
+
+// ===== 核心模拟引擎 =====
+function runSimulation(config) {
+  var totalRounds = config.totalRounds || 200;
+  var creatorCount = config.creatorCount || 5;
+  var consumerCount = config.consumerCount || 15;
+  var mediatorCount = config.mediatorCount || 2;
+  var governanceCount = config.governanceCount || 1;
+  var initialSkillCount = config.initialSkillCount || 10;
+  var useLevel = config.useLevel || 0;
+  var deriveLevel = config.deriveLevel || 0;
+  var extendLevel = config.extendLevel || 0;
+  var revenueLevel = config.revenueLevel || 0;
+  var seed = (config.seed || 42) >>> 0;
+
+  var rng = makeRng(seed);
+  var D = useLevelToD(useLevel);
+  var creatorShare = revenueLevelToShare(revenueLevel);
+  var deriveProb = deriveLevel > 0 ? 0.3 * (deriveLevel / 5) : 0;
+  var extendProb = extendLevel > 0 ? 0.2 * (extendLevel / 5) : 0;
+
+  // 初始化 Agents
+  var agents = [];
+  var agentId = 0;
+  for (var i = 0; i < creatorCount; i++) {
+    agents.push({ id: 'c' + i, type: 'creator', name: '创作者' + i, potential: 20 + rng() * 15, balance: 100, revenue: 0, skills: [] });
+  }
+  for (var i = 0; i < consumerCount; i++) {
+    agents.push({ id: 'u' + i, type: 'consumer', name: '消费者' + i, potential: 10 + rng() * 10, balance: 80, skills: [] });
+  }
+  for (var i = 0; i < mediatorCount; i++) {
+    agents.push({ id: 'm' + i, type: 'mediator', name: '中介' + i, potential: 25 + rng() * 15, balance: 120, skills: [] });
+  }
+  for (var i = 0; i < governanceCount; i++) {
+    agents.push({ id: 'g' + i, type: 'governance', name: '治理' + i, potential: 30 + rng() * 20, balance: 150, skills: [] });
+  }
+
+  var creators = agents.filter(function(a) { return a.type === 'creator'; });
+  var consumers = agents.filter(function(a) { return a.type === 'consumer'; });
+
+  // 初始化 Skills
+  var skills = [];
+  var skillIdCounter = 0;
+  for (var i = 0; i < initialSkillCount; i++) {
+    var creator = creators[i % creators.length];
+    skills.push({
+      id: 's' + (skillIdCounter++),
+      name: 'Skill' + (i + 1),
+      category: 'base',
+      potential: 15 + rng() * 10,
+      price: 10 + rng() * 20,
+      creator_id: creator.id,
+      creator_name: creator.name,
+      generation: 0,
+      parent: null,
+      usage_count: 0,
+      derive_count: 0,
+      extend_count: 0,
+      revenue: 0,
+      status: 'active'
+    });
+  }
+
+  // 将初始技能分配给创作者
+  for (var i = 0; i < skills.length; i++) {
+    var cr = creators.find(function(a) { return a.id === skills[i].creator_id; });
+    if (cr) cr.skills.push(skills[i].id);
+  }
+
+  var rounds = [];
+
+  for (var round = 0; round < totalRounds; round++) {
+    var events = [];
+    var transactions = [];
+
+    // --- 1. 创作者创作新 Skill（基础概率） ---
+    var createProb = Math.max(0.05, 0.08 * (1 + D));
+    for (var ci = 0; ci < creators.length; ci++) {
+      if (rng() < createProb) {
+        var creator = creators[ci];
+        var newSkill = {
+          id: 's' + (skillIdCounter++),
+          name: 'Skill' + skillIdCounter,
+          category: 'new',
+          potential: 15 + rng() * 10,
+          price: 10 + rng() * 20,
+          creator_id: creator.id,
+          creator_name: creator.name,
+          generation: 0,
+          parent: null,
+          usage_count: 0,
+          derive_count: 0,
+          extend_count: 0,
+          revenue: 0,
+          status: 'active'
+        };
+        skills.push(newSkill);
+        creator.skills.push(newSkill.id);
+        events.push({ type: 'birth', skill: newSkill, creator: creator, round: round, description: creator.name + ' 创作了 ' + newSkill.name });
+      }
+    }
+
+    // --- 2. 消费者使用 Skills ---
+    // 按热度（usage_count）构建加权概率分布
+    var activeSkills = skills.filter(function(s) { return s.status === 'active'; });
+    if (activeSkills.length > 0) {
+      for (var ci = 0; ci < consumers.length; ci++) {
+        // 消费者接触到新 skill 的概率 = D
+        if (rng() < D) {
+          // 按热度偏好选择 skill
+          var totalWeight = 0;
+          var weights = activeSkills.map(function(s) {
+            var w = 1 + s.usage_count * 2; // 基础权重1 + 热度加成
+            totalWeight += w;
+            return w;
+          });
+          var r = rng() * totalWeight;
+          var chosen = activeSkills[0];
+          var cum = 0;
+          for (var si = 0; si < activeSkills.length; si++) {
+            cum += weights[si];
+            if (r <= cum) { chosen = activeSkills[si]; break; }
+          }
+
+          chosen.usage_count++;
+          var consumer = consumers[ci];
+          transactions.push({ type: 'usage', skill: chosen, consumer: consumer, round: round, amount: chosen.price });
+          events.push({ type: 'trade', skill: chosen, consumer: consumer, round: round, description: consumer.name + ' 使用了 ' + chosen.name });
+
+          // 收益分配
+          var rev = chosen.price;
+          var cShare = rev * creatorShare;
+          var creator = agents.find(function(a) { return a.id === chosen.creator_id; });
+          if (creator) {
+            creator.balance += cShare;
+            creator.revenue += cShare;
+            chosen.revenue += cShare;
+          }
+        }
+      }
+    }
+
+    // --- 3. 衍生规则：usage_count >= 5 时可能触发 ---
+    if (deriveLevel > 0) {
+      for (var si = 0; si < skills.length; si++) {
+        var skill = skills[si];
+        if (skill.usage_count >= 5 && rng() < deriveProb) {
+          var parentGen = skill.generation;
+          var newSkill = {
+            id: 's' + (skillIdCounter++),
+            name: skill.name + '-v' + (parentGen + 2),
+            category: 'derived',
+            potential: skill.potential * (0.8 + rng() * 0.4),
+            price: skill.price * (0.7 + rng() * 0.3),
+            creator_id: skill.creator_id,
+            creator_name: skill.creator_name,
+            generation: parentGen + 1,
+            parent: skill.id,
+            usage_count: 0,
+            derive_count: 0,
+            extend_count: 0,
+            revenue: 0,
+            status: 'active'
+          };
+          skills.push(newSkill);
+          skill.derive_count++;
+          events.push({ type: 'derive', skill: newSkill, parent: skill, round: round, description: skill.name + ' 被衍生为 ' + newSkill.name });
+        }
+      }
+    }
+
+    // --- 4. 扩展规则：创作者收益达到阈值时触发 ---
+    if (extendLevel > 0) {
+      for (var si = 0; si < skills.length; si++) {
+        var skill = skills[si];
+        if (skill.revenue >= 50 && rng() < extendProb) {
+          skill.extend_count++;
+          events.push({ type: 'extend', skill: skill, round: round, description: skill.name + ' 被编排进新方法 Method-' + Math.floor(rng() * 100) });
+        }
+      }
+    }
+
+    // --- 5. 新 Agent 加入（概率与总 skill 数正相关） ---
+    var newConsumerProb = Math.min(0.3, activeSkills.length * 0.005);
+    if (rng() < newConsumerProb) {
+      var newId = 'u' + consumers.length;
+      var newConsumer = { id: newId, type: 'consumer', name: '消费者' + consumers.length, potential: 10 + rng() * 10, balance: 80, skills: [] };
+      agents.push(newConsumer);
+      consumers.push(newConsumer);
+      events.push({ type: 'birth', agent: newConsumer, round: round, description: '新消费者 ' + newConsumer.name + ' 加入生态' });
+    }
+
+    // --- 6. 周期性收益报告 ---
+    if (round > 0 && round % 5 === 0) {
+      var totalRev = skills.reduce(function(sum, s) { return sum + s.revenue; }, 0);
+      if (totalRev > 0) {
+        events.push({ type: 'revenue', round: round, description: '本轮生态总收益: ' + totalRev.toFixed(1) + ' 单位' });
+      } else {
+        events.push({ type: 'revenue', round: round, description: '本轮生态暂无收益' });
+      }
+    }
+
+    // 深拷贝当前状态存入 rounds
+    rounds.push({
+      round: round,
+      agents: agents.map(function(a) { return JSON.parse(JSON.stringify(a)); }),
+      skills: skills.map(function(s) { return JSON.parse(JSON.stringify(s)); }),
+      transactions: transactions.map(function(t) { return JSON.parse(JSON.stringify(t)); }),
+      events: events.map(function(e) { return JSON.parse(JSON.stringify(e)); })
+    });
+  }
+
+  // 计算最终指标
+  var totalSkills = skills.length;
+  var derivedSkills = skills.filter(function(s) { return s.generation > 0; }).length;
+  var extendedSkills = skills.filter(function(s) { return s.extend_count > 0; }).length;
+  var totalRevenue = skills.reduce(function(sum, s) { return sum + s.revenue; }, 0);
+  var avgUsage = totalSkills > 0 ? skills.reduce(function(sum, s) { return sum + s.usage_count; }, 0) / totalSkills : 0;
+
+  // 计算 Gini 系数（基于 skill 收益分布）
+  var revenues = skills.map(function(s) { return s.revenue; }).sort(function(a, b) { return a - b; });
+  var n = revenues.length;
+  var gini = 0;
+  if (n > 0) {
+    var meanRev = revenues.reduce(function(a, b) { return a + b; }, 0) / n;
+    if (meanRev > 0) {
+      var num = 0;
+      for (var i = 0; i < n; i++) {
+        for (var j = 0; j < n; j++) {
+          num += Math.abs(revenues[i] - revenues[j]);
+        }
+      }
+      gini = num / (2 * n * n * meanRev);
+    }
+  }
+  gini = Math.max(0.1, Math.min(0.9, gini + (1 - D) * 0.1));
+
+  // Shannon 多样性（基于 skill 使用分布）
+  var totalUsage = skills.reduce(function(sum, s) { return sum + s.usage_count; }, 0);
+  var shannon = 0;
+  if (totalUsage > 0) {
+    for (var i = 0; i < skills.length; i++) {
+      var p = skills[i].usage_count / totalUsage;
+      if (p > 0) shannon -= p * Math.log(p);
+    }
+  }
+  shannon = 1.0 + shannon * 0.5 + D * 1.2;
+
+  // 马太效应（收益集中度）
+  var matthew = 0.3 + (1 - D) * 0.2;
+  if (totalRevenue > 0) {
+    var topRev = skills.slice().sort(function(a, b) { return b.revenue - a.revenue; }).slice(0, Math.max(1, Math.floor(n * 0.2)));
+    var topTotal = topRev.reduce(function(sum, s) { return sum + s.revenue; }, 0);
+    matthew = topTotal / totalRevenue;
+  }
+
+  // 桥接密度 ρ
+  var rho = 0.3 + (extendLevel / 5) * 0.3 + (deriveLevel / 5) * 0.1;
+
+  var metrics = {
+    gini: gini,
+    matthew: matthew,
+    shannon: shannon,
+    rho: rho,
+    totalSkills: totalSkills,
+    derivedSkills: derivedSkills,
+    extendedSkills: extendedSkills,
+    totalRevenue: totalRevenue,
+    avgUsage: avgUsage,
+    useLevel: useLevel,
+    deriveLevel: deriveLevel,
+    extendLevel: extendLevel,
+    revenueLevel: revenueLevel
+  };
+
+  return { rounds: rounds, skills: skills, agents: agents, metrics: metrics };
+}
+
+// ===== 读取配置并生成模拟数据 =====
 function generateMockData() {
-  const totalRounds = parseInt(document.getElementById('rounds').value) || 50;
-  const creatorCount = parseInt(document.getElementById('creatorCount').value) || 5;
-  const consumerCount = parseInt(document.getElementById('consumerCount').value) || 15;
-  const mediatorCount = parseInt(document.getElementById('mediatorCount').value) || 2;
-  const governanceCount = parseInt(document.getElementById('governanceCount').value) || 1;
-  const initialSkillCount = parseInt(document.getElementById('initialSkills').value) || 10;
-  
-  const aUseLevel = getPowerLevel('use');
-  const aDeriveLevel = getPowerLevel('derive');
-  const aExtendLevel = getPowerLevel('extend');
-  const aRevenueLevel = getPowerLevel('revenue');
-  
-  const aResult = runSimulation({ totalRounds, creatorCount, consumerCount, mediatorCount, governanceCount, initialSkillCount, useLevel: aUseLevel, deriveLevel: aDeriveLevel, extendLevel: aExtendLevel, revenueLevel: aRevenueLevel });
-  
-  const result = { rounds: aResult.rounds, skills: aResult.skills, agents: aResult.agents, final_metrics: aResult.metrics, mode: currentMode };
-  
+  var totalRounds = parseInt(document.getElementById('rounds').value) || 200;
+  var creatorCount = parseInt(document.getElementById('creatorCount').value) || 5;
+  var consumerCount = parseInt(document.getElementById('consumerCount').value) || 15;
+  var mediatorCount = parseInt(document.getElementById('mediatorCount').value) || 2;
+  var governanceCount = parseInt(document.getElementById('governanceCount').value) || 1;
+  var initialSkillCount = parseInt(document.getElementById('initialSkills').value) || 10;
+  var seed = parseInt(document.getElementById('seed').value) || 42;
+
+  var aUseLevel = getPowerLevel('use');
+  var aDeriveLevel = getPowerLevel('derive');
+  var aExtendLevel = getPowerLevel('extend');
+  var aRevenueLevel = getPowerLevel('revenue');
+
+  var aResult = runSimulation({
+    totalRounds: totalRounds,
+    creatorCount: creatorCount,
+    consumerCount: consumerCount,
+    mediatorCount: mediatorCount,
+    governanceCount: governanceCount,
+    initialSkillCount: initialSkillCount,
+    useLevel: aUseLevel,
+    deriveLevel: aDeriveLevel,
+    extendLevel: aExtendLevel,
+    revenueLevel: aRevenueLevel,
+    seed: seed
+  });
+
+  var result = {
+    rounds: aResult.rounds,
+    skills: aResult.skills,
+    agents: aResult.agents,
+    final_metrics: aResult.metrics,
+    mode: currentMode
+  };
+
   if (currentMode === 'compare') {
-    const bUseLevel = getBPowerLevel('use');
-    const bDeriveLevel = getBPowerLevel('derive');
-    const bExtendLevel = getBPowerLevel('extend');
-    const bRevenueLevel = getBPowerLevel('revenue');
-    
-    const bResult = runSimulation({ totalRounds, creatorCount, consumerCount, mediatorCount, governanceCount, initialSkillCount, useLevel: bUseLevel, deriveLevel: bDeriveLevel, extendLevel: bExtendLevel, revenueLevel: bRevenueLevel });
-    
-    const aMetrics = aResult.metrics;
-    const bMetrics = bResult.metrics;
-    
+    var bUseLevel = getBPowerLevel('use');
+    var bDeriveLevel = getBPowerLevel('derive');
+    var bExtendLevel = getBPowerLevel('extend');
+    var bRevenueLevel = getBPowerLevel('revenue');
+
+    var bResult = runSimulation({
+      totalRounds: totalRounds,
+      creatorCount: creatorCount,
+      consumerCount: consumerCount,
+      mediatorCount: mediatorCount,
+      governanceCount: governanceCount,
+      initialSkillCount: initialSkillCount,
+      useLevel: bUseLevel,
+      deriveLevel: bDeriveLevel,
+      extendLevel: bExtendLevel,
+      revenueLevel: bRevenueLevel,
+      seed: seed + 1
+    });
+
+    var aMetrics = aResult.metrics;
+    var bMetrics = bResult.metrics;
+
     result.a_result = { rounds: aResult.rounds, final_metrics: aMetrics };
     result.b_result = { rounds: bResult.rounds, final_metrics: bMetrics };
     result.diff_metrics = {
@@ -897,16 +1151,16 @@ function generateMockData() {
       totalRevenue: aMetrics.totalRevenue - bMetrics.totalRevenue
     };
   }
-  
+
   if (currentMode === 'headless') {
-    const batchCount = parseInt(document.getElementById('batchCount')?.value) || 100;
+    var batchCount = parseInt(document.getElementById('batchCount') ? document.getElementById('batchCount').value : 100) || 100;
     result.batch_stats = {
       totalSkills: { mean: aResult.metrics.totalSkills, median: aResult.metrics.totalSkills, std: aResult.metrics.totalSkills * 0.05, ci_95: [aResult.metrics.totalSkills * 0.9, aResult.metrics.totalSkills * 1.1] },
-      totalRevenue: { mean: aResult.metrics.totalRevenue, median: aResult.metrics.totalRevenue, std: aResult.metrics.totalRevenue * 0.08, ci_95: [aResult.metrics.totalRevenue * 0.85, aResult.metrics.totalRevenue * 1.15] },
+      totalRevenue: { mean: aResult.metrics.totalRevenue, median: aResult.metrics.totalRevenue, std: aResult.metrics.totalRevenue * 0.08, ci_95: [aResult.metrics.totalRevenue * 0.85, aResult.metrics.totalRevenue * 1.15] }
     };
     result.batch_count = batchCount;
   }
-  
+
   return result;
 }
 
@@ -914,6 +1168,7 @@ function startSimulation() {
   simulationResult = generateMockData();
   currentRound = 0;
   isPlaying = false;
+  simulateDomReady = false; // 重置 DOM 初始化标记
   if (playInterval) clearInterval(playInterval);
   showPage('simulate');
 }
@@ -1059,145 +1314,193 @@ function renderSimulate() {
     return;
   }
   
-  // Visual mode
-  container.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-      <div>
-        <h1 class="ink-title" style="font-size: 24px; letter-spacing: 0.1em;">推演播放器</h1>
-        <p class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-top: 4px;">Skill 全生命周期观察 · 诞生→使用→衍生→扩展→收益</p>
-      </div>
-      <span class="seal seal-fill">推演</span>
-    </div>
-    <div class="ink-divider-short"></div>
-    <div class="play-controls" style="margin-bottom: 16px;">
-      <button class="play-btn" onclick="resetSim()">重置</button>
-      <button class="play-btn" onclick="stepBack()">←</button>
-      <button class="play-btn primary" onclick="togglePlay()">${isPlaying ? '暂停' : '▶ 播放'}</button>
-      <button class="play-btn" onclick="stepForward()">→</button>
-      <span class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted);">轮次 ${currentRound} / ${result.rounds.length - 1}</span>
-      <button class="play-btn" onclick="toggleGraphFullscreen()" title="放大播放器">⛶ 放大</button>
-    </div>
-    <div style="display: grid; grid-template-columns: 300px 1fr 300px; gap: 16px; height: calc(100vh - 300px);">
-      <div>
-        <div class="paper-card" style="padding: 16px; margin-bottom: 16px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-            <span class="font-serif-sc" style="font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: 0.05em;">时间轴</span>
-            <span class="font-sans-sc" style="font-size: 14px; color: var(--accent); font-weight: 700;">${currentRound} / ${result.rounds.length - 1}</span>
+  // ===== Visual mode — 懒初始化，不重建图形容器 =====
+  const isInit = container.querySelector('#sim-visual-root') !== null;
+  
+  if (!isInit) {
+    container.innerHTML = `
+      <div id="sim-visual-root">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <div>
+            <h1 class="ink-title" style="font-size: 24px; letter-spacing: 0.1em;">推演播放器</h1>
+            <p class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-top: 4px;">Skill 全生命周期观察 · 诞生→使用→衍生→扩展→收益</p>
           </div>
-          <div style="height: 2px; background: linear-gradient(to right, var(--border-ink), var(--accent)); margin: 8px 0;"></div>
-          <input type="range" class="timeline-slider" min="0" max="${result.rounds.length - 1}" value="${currentRound}" oninput="goToRound(parseInt(this.value))">
-          <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 11px; color: var(--ink-muted);"><span>0</span><span>${result.rounds.length - 1}</span></div>
+          <span class="seal seal-fill">推演</span>
         </div>
-        <div class="paper-card" style="padding: 16px;">
-          <div class="font-serif-sc" style="font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">生态快照</div>
-          <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); line-height: 2.2;">
-            <div><strong style="color: var(--ink);">Agent 生态</strong></div>
-            <div>总 量: ${currentState.agents.length} 个</div>
-            <div>创作者: ${currentState.agents.filter(a => a.type === 'creator').length} 个</div>
-            <div>消费者: ${currentState.agents.filter(a => a.type === 'consumer').length} 个</div>
-            <div style="margin-top: 8px;"><strong style="color: var(--ink);">Skill 市场</strong></div>
-            <div>总 量: ${currentState.skills.length} 个</div>
-            <div>新 生: ${currentState.events.filter(e => e.type === 'birth').length} 个</div>
-            <div>衍 生: ${currentState.skills.filter(s => s.generation > 0).length} 个</div>
-            <div style="margin-top: 8px;"><strong style="color: var(--ink);">交易流</strong></div>
-            <div>本 轮: ${currentState.transactions.length} 笔</div>
-            <div>事 件: ${currentState.events.length} 个</div>
-          </div>
+        <div class="ink-divider-short"></div>
+        <div class="play-controls" style="margin-bottom: 16px;" id="sim-play-controls">
+          <button class="play-btn" onclick="resetSim()">重置</button>
+          <button class="play-btn" onclick="stepBack()">←</button>
+          <button class="play-btn primary" id="sim-play-btn" onclick="togglePlay()">▶ 播放</button>
+          <button class="play-btn" onclick="stepForward()">→</button>
+          <span class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted);" id="sim-round-display">轮次 0 / ${result.rounds.length - 1}</span>
+          <button class="play-btn" onclick="toggleGraphFullscreen()" title="放大播放器">⛶ 放大</button>
         </div>
-      </div>
-      <div class="graph-container" id="main-graph" style="height: 100%;"></div>
-      <div>
-        <div class="paper-card" style="margin-bottom: 12px;">
-          <div class="font-serif-sc" style="font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 12px; padding: 16px 16px 0;">生命周期事件</div>
-          <div style="padding: 0 16px 16px; max-height: 200px; overflow-y: auto;">
-            ${(() => {
-              const allEvents = [];
-              for (let r = 0; r <= currentRound; r++) {
-                const round = result.rounds[r];
-                if (round) allEvents.push(...round.events);
-              }
-              return allEvents.slice(-12).map(e => {
-                const tagClass = e.type;
-                const tagName = { birth: '诞生', trade: '使用', derive: '衍生', extend: '扩展', revenue: '收益' }[e.type] || e.type;
-                return `<div class="event-item ${tagClass}"><span class="tag ${tagClass}">${tagName}</span>轮${e.round} · ${e.description}</div>`;
-              }).join('') || '<div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted);">暂无事件</div>';
-            })()}
+        <div style="display: grid; grid-template-columns: 300px 1fr 300px; gap: 16px; height: calc(100vh - 300px);">
+          <div>
+            <div class="paper-card" style="padding: 16px; margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <span class="font-serif-sc" style="font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: 0.05em;">时间轴</span>
+                <span class="font-sans-sc" style="font-size: 14px; color: var(--accent); font-weight: 700;" id="sim-timeline-display">0 / ${result.rounds.length - 1}</span>
+              </div>
+              <div style="height: 2px; background: linear-gradient(to right, var(--border-ink), var(--accent)); margin: 8px 0;"></div>
+              <input type="range" class="timeline-slider" id="sim-timeline-slider" min="0" max="${result.rounds.length - 1}" value="0" oninput="goToRound(parseInt(this.value))">
+              <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 11px; color: var(--ink-muted);"><span>0</span><span>${result.rounds.length - 1}</span></div>
+            </div>
+            <div class="paper-card" style="padding: 16px;" id="sim-eco-panel">
+              <div class="font-serif-sc" style="font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">生态快照</div>
+              <div class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); line-height: 2.2;" id="sim-eco-content"></div>
+            </div>
           </div>
-          <div style="padding: 0 16px 16px;">
-            <div class="font-serif-sc" style="font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 10px;">Top 创作者（按收益）</div>
-            ${currentState.agents.filter(a => a.type === 'creator').sort((a, b) => b.revenue - a.revenue).slice(0, 3).map((a, i) => 
-              `<div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 12px; border-bottom: 1px solid var(--border-light);">
-                <span style="color: var(--ink);">${i + 1}. ${a.name}</span>
-                <span style="color: var(--gold); font-weight: 700;">${a.revenue.toFixed(1)}</span>
-              </div>`
-            ).join('')}
-          </div>
-          <div style="padding: 0 16px 16px;">
-            <div class="font-serif-sc" style="font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 10px;">活跃 Skill</div>
-            ${currentState.skills.sort((a, b) => b.usage_count - a.usage_count).slice(0, 3).map(s => 
-              `<div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 12px; border-bottom: 1px solid var(--border-light);">
-                <span style="color: var(--ink);">${s.name}</span>
-                <span style="color: var(--accent);">使用 ${s.usage_count} 次</span>
-              </div>`
-            ).join('')}
+          <div class="graph-container" id="main-graph" style="height: 100%;"></div>
+          <div>
+            <div class="paper-card" style="margin-bottom: 12px;">
+              <div class="font-serif-sc" style="font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 12px; padding: 16px 16px 0;">生命周期事件</div>
+              <div style="padding: 0 16px 16px; max-height: 200px; overflow-y: auto;" id="sim-events-list"></div>
+              <div style="padding: 0 16px 16px;">
+                <div class="font-serif-sc" style="font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 10px;">Top 创作者（按收益）</div>
+                <div id="sim-top-creators"></div>
+              </div>
+              <div style="padding: 0 16px 16px;">
+                <div class="font-serif-sc" style="font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 10px;">活跃 Skill</div>
+                <div id="sim-active-skills"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  `;
-  setTimeout(() => drawGraph('main-graph', result), 100);
+    `;
+    setTimeout(() => { drawGraph('main-graph', result); }, 50);
+  }
+  
+  // 更新数据（每次调用都执行）
+  updateVisualSimulate(result, currentState);
 }
 
-let globalSvg = null;
-let globalLinkG = null;
-let globalNodeG = null;
-let globalSimulation = null;
+function updateVisualSimulate(result, currentState) {
+  // 更新轮次显示
+  const roundDisplay = document.getElementById('sim-round-display');
+  if (roundDisplay) roundDisplay.textContent = `轮次 ${currentRound} / ${result.rounds.length - 1}`;
+  
+  const timelineDisplay = document.getElementById('sim-timeline-display');
+  if (timelineDisplay) timelineDisplay.textContent = `${currentRound} / ${result.rounds.length - 1}`;
+  
+  const timelineSlider = document.getElementById('sim-timeline-slider');
+  if (timelineSlider) timelineSlider.value = currentRound;
+  
+  const playBtn = document.getElementById('sim-play-btn');
+  if (playBtn) playBtn.textContent = isPlaying ? '暂停' : '▶ 播放';
+  
+  // 更新生态快照
+  const ecoContent = document.getElementById('sim-eco-content');
+  if (ecoContent) {
+    ecoContent.innerHTML = `
+      <div><strong style="color: var(--ink);">Agent 生态</strong></div>
+      <div>总 量: ${currentState.agents.length} 个</div>
+      <div>创作者: ${currentState.agents.filter(a => a.type === 'creator').length} 个</div>
+      <div>消费者: ${currentState.agents.filter(a => a.type === 'consumer').length} 个</div>
+      <div style="margin-top: 8px;"><strong style="color: var(--ink);">Skill 市场</strong></div>
+      <div>总 量: ${currentState.skills.length} 个</div>
+      <div>新 生: ${currentState.events.filter(e => e.type === 'birth').length} 个</div>
+      <div>衍 生: ${currentState.skills.filter(s => s.generation > 0).length} 个</div>
+      <div style="margin-top: 8px;"><strong style="color: var(--ink);">交易流</strong></div>
+      <div>本 轮: ${currentState.transactions.length} 笔</div>
+      <div>事 件: ${currentState.events.length} 个</div>
+    `;
+  }
+  
+  // 更新事件列表
+  const eventsList = document.getElementById('sim-events-list');
+  if (eventsList) {
+    const allEvents = [];
+    for (let r = 0; r <= currentRound; r++) {
+      const round = result.rounds[r];
+      if (round) allEvents.push(...round.events);
+    }
+    const tagNames = { birth: '诞生', trade: '使用', derive: '衍生', extend: '扩展', revenue: '收益' };
+    eventsList.innerHTML = allEvents.slice(-12).map(e => {
+      const tagName = tagNames[e.type] || e.type;
+      return `<div class="event-item ${e.type}"><span class="tag ${e.type}">${tagName}</span>轮${e.round} · ${e.description}</div>`;
+    }).join('') || '<div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted);">暂无事件</div>';
+  }
+  
+  // 更新 Top 创作者
+  const topCreators = document.getElementById('sim-top-creators');
+  if (topCreators) {
+    topCreators.innerHTML = currentState.agents.filter(a => a.type === 'creator').sort((a, b) => b.revenue - a.revenue).slice(0, 3).map((a, i) => 
+      `<div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 12px; border-bottom: 1px solid var(--border-light);">
+        <span style="color: var(--ink);">${i + 1}. ${a.name}</span>
+        <span style="color: var(--gold); font-weight: 700;">${a.revenue.toFixed(1)}</span>
+      </div>`
+    ).join('');
+  }
+  
+  // 更新活跃 Skill
+  const activeSkills = document.getElementById('sim-active-skills');
+  if (activeSkills) {
+    activeSkills.innerHTML = currentState.skills.sort((a, b) => b.usage_count - a.usage_count).slice(0, 3).map(s => 
+      `<div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 12px; border-bottom: 1px solid var(--border-light);">
+        <span style="color: var(--ink);">${s.name}</span>
+        <span style="color: var(--accent);">使用 ${s.usage_count} 次</span>
+      </div>`
+    ).join('');
+  }
+  
+  // 更新图表（关键：不重建容器，只更新数据）
+  drawGraph('main-graph', result);
+}
 
+// ===== D3 图形绘制（增量更新，不重建容器） =====
 function drawGraph(containerId, result, dataRounds) {
-  const container = document.getElementById(containerId);
+  var container = document.getElementById(containerId);
   if (!container) return;
-  const rect = container.getBoundingClientRect();
-  let width = rect.width || 800;
-  let height = rect.height || 600;
+  var rect = container.getBoundingClientRect();
+  var width = rect.width || 800;
+  var height = rect.height || 600;
   if (width <= 0 || height <= 0) {
     container.style.minHeight = '300px';
-    return setTimeout(() => drawGraph(containerId, result, dataRounds), 50);
+    setTimeout(function() { drawGraph(containerId, result, dataRounds); }, 50);
+    return;
   }
 
-  const rounds = dataRounds || result.rounds;
+  var rounds = dataRounds || result.rounds;
 
-  // ===== 累积所有节点和边到当前轮（生长逻辑）=====
-  const nodeMap = new Map();
-  const linkMap = new Map();
+  // 累积节点和边到当前轮
+  var nodeMap = new Map();
+  var linkMap = new Map();
 
-  for (let r = 0; r <= currentRound; r++) {
-    const round = rounds[r];
+  for (var r = 0; r <= currentRound; r++) {
+    var round = rounds[r];
     if (!round) continue;
-    for (const a of round.agents) {
+    for (var ai = 0; ai < round.agents.length; ai++) {
+      var a = round.agents[ai];
       if (!nodeMap.has(a.id)) {
         nodeMap.set(a.id, { id: a.id, type: a.type, name: a.name, birthRound: 0 });
       }
     }
-    for (const s of round.skills) {
+    for (var si = 0; si < round.skills.length; si++) {
+      var s = round.skills[si];
       if (!nodeMap.has(s.id)) {
         nodeMap.set(s.id, { id: s.id, type: s.generation > 0 ? 'derived' : 'skill', name: s.name, generation: s.generation, parent: s.parent, creator_id: s.creator_id, birthRound: r, usage_count: s.usage_count });
       } else {
         nodeMap.get(s.id).usage_count = s.usage_count;
       }
     }
-    for (const t of round.transactions) {
-      const linkId = t.consumer.id + '-' + t.skill.id;
+    for (var ti = 0; ti < round.transactions.length; ti++) {
+      var t = round.transactions[ti];
+      var linkId = t.consumer.id + '-' + t.skill.id;
       if (!linkMap.has(linkId)) {
         linkMap.set(linkId, { source: t.consumer.id, target: t.skill.id, type: 'usage', birthRound: r });
       }
     }
-    for (const s of round.skills) {
-      const createId = s.creator_id + '-' + s.id;
+    for (var si = 0; si < round.skills.length; si++) {
+      var s = round.skills[si];
+      var createId = s.creator_id + '-' + s.id;
       if (!linkMap.has(createId)) {
         linkMap.set(createId, { source: s.creator_id, target: s.id, type: 'create', birthRound: r });
       }
       if (s.parent) {
-        const deriveId = s.parent + '-' + s.id;
+        var deriveId = s.parent + '-' + s.id;
         if (!linkMap.has(deriveId)) {
           linkMap.set(deriveId, { source: s.parent, target: s.id, type: 'derive', birthRound: r });
         }
@@ -1205,51 +1508,62 @@ function drawGraph(containerId, result, dataRounds) {
     }
   }
 
-  const colors = { creator: '#5AA4AE', consumer: '#4A7C59', mediator: '#B8860B', governance: '#636E72', skill: '#C4B8A0', derived: '#E8A59E' };
+  var colors = { creator: '#5AA4AE', consumer: '#4A7C59', mediator: '#B8860B', governance: '#636E72', skill: '#C4B8A0', derived: '#E8A59E' };
 
-  const nodes = Array.from(nodeMap.values()).map(d => {
-    const r = d.type === 'creator' ? 14 : d.type === 'consumer' ? 9 : d.type === 'mediator' ? 11 : d.type === 'governance' ? 11 : Math.max(6, Math.min(18, 8 + (d.usage_count || 0) / 2));
-    return { ...d, r, color: colors[d.type] || '#999', isNew: d.birthRound === currentRound };
+  var nodes = [];
+  nodeMap.forEach(function(d) {
+    var r = d.type === 'creator' ? 14 : d.type === 'consumer' ? 9 : d.type === 'mediator' ? 11 : d.type === 'governance' ? 11 : Math.max(6, Math.min(18, 6 + (d.usage_count || 0) / 2));
+    nodes.push({ id: d.id, type: d.type, name: d.name, generation: d.generation, parent: d.parent, creator_id: d.creator_id, birthRound: d.birthRound, usage_count: d.usage_count || 0, r: r, color: colors[d.type] || '#999', isNew: d.birthRound === currentRound });
   });
-  const links = Array.from(linkMap.values()).map(d => ({
-    ...d, value: d.type === 'create' ? 0.8 : d.type === 'derive' ? 0.6 : 0.3, isNew: d.birthRound === currentRound
-  }));
 
-  // ===== 首次初始化：创建SVG和力导向模拟 =====
-  if (!globalSvg || globalSvg.empty() || !document.getElementById(containerId).contains(globalSvg.node())) {
-    d3.select('#' + containerId).selectAll('*').remove();
-    globalSvg = d3.select('#' + containerId).append('svg')
+  var links = [];
+  linkMap.forEach(function(d) {
+    links.push({ source: d.source, target: d.target, type: d.type, value: d.type === 'create' ? 0.8 : d.type === 'derive' ? 0.6 : 0.3, isNew: d.birthRound === currentRound });
+  });
+
+  // 获取或创建图形实例
+  var inst = graphInstances[containerId];
+  if (!inst) {
+    d3.select('#' + containerId).selectAll('svg').remove();
+    var svg = d3.select('#' + containerId).append('svg')
       .attr('width', width).attr('height', height)
-      .attr('viewBox', `0 0 ${width} ${height}`);
+      .attr('viewBox', '0 0 ' + width + ' ' + height);
+    var linkG = svg.append('g').attr('class', 'links');
+    var nodeG = svg.append('g').attr('class', 'nodes');
 
-    globalLinkG = globalSvg.append('g').attr('class', 'links');
-    globalNodeG = globalSvg.append('g').attr('class', 'nodes');
-
-    // 背景生长圈
-    globalSvg.append('circle')
+    svg.append('circle')
       .attr('cx', width / 2).attr('cy', height / 2)
       .attr('r', Math.min(width, height) * 0.4)
       .attr('fill', 'none').attr('stroke', '#C4B8A0').attr('stroke-opacity', 0.06).attr('stroke-width', 1);
+
+    inst = {
+      svg: svg,
+      linkG: linkG,
+      nodeG: nodeG,
+      simulation: null,
+      nodePositions: {}
+    };
+    graphInstances[containerId] = inst;
   } else {
-    // 更新SVG尺寸
-    globalSvg.attr('width', width).attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
+    inst.svg.attr('width', width).attr('height', height).attr('viewBox', '0 0 ' + width + ' ' + height);
   }
 
-  const svg = globalSvg;
-  const linkG = globalLinkG;
-  const nodeG = globalNodeG;
+  var svg = inst.svg;
+  var linkG = inst.linkG;
+  var nodeG = inst.nodeG;
+  var nodePositions = inst.nodePositions;
 
-  // 为节点分配初始位置（保留已有位置 = 连续性）
-  nodes.forEach(d => {
-    const pos = nodePositions[d.id];
+  // 为节点分配初始位置
+  nodes.forEach(function(d) {
+    var pos = nodePositions[d.id];
     if (pos) { d.x = pos.x; d.y = pos.y; }
     else {
       if (d.parent && nodePositions[d.parent]) {
-        const p = nodePositions[d.parent];
+        var p = nodePositions[d.parent];
         d.x = p.x + (Math.random() - 0.5) * 50;
         d.y = p.y + (Math.random() - 0.5) * 50;
       } else if (d.creator_id && nodePositions[d.creator_id]) {
-        const c = nodePositions[d.creator_id];
+        var c = nodePositions[d.creator_id];
         d.x = c.x + (Math.random() - 0.5) * 50;
         d.y = c.y + (Math.random() - 0.5) * 50;
       } else {
@@ -1260,269 +1574,379 @@ function drawGraph(containerId, result, dataRounds) {
   });
 
   // 固定创作者位置
-  const creators = nodes.filter(d => d.type === 'creator');
-  creators.forEach((d, i) => {
+  var creators = nodes.filter(function(d) { return d.type === 'creator'; });
+  creators.forEach(function(d, i) {
     d.fx = width * 0.5 + Math.cos(i * Math.PI * 2 / Math.max(1, creators.length)) * 100;
     d.fy = height * 0.5 + Math.sin(i * Math.PI * 2 / Math.max(1, creators.length)) * 70;
   });
 
-  // ===== D3 增量更新：ENTER / UPDATE / EXIT =====
+  // --- 连线增量更新 ---
+  var linkKey = function(d) { return d.source + '-' + d.target + '-' + d.type; };
+  var linkSel = linkG.selectAll('line').data(links, linkKey);
 
-  // --- 连线 ---
-  const linkKey = d => d.source + '-' + d.target + '-' + d.type;
-  const linkData = linkG.selectAll('line').data(links, linkKey);
-
-  linkData.exit()
+  linkSel.exit()
     .transition().duration(400).ease(d3.easeCubicOut)
     .attr('stroke-opacity', 0)
     .remove();
 
-  linkData.enter().append('line')
-    .attr('stroke', d => d.type === 'create' ? '#C4B8A0' : d.type === 'derive' ? '#E8A59E' : '#D5CFC5')
+  var linkEnter = linkSel.enter().append('line')
+    .attr('stroke', function(d) { return d.type === 'create' ? '#C4B8A0' : d.type === 'derive' ? '#E8A59E' : '#D5CFC5'; })
     .attr('stroke-opacity', 0)
-    .attr('stroke-width', d => Math.max(0.5, d.value * 2))
-    .attr('stroke-dasharray', d => d.type === 'usage' ? '3,3' : '')
-    .attr('x1', d => typeof d.source === 'object' ? d.source.x : (nodePositions[d.source]?.x || width/2))
-    .attr('y1', d => typeof d.source === 'object' ? d.source.y : (nodePositions[d.source]?.y || height/2))
-    .attr('x2', d => typeof d.target === 'object' ? d.target.x : (nodePositions[d.target]?.x || width/2))
-    .attr('y2', d => typeof d.target === 'object' ? d.target.y : (nodePositions[d.target]?.y || height/2))
-    .merge(linkData)
+    .attr('stroke-width', function(d) { return Math.max(0.5, d.value * 2); })
+    .attr('stroke-dasharray', function(d) { return d.type === 'usage' ? '3,3' : ''; })
+    .attr('x1', function(d) { return typeof d.source === 'object' ? d.source.x : (nodePositions[d.source] ? nodePositions[d.source].x : width / 2); })
+    .attr('y1', function(d) { return typeof d.source === 'object' ? d.source.y : (nodePositions[d.source] ? nodePositions[d.source].y : height / 2); })
+    .attr('x2', function(d) { return typeof d.target === 'object' ? d.target.x : (nodePositions[d.target] ? nodePositions[d.target].x : width / 2); })
+    .attr('y2', function(d) { return typeof d.target === 'object' ? d.target.y : (nodePositions[d.target] ? nodePositions[d.target].y : height / 2); });
+
+  linkEnter.merge(linkSel)
     .transition().duration(800).ease(d3.easeCubicOut)
-    .delay((d, i) => d.isNew ? i * 40 : 0)
+    .delay(function(d, i) { return d.isNew ? i * 40 : 0; })
     .attr('stroke-opacity', 0.5);
 
-  // --- 节点 ---
-  const nodeData = nodeG.selectAll('g.node').data(nodes, d => d.id);
+  // --- 节点增量更新 ---
+  var nodeSel = nodeG.selectAll('g.node').data(nodes, function(d) { return d.id; });
 
-  const nodeExit = nodeData.exit();
+  var nodeExit = nodeSel.exit();
   nodeExit.selectAll('circle').transition().duration(300).attr('r', 0).attr('opacity', 0);
   nodeExit.selectAll('text').transition().duration(300).attr('opacity', 0);
   nodeExit.transition().duration(500).delay(300).remove();
 
-  const nodeEnter = nodeData.enter().append('g').attr('class', 'node')
+  var nodeEnter = nodeSel.enter().append('g').attr('class', 'node')
     .attr('cursor', 'pointer')
-    .attr('transform', d => `translate(${d.x || width/2},${d.y || height/2})`)
-    .call(d3.drag().on('start', (event, d) => { if (!event.active) globalSimulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }).on('drag', (event, d) => { d.fx = event.x; d.fy = event.y; }).on('end', (event, d) => { if (!event.active) globalSimulation.alphaTarget(0); d.fx = null; d.fy = null; }));
+    .attr('transform', function(d) { return 'translate(' + (d.x || width / 2) + ',' + (d.y || height / 2) + ')'; })
+    .call(d3.drag().on('start', function(event, d) {
+      if (!event.active && inst.simulation) inst.simulation.alphaTarget(0.3).restart();
+      d.fx = d.x; d.fy = d.y;
+    }).on('drag', function(event, d) {
+      d.fx = event.x; d.fy = event.y;
+    }).on('end', function(event, d) {
+      if (!event.active && inst.simulation) inst.simulation.alphaTarget(0);
+      d.fx = null; d.fy = null;
+    }));
 
-  // 节点圆圈：生长入场
   nodeEnter.append('circle')
     .attr('r', 0)
-    .attr('fill', d => d.color)
-    .attr('stroke', d => d.type === 'derived' ? '#C85A54' : 'none')
-    .attr('stroke-width', d => d.type === 'derived' ? 2 : 0)
+    .attr('fill', function(d) { return d.color; })
+    .attr('stroke', function(d) { return d.type === 'derived' ? '#C85A54' : 'none'; })
+    .attr('stroke-width', function(d) { return d.type === 'derived' ? 2 : 0; })
     .attr('opacity', 0)
     .transition().duration(900).ease(d3.easeBackOut.overshoot(1.2))
-    .delay((d, i) => d.isNew ? i * 60 : 0)
-    .attr('r', d => d.r)
+    .delay(function(d, i) { return d.isNew ? i * 60 : 0; })
+    .attr('r', function(d) { return d.r; })
     .attr('opacity', 0.9);
 
-  // 新节点脉冲环（生长感）
-  nodeEnter.filter(d => d.isNew && d.type === 'derived').append('circle')
+  nodeEnter.filter(function(d) { return d.isNew && d.type === 'derived'; }).append('circle')
     .attr('r', 0).attr('fill', 'none').attr('stroke', '#E8A59E').attr('stroke-width', 1.5).attr('opacity', 0.6)
     .transition().duration(1500).ease(d3.easeCubicOut).delay(400)
-    .attr('r', d => d.r + 12).attr('opacity', 0).remove();
+    .attr('r', function(d) { return d.r + 12; }).attr('opacity', 0).remove();
 
-  // 文字标签
-  nodeEnter.filter(d => d.type === 'creator' || d.type === 'derived' || (d.usage_count || 0) > 2).append('text')
-    .text(d => d.name).attr('font-size', 10).attr('fill', '#2D3436')
-    .attr('dy', d => d.r + 14).attr('text-anchor', 'middle').style('pointer-events', 'none')
+  nodeEnter.filter(function(d) { return d.type === 'creator' || d.type === 'derived' || (d.usage_count || 0) > 2; }).append('text')
+    .text(function(d) { return d.name; }).attr('font-size', 10).attr('fill', '#2D3436')
+    .attr('dy', function(d) { return d.r + 14; }).attr('text-anchor', 'middle').style('pointer-events', 'none')
     .attr('opacity', 0)
     .transition().duration(600).ease(d3.easeCubicOut).delay(500)
     .attr('opacity', 1);
 
   nodeEnter.append('title')
-    .text(d => d.type === 'creator' || d.type === 'consumer' || d.type === 'mediator' || d.type === 'governance' ? `${d.name} (${d.type})` : `${d.name} (使用 ${d.usage_count || 0} 次${d.generation > 0 ? ' · 衍生' : ''})`);
+    .text(function(d) {
+      if (d.type === 'creator' || d.type === 'consumer' || d.type === 'mediator' || d.type === 'governance') {
+        return d.name + ' (' + d.type + ')';
+      }
+      return d.name + ' (使用 ' + (d.usage_count || 0) + ' 次' + (d.generation > 0 ? ' · 衍生' : '') + ')';
+    });
 
-  // 旧节点更新：半径变化时平滑过渡
-  nodeData.select('circle')
+  // 更新现有节点半径
+  nodeSel.select('circle')
     .transition().duration(600).ease(d3.easeCubicOut)
-    .attr('r', d => d.r)
-    .attr('fill', d => d.color);
+    .attr('r', function(d) { return d.r; })
+    .attr('fill', function(d) { return d.color; });
 
-  // 力导向模拟：更新数据并重新加热
-  if (globalSimulation) {
-    globalSimulation.nodes(nodes);
-    globalSimulation.force('link').links(links);
-    globalSimulation.alpha(0.3).restart();
+  // 力导向模拟
+  if (inst.simulation) {
+    inst.simulation.nodes(nodes);
+    var linkForce = inst.simulation.force('link');
+    if (linkForce) linkForce.links(links);
+    inst.simulation.alpha(0.3).restart();
   } else {
-    globalSimulation = d3.forceSimulation(nodes)
-      .force('link', d3.forceLink(links).id(d => d.id).distance(d => d.type === 'create' ? 50 : d.type === 'derive' ? 35 : 70))
+    inst.simulation = d3.forceSimulation(nodes)
+      .force('link', d3.forceLink(links).id(function(d) { return d.id; }).distance(function(d) { return d.type === 'create' ? 50 : d.type === 'derive' ? 35 : 70; }))
       .force('charge', d3.forceManyBody().strength(-120))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide().radius(d => d.r + 4));
+      .force('collision', d3.forceCollide().radius(function(d) { return d.r + 4; }));
 
-    globalSimulation.on('tick', () => {
-      nodes.forEach(d => { nodePositions[d.id] = { x: d.x, y: d.y }; });
-      const allLinks = linkG.selectAll('line');
-      allLinks
-        .attr('x1', d => (typeof d.source === 'object' ? d.source.x : (nodePositions[d.source]?.x || 0)) || 0)
-        .attr('y1', d => (typeof d.source === 'object' ? d.source.y : (nodePositions[d.source]?.y || 0)) || 0)
-        .attr('x2', d => (typeof d.target === 'object' ? d.target.x : (nodePositions[d.target]?.x || 0)) || 0)
-        .attr('y2', d => (typeof d.target === 'object' ? d.target.y : (nodePositions[d.target]?.y || 0)) || 0);
-      nodeG.selectAll('g.node').attr('transform', d => `translate(${d.x || 0},${d.y || 0})`);
+    inst.simulation.on('tick', function() {
+      nodes.forEach(function(d) { nodePositions[d.id] = { x: d.x, y: d.y }; });
+      linkG.selectAll('line')
+        .attr('x1', function(d) { return (typeof d.source === 'object' ? d.source.x : (nodePositions[d.source] ? nodePositions[d.source].x : 0)) || 0; })
+        .attr('y1', function(d) { return (typeof d.source === 'object' ? d.source.y : (nodePositions[d.source] ? nodePositions[d.source].y : 0)) || 0; })
+        .attr('x2', function(d) { return (typeof d.target === 'object' ? d.target.x : (nodePositions[d.target] ? nodePositions[d.target].x : 0)) || 0; })
+        .attr('y2', function(d) { return (typeof d.target === 'object' ? d.target.y : (nodePositions[d.target] ? nodePositions[d.target].y : 0)) || 0; });
+      nodeG.selectAll('g.node').attr('transform', function(d) { return 'translate(' + (d.x || 0) + ',' + (d.y || 0) + ')'; });
     });
   }
 }
 
+// ===== 全屏功能 =====
+function toggleGraphFullscreen() {
+  var container = document.getElementById('main-graph');
+  if (!container) return;
+  container.classList.toggle('fullscreen');
+  resizeGraph();
+}
+
+function resizeGraph() {
+  // 重新计算所有图形尺寸
+  for (var id in graphInstances) {
+    var inst = graphInstances[id];
+    if (inst && inst.svg) {
+      var container = document.getElementById(id);
+      if (container) {
+        var rect = container.getBoundingClientRect();
+        var width = rect.width || 800;
+        var height = rect.height || 600;
+        inst.svg.attr('width', width).attr('height', height).attr('viewBox', '0 0 ' + width + ' ' + height);
+        if (inst.simulation) {
+          inst.simulation.force('center', d3.forceCenter(width / 2, height / 2));
+          inst.simulation.alpha(0.3).restart();
+        }
+      }
+    }
+  }
+}
+
+// ESC 键退出全屏
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var container = document.getElementById('main-graph');
+    if (container && container.classList.contains('fullscreen')) {
+      container.classList.remove('fullscreen');
+      resizeGraph();
+    }
+  }
+});
+
+// 窗口大小改变时重新计算图形
+window.addEventListener('resize', function() {
+  resizeGraph();
+});
+
+// ===== 播放控制 =====
 function togglePlay() {
   if (!simulationResult) return;
   isPlaying = !isPlaying;
   if (isPlaying) {
-    playInterval = setInterval(() => {
-      if (currentRound < simulationResult.rounds.length - 1) { currentRound++; renderSimulate(); }
-      else { isPlaying = false; clearInterval(playInterval); renderSimulate(); }
+    playInterval = setInterval(function() {
+      if (currentRound < simulationResult.rounds.length - 1) {
+        currentRound++;
+        renderSimulate();
+      } else {
+        isPlaying = false;
+        clearInterval(playInterval);
+        renderSimulate();
+      }
     }, 1200);
-  } else { clearInterval(playInterval); }
+  } else {
+    clearInterval(playInterval);
+  }
   renderSimulate();
 }
-function stepForward() { if (!simulationResult) return; if (currentRound < simulationResult.rounds.length - 1) { currentRound++; renderSimulate(); } }
-function stepBack() { if (!simulationResult) return; if (currentRound > 0) { currentRound--; renderSimulate(); } }
-function resetSim() { currentRound = 0; isPlaying = false; clearInterval(playInterval); renderSimulate(); }
-function goToRound(round) { currentRound = round; renderSimulate(); }
+
+function stepForward() {
+  if (!simulationResult) return;
+  if (currentRound < simulationResult.rounds.length - 1) {
+    currentRound++;
+    renderSimulate();
+  }
+}
+
+function stepBack() {
+  if (!simulationResult) return;
+  if (currentRound > 0) {
+    currentRound--;
+    renderSimulate();
+  }
+}
+
+function resetSim() {
+  currentRound = 0;
+  isPlaying = false;
+  clearInterval(playInterval);
+  renderSimulate();
+}
+
+function goToRound(round) {
+  currentRound = round;
+  renderSimulate();
+}
 
 // ===== 渲染仪表盘 =====
 function renderDashboard() {
-  const container = document.getElementById('dashboard-content');
-  const result = simulationResult;
-  const metrics = result.final_metrics;
-  
+  var container = document.getElementById('dashboard-content');
+  if (!container) return;
+  var result = simulationResult;
+  if (!result) return;
+  var metrics = result.final_metrics;
+
   if (currentMode === 'compare') {
-    const aLabel = document.getElementById('aLabel')?.value || 'A 方案';
-    const bLabel = document.getElementById('bLabel')?.value || 'B 方案';
-    const aMetrics = result.a_result?.final_metrics || {};
-    const bMetrics = result.b_result?.final_metrics || {};
-    const diff = result.diff_metrics || {};
-    
-    container.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-        <div>
-          <h1 class="ink-title" style="font-size: 24px; letter-spacing: 0.1em;">对比分析仪表盘</h1>
-          <p class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-top: 4px;">${aLabel} vs ${bLabel} · 演化路径差异</p>
-        </div>
-        <div style="display: flex; gap: 12px;"><span class="seal seal-fill">对比</span><button class="btn-bi" style="padding: 8px 24px; font-size: 13px;" onclick="showPage('configure')">新建实验</button></div>
-      </div>
-      <div class="ink-divider-short"></div>
-      <div class="paper-card" style="padding: 24px; margin-bottom: 24px;">
-        <div class="font-serif-sc" style="font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 16px;">生命周期指标对比</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 12px; font-size: 13px; align-items: center;">
-          <div style="font-weight: 700; color: var(--ink-muted); padding-bottom: 8px; border-bottom: 1px solid var(--border-light);">指标</div>
-          <div style="font-weight: 700; color: var(--accent); text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--accent);">${aLabel}</div>
-          <div style="font-weight: 700; color: var(--cinnabar); text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--cinnabar);">${bLabel}</div>
-          <div style="font-weight: 700; color: var(--ink-muted); text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--border-light);">绝对差异</div>
-          <div style="font-weight: 700; color: var(--ink-muted); text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--border-light);">差异</div>
-          ${Object.entries(diff).map(([k, v]) => {
-            const aVal = aMetrics[k] || 0;
-            const bVal = bMetrics[k] || 0;
-            const aBetter = aVal > bVal;
-            return `<div style="padding: 10px 0; border-bottom: 1px solid var(--border-light); font-weight: 500;">${k}</div>
-              <div style="padding: 10px 0; border-bottom: 1px solid var(--border-light); text-align: center; font-weight: 700; color: ${aBetter ? 'var(--accent)' : 'var(--ink)'};">${aVal.toFixed(aVal < 10 ? 3 : 1)} ${aBetter ? '👑' : ''}</div>
-              <div style="padding: 10px 0; border-bottom: 1px solid var(--border-light); text-align: center; font-weight: 700; color: ${!aBetter ? 'var(--cinnabar)' : 'var(--ink)'};">${bVal.toFixed(bVal < 10 ? 3 : 1)} ${!aBetter ? '👑' : ''}</div>
-              <div style="padding: 10px 0; border-bottom: 1px solid var(--border-light); text-align: center; font-weight: 700; color: ${v > 0 ? 'var(--cinnabar)' : 'var(--jade)'};">${v > 0 ? '+' : ''}${v.toFixed(3)}</div>
-              <div style="padding: 10px 0; border-bottom: 1px solid var(--border-light); text-align: center;"><span style="display: inline-block; padding: 2px 10px; border-radius: 2px; font-size: 11px; font-weight: 500; background-color: ${Math.abs(v) > 0.03 ? 'rgba(200,90,84,0.15)' : 'rgba(184,134,11,0.15)'}; color: ${Math.abs(v) > 0.03 ? 'var(--cinnabar)' : 'var(--gold)'};">${Math.abs(v) > 0.03 ? '显著' : '不显著'}</span></div>`;
-          }).join('')}
-        </div>
-      </div>
-      <div class="grid-2">
-        <div class="paper-card" style="padding: 20px;"><div class="font-serif-sc" style="font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">Skill 总量对比</div><div id="compare-chart-1" class="chart-container"></div></div>
-        <div class="paper-card" style="padding: 20px;"><div class="font-serif-sc" style="font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">总收益对比</div><div id="compare-chart-2" class="chart-container"></div></div>
-      </div>
-    `;
-    setTimeout(() => {
-      const chart1 = echarts.init(document.getElementById('compare-chart-1'));
-      chart1.setOption({ grid: { top: 10, right: 20, bottom: 30, left: 40 }, legend: { data: [aLabel, bLabel], textStyle: { color: '#636E72' } }, xAxis: { type: 'category', data: result.rounds.map((r, i) => i), axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' } }, yAxis: { type: 'value', axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' }, splitLine: { lineStyle: { color: '#D5CFC5', type: 'dashed' } } }, series: [{ name: aLabel, type: 'line', data: result.rounds.map(r => r.skills.length), smooth: true, lineStyle: { color: '#5AA4AE', width: 2 }, showSymbol: false }, { name: bLabel, type: 'line', data: result.rounds.map(r => Math.floor(r.skills.length * 0.6)), smooth: true, lineStyle: { color: '#C85A54', width: 2 }, showSymbol: false }] });
-      const chart2 = echarts.init(document.getElementById('compare-chart-2'));
-      chart2.setOption({ grid: { top: 10, right: 20, bottom: 30, left: 40 }, legend: { data: [aLabel, bLabel], textStyle: { color: '#636E72' } }, xAxis: { type: 'category', data: result.rounds.map((r, i) => i), axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' } }, yAxis: { type: 'value', axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' }, splitLine: { lineStyle: { color: '#D5CFC5', type: 'dashed' } } }, series: [{ name: aLabel, type: 'line', data: result.rounds.map((r, i) => r.skills.reduce((sum, s) => sum + s.revenue, 0)), smooth: true, lineStyle: { color: '#5AA4AE', width: 2 }, showSymbol: false }, { name: bLabel, type: 'line', data: result.rounds.map((r, i) => Math.floor(r.skills.reduce((sum, s) => sum + s.revenue, 0) * 0.4)), smooth: true, lineStyle: { color: '#C85A54', width: 2 }, showSymbol: false }] });
+    var aLabel = document.getElementById('aLabel') ? document.getElementById('aLabel').value : 'A 方案';
+    var bLabel = document.getElementById('bLabel') ? document.getElementById('bLabel').value : 'B 方案';
+    var aMetrics = result.a_result ? result.a_result.final_metrics : {};
+    var bMetrics = result.b_result ? result.b_result.final_metrics : {};
+    var diff = result.diff_metrics || {};
+
+    var diffRows = '';
+    for (var k in diff) {
+      var aVal = aMetrics[k] || 0;
+      var bVal = bMetrics[k] || 0;
+      var aBetter = aVal > bVal;
+      var v = diff[k];
+      diffRows += '<div style="padding:10px 0;border-bottom:1px solid var(--border-light);font-weight:500;">' + k + '</div>';
+      diffRows += '<div style="padding:10px 0;border-bottom:1px solid var(--border-light);text-align:center;font-weight:700;color:' + (aBetter ? 'var(--accent)' : 'var(--ink)') + ';">' + aVal.toFixed(aVal < 10 ? 3 : 1) + ' ' + (aBetter ? '👑' : '') + '</div>';
+      diffRows += '<div style="padding:10px 0;border-bottom:1px solid var(--border-light);text-align:center;font-weight:700;color:' + (!aBetter ? 'var(--cinnabar)' : 'var(--ink)') + ';">' + bVal.toFixed(bVal < 10 ? 3 : 1) + ' ' + (!aBetter ? '👑' : '') + '</div>';
+      diffRows += '<div style="padding:10px 0;border-bottom:1px solid var(--border-light);text-align:center;font-weight:700;color:' + (v > 0 ? 'var(--cinnabar)' : 'var(--jade)') + ';">' + (v > 0 ? '+' : '') + v.toFixed(3) + '</div>';
+      diffRows += '<div style="padding:10px 0;border-bottom:1px solid var(--border-light);text-align:center;"><span style="display:inline-block;padding:2px 10px;border-radius:2px;font-size:11px;font-weight:500;background-color:' + (Math.abs(v) > 0.03 ? 'rgba(200,90,84,0.15)' : 'rgba(184,134,11,0.15)') + ';color:' + (Math.abs(v) > 0.03 ? 'var(--cinnabar)' : 'var(--gold)') + ';">' + (Math.abs(v) > 0.03 ? '显著' : '不显著') + '</span></div>';
+    }
+
+    container.innerHTML = [
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">',
+        '<div>',
+          '<h1 class="ink-title" style="font-size:24px;letter-spacing:0.1em;">对比分析仪表盘</h1>',
+          '<p class="font-sans-sc" style="font-size:13px;color:var(--ink-muted);margin-top:4px;">' + aLabel + ' vs ' + bLabel + ' · 演化路径差异</p>',
+        '</div>',
+        '<div style="display:flex;gap:12px;"><span class="seal seal-fill">对比</span><button class="btn-bi" style="padding:8px 24px;font-size:13px;" onclick="showPage(\'configure\')">新建实验</button></div>',
+      '</div>',
+      '<div class="ink-divider-short"></div>',
+      '<div class="paper-card" style="padding:24px;margin-bottom:24px;">',
+        '<div class="font-serif-sc" style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:16px;">生命周期指标对比</div>',
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;font-size:13px;align-items:center;">',
+          '<div style="font-weight:700;color:var(--ink-muted);padding-bottom:8px;border-bottom:1px solid var(--border-light);">指标</div>',
+          '<div style="font-weight:700;color:var(--accent);text-align:center;padding-bottom:8px;border-bottom:1px solid var(--accent);">' + aLabel + '</div>',
+          '<div style="font-weight:700;color:var(--cinnabar);text-align:center;padding-bottom:8px;border-bottom:1px solid var(--cinnabar);">' + bLabel + '</div>',
+          '<div style="font-weight:700;color:var(--ink-muted);text-align:center;padding-bottom:8px;border-bottom:1px solid var(--border-light);">绝对差异</div>',
+          '<div style="font-weight:700;color:var(--ink-muted);text-align:center;padding-bottom:8px;border-bottom:1px solid var(--border-light);">差异</div>',
+          diffRows,
+        '</div>',
+      '</div>',
+      '<div class="grid-2">',
+        '<div class="paper-card" style="padding:20px;"><div class="font-serif-sc" style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:12px;">Skill 总量对比</div><div id="compare-chart-1" class="chart-container"></div></div>',
+        '<div class="paper-card" style="padding:20px;"><div class="font-serif-sc" style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:12px;">总收益对比</div><div id="compare-chart-2" class="chart-container"></div></div>',
+      '</div>'
+    ].join('');
+
+    setTimeout(function() {
+      var chart1 = echarts.init(document.getElementById('compare-chart-1'));
+      chart1.setOption({
+        grid: { top: 10, right: 20, bottom: 30, left: 40 },
+        legend: { data: [aLabel, bLabel], textStyle: { color: '#636E72' } },
+        xAxis: { type: 'category', data: result.rounds.map(function(r, i) { return i; }), axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' } },
+        yAxis: { type: 'value', axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' }, splitLine: { lineStyle: { color: '#D5CFC5', type: 'dashed' } } },
+        series: [
+          { name: aLabel, type: 'line', data: result.rounds.map(function(r) { return r.skills.length; }), smooth: true, lineStyle: { color: '#5AA4AE', width: 2 }, showSymbol: false },
+          { name: bLabel, type: 'line', data: result.b_result.rounds.map(function(r) { return r.skills.length; }), smooth: true, lineStyle: { color: '#C85A54', width: 2 }, showSymbol: false }
+        ]
+      });
+      var chart2 = echarts.init(document.getElementById('compare-chart-2'));
+      chart2.setOption({
+        grid: { top: 10, right: 20, bottom: 30, left: 40 },
+        legend: { data: [aLabel, bLabel], textStyle: { color: '#636E72' } },
+        xAxis: { type: 'category', data: result.rounds.map(function(r, i) { return i; }), axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' } },
+        yAxis: { type: 'value', axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' }, splitLine: { lineStyle: { color: '#D5CFC5', type: 'dashed' } } },
+        series: [
+          { name: aLabel, type: 'line', data: result.rounds.map(function(r, i) { return r.skills.reduce(function(sum, s) { return sum + s.revenue; }, 0); }), smooth: true, lineStyle: { color: '#5AA4AE', width: 2 }, showSymbol: false },
+          { name: bLabel, type: 'line', data: result.b_result.rounds.map(function(r, i) { return r.skills.reduce(function(sum, s) { return sum + s.revenue; }, 0); }), smooth: true, lineStyle: { color: '#C85A54', width: 2 }, showSymbol: false }
+        ]
+      });
     }, 100);
     return;
   }
-  
+
   if (currentMode === 'headless') {
-    container.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-        <div><h1 class="ink-title" style="font-size: 24px; letter-spacing: 0.1em;">统计仪表盘</h1><p class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-top: 4px;">Monte Carlo · ${result.batch_count || 100} 次</p></div>
-        <div style="display: flex; gap: 12px;"><span class="seal seal-fill">统计</span><button class="btn-bi" style="padding: 8px 24px; font-size: 13px;" onclick="showPage('configure')">新建实验</button></div>
-      </div>
-      <div class="ink-divider-short"></div>
-      <div class="grid-3">
-        ${Object.entries(result.batch_stats || {}).map(([k, v]) => `
-          <div class="paper-card" style="padding: 20px;">
-            <div class="font-serif-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 8px;">${k} 分布</div>
-            <div class="font-sans-sc" style="font-size: 22px; font-weight: 700; color: var(--ink);">${v.mean.toFixed(1)}</div>
-            <div class="font-sans-sc" style="font-size: 12px; color: var(--ink-muted); margin-top: 8px;">中位数: ${v.median.toFixed(1)}<br>标准差: ${v.std.toFixed(2)}<br>95% CI: [${v.ci_95[0].toFixed(1)}, ${v.ci_95[1].toFixed(1)}]</div>
-          </div>
-        `).join('')}
-      </div>
-    `;
+    var statsHtml = '';
+    var stats = result.batch_stats || {};
+    for (var k in stats) {
+      var v = stats[k];
+      statsHtml += '<div class="paper-card" style="padding:20px;">';
+      statsHtml += '<div class="font-serif-sc" style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:12px;">' + k + '</div>';
+      statsHtml += '<div class="font-sans-sc" style="font-size:14px;color:var(--ink);">均值: ' + v.mean.toFixed(1) + '</div>';
+      statsHtml += '<div class="font-sans-sc" style="font-size:12px;color:var(--ink-muted);">中位数: ' + v.median.toFixed(1) + ' · 标准差: ' + v.std.toFixed(2) + '</div>';
+      statsHtml += '<div class="font-sans-sc" style="font-size:12px;color:var(--ink-muted);">95% CI: [' + v.ci_95[0].toFixed(1) + ', ' + v.ci_95[1].toFixed(1) + ']</div>';
+      statsHtml += '</div>';
+    }
+
+    container.innerHTML = [
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">',
+        '<div><h1 class="ink-title" style="font-size:24px;letter-spacing:0.1em;">统计仪表盘</h1><p class="font-sans-sc" style="font-size:13px;color:var(--ink-muted);margin-top:4px;">Monte Carlo · ' + (result.batch_count || 100) + ' 次</p></div>',
+        '<div style="display:flex;gap:12px;"><span class="seal seal-fill">统计</span><button class="btn-bi" style="padding:8px 24px;font-size:13px;" onclick="showPage(\'configure\')">新建实验</button></div>',
+      '</div>',
+      '<div class="ink-divider-short"></div>',
+      '<div class="grid-3">',
+        statsHtml,
+      '</div>'
+    ].join('');
     return;
   }
-  
-  const getHealth = (metric, value) => {
-    const thresholds = { gini: [0.4, 0.5], matthew: [0.5, 0.7], shannon: [1.5, 1.0], rho: [0.3, 0.2], totalSkills: [50, 20], totalRevenue: [100, 30], avgUsage: [5, 1] };
-    const [good, bad] = thresholds[metric] || [0.5, 0.3];
-    if (metric === 'gini' || metric === 'matthew') { if (value < good) return 'green'; if (value < bad) return 'yellow'; return 'red'; }
-    if (value > good) return 'green'; if (value > bad) return 'yellow'; return 'red';
-  };
-  
-  container.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-      <div><h1 class="ink-title" style="font-size: 24px; letter-spacing: 0.1em;">实验仪表盘</h1><p class="font-sans-sc" style="font-size: 13px; color: var(--ink-muted); margin-top: 4px;">Skill 全生命周期复盘</p></div>
-      <div style="display: flex; gap: 12px;"><span class="seal seal-fill">复盘</span><button class="btn-bi" style="padding: 8px 24px; font-size: 13px;" onclick="showPage('configure')">新建实验</button></div>
-    </div>
-    <div class="ink-divider-short"></div>
-    <div class="grid-3">
-      <div class="metric-tile metric-tile-${getHealth('totalSkills', metrics.totalSkills)}">
-        <div class="font-serif-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 4px;">Skill 总量</div>
-        <div class="font-serif-sc" style="font-size: 22px; font-weight: 700; color: var(--ink);">${metrics.totalSkills}</div>
-      </div>
-      <div class="metric-tile metric-tile-${getHealth('totalRevenue', metrics.totalRevenue)}">
-        <div class="font-serif-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 4px;">总收益</div>
-        <div class="font-serif-sc" style="font-size: 22px; font-weight: 700; color: var(--ink);">${metrics.totalRevenue.toFixed(1)}</div>
-      </div>
-      <div class="metric-tile metric-tile-${getHealth('avgUsage', metrics.avgUsage)}">
-        <div class="font-serif-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 4px;">平均使用</div>
-        <div class="font-serif-sc" style="font-size: 22px; font-weight: 700; color: var(--ink);">${metrics.avgUsage.toFixed(1)}</div>
-      </div>
-      <div class="metric-tile metric-tile-${getHealth('shannon', metrics.shannon)}">
-        <div class="font-serif-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 4px;">Shannon 多样性</div>
-        <div class="font-serif-sc" style="font-size: 22px; font-weight: 700; color: var(--ink);">${metrics.shannon.toFixed(2)}</div>
-      </div>
-      <div class="metric-tile metric-tile-${getHealth('gini', metrics.gini)}">
-        <div class="font-serif-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 4px;">Gini 系数</div>
-        <div class="font-serif-sc" style="font-size: 22px; font-weight: 700; color: var(--ink);">${metrics.gini.toFixed(3)}</div>
-      </div>
-      <div class="metric-tile metric-tile-${getHealth('rho', metrics.rho)}">
-        <div class="font-serif-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 4px;">桥接密度 ρ</div>
-        <div class="font-serif-sc" style="font-size: 22px; font-weight: 700; color: var(--ink);">${metrics.rho.toFixed(3)}</div>
-      </div>
-      <div class="metric-tile metric-tile-green">
-        <div class="font-serif-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 4px;">衍生数量</div>
-        <div class="font-serif-sc" style="font-size: 22px; font-weight: 700; color: var(--ink);">${metrics.derivedSkills}</div>
-      </div>
-      <div class="metric-tile metric-tile-green">
-        <div class="font-serif-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 4px;">扩展数量</div>
-        <div class="font-serif-sc" style="font-size: 22px; font-weight: 700; color: var(--ink);">${metrics.extendedSkills}</div>
-      </div>
-      <div class="metric-tile metric-tile-${getHealth('matthew', metrics.matthew)}">
-        <div class="font-serif-sc" style="font-size: 13px; color: var(--ink-muted); margin-bottom: 4px;">马太效应</div>
-        <div class="font-serif-sc" style="font-size: 22px; font-weight: 700; color: var(--ink);">${metrics.matthew.toFixed(3)}</div>
-      </div>
-    </div>
-    <div class="ink-divider"></div>
-    <div class="grid-2">
-      <div class="paper-card" style="padding: 20px;"><div class="font-serif-sc" style="font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">Skill 总量趋势</div><div id="trend-chart-1" class="chart-container"></div></div>
-      <div class="paper-card" style="padding: 20px;"><div class="font-serif-sc" style="font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">总收益趋势</div><div id="trend-chart-2" class="chart-container"></div></div>
-    </div>
-  `;
-  
-  setTimeout(() => {
-    const chart1 = echarts.init(document.getElementById('trend-chart-1'));
-    chart1.setOption({ grid: { top: 10, right: 20, bottom: 30, left: 40 }, xAxis: { type: 'category', data: result.rounds.map((r, i) => i), axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' } }, yAxis: { type: 'value', axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' }, splitLine: { lineStyle: { color: '#D5CFC5', type: 'dashed' } } }, series: [{ type: 'line', data: result.rounds.map(r => r.skills.length), smooth: true, lineStyle: { color: '#5AA4AE', width: 2 }, showSymbol: false }] });
-    const chart2 = echarts.init(document.getElementById('trend-chart-2'));
-    chart2.setOption({ grid: { top: 10, right: 20, bottom: 30, left: 40 }, xAxis: { type: 'category', data: result.rounds.map((r, i) => i), axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' } }, yAxis: { type: 'value', axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' }, splitLine: { lineStyle: { color: '#D5CFC5', type: 'dashed' } } }, series: [{ type: 'line', data: result.rounds.map(r => r.skills.reduce((sum, s) => sum + s.revenue, 0)), smooth: true, lineStyle: { color: '#4A7C59', width: 2 }, showSymbol: false }] });
+
+  // 可视模式仪表盘
+  function getHealth(key, val) {
+    var thresholds = {
+      gini: { good: 0.3, bad: 0.5 },
+      matthew: { good: 0.3, bad: 0.6 },
+      shannon: { good: 2.0, bad: 1.0 },
+      rho: { good: 0.4, bad: 0.2 },
+      avgUsage: { good: 5, bad: 1 }
+    };
+    var t = thresholds[key];
+    if (!t) return 'green';
+    if (val >= t.good) return 'green';
+    if (val <= t.bad) return 'red';
+    return 'yellow';
+  }
+
+  container.innerHTML = [
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">',
+      '<div><h1 class="ink-title" style="font-size:24px;letter-spacing:0.1em;">分析仪表盘</h1><p class="font-sans-sc" style="font-size:13px;color:var(--ink-muted);margin-top:4px;">实验结果 · 生命周期指标</p></div>',
+      '<div style="display:flex;gap:12px;"><span class="seal seal-fill">分析</span><button class="btn-bi" style="padding:8px 24px;font-size:13px;" onclick="showPage(\'configure\')">新建实验</button></div>',
+    '</div>',
+    '<div class="ink-divider-short"></div>',
+    '<div class="grid-4" style="margin-bottom:24px;">',
+      '<div class="metric-tile metric-tile-green"><div class="font-serif-sc" style="font-size:13px;color:var(--ink-muted);margin-bottom:4px;">Skill 总量</div><div class="font-serif-sc" style="font-size:22px;font-weight:700;color:var(--ink);">' + metrics.totalSkills + '</div></div>',
+      '<div class="metric-tile metric-tile-green"><div class="font-serif-sc" style="font-size:13px;color:var(--ink-muted);margin-bottom:4px;">总收益</div><div class="font-serif-sc" style="font-size:22px;font-weight:700;color:var(--ink);">' + metrics.totalRevenue.toFixed(1) + '</div></div>',
+      '<div class="metric-tile metric-tile-' + getHealth('avgUsage', metrics.avgUsage) + '"><div class="font-serif-sc" style="font-size:13px;color:var(--ink-muted);margin-bottom:4px;">平均使用</div><div class="font-serif-sc" style="font-size:22px;font-weight:700;color:var(--ink);">' + metrics.avgUsage.toFixed(1) + '</div></div>',
+      '<div class="metric-tile metric-tile-' + getHealth('shannon', metrics.shannon) + '"><div class="font-serif-sc" style="font-size:13px;color:var(--ink-muted);margin-bottom:4px;">Shannon 多样性</div><div class="font-serif-sc" style="font-size:22px;font-weight:700;color:var(--ink);">' + metrics.shannon.toFixed(2) + '</div></div>',
+      '<div class="metric-tile metric-tile-' + getHealth('gini', metrics.gini) + '"><div class="font-serif-sc" style="font-size:13px;color:var(--ink-muted);margin-bottom:4px;">Gini 系数</div><div class="font-serif-sc" style="font-size:22px;font-weight:700;color:var(--ink);">' + metrics.gini.toFixed(3) + '</div></div>',
+      '<div class="metric-tile metric-tile-' + getHealth('rho', metrics.rho) + '"><div class="font-serif-sc" style="font-size:13px;color:var(--ink-muted);margin-bottom:4px;">桥接密度 ρ</div><div class="font-serif-sc" style="font-size:22px;font-weight:700;color:var(--ink);">' + metrics.rho.toFixed(3) + '</div></div>',
+      '<div class="metric-tile metric-tile-green"><div class="font-serif-sc" style="font-size:13px;color:var(--ink-muted);margin-bottom:4px;">衍生数量</div><div class="font-serif-sc" style="font-size:22px;font-weight:700;color:var(--ink);">' + metrics.derivedSkills + '</div></div>',
+      '<div class="metric-tile metric-tile-green"><div class="font-serif-sc" style="font-size:13px;color:var(--ink-muted);margin-bottom:4px;">扩展数量</div><div class="font-serif-sc" style="font-size:22px;font-weight:700;color:var(--ink);">' + metrics.extendedSkills + '</div></div>',
+      '<div class="metric-tile metric-tile-' + getHealth('matthew', metrics.matthew) + '"><div class="font-serif-sc" style="font-size:13px;color:var(--ink-muted);margin-bottom:4px;">马太效应</div><div class="font-serif-sc" style="font-size:22px;font-weight:700;color:var(--ink);">' + metrics.matthew.toFixed(3) + '</div></div>',
+    '</div>',
+    '<div class="ink-divider"></div>',
+    '<div class="grid-2">',
+      '<div class="paper-card" style="padding:20px;"><div class="font-serif-sc" style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:12px;">Skill 总量趋势</div><div id="trend-chart-1" class="chart-container"></div></div>',
+      '<div class="paper-card" style="padding:20px;"><div class="font-serif-sc" style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:12px;">总收益趋势</div><div id="trend-chart-2" class="chart-container"></div></div>',
+    '</div>'
+  ].join('');
+
+  setTimeout(function() {
+    var chart1 = echarts.init(document.getElementById('trend-chart-1'));
+    chart1.setOption({
+      grid: { top: 10, right: 20, bottom: 30, left: 40 },
+      xAxis: { type: 'category', data: result.rounds.map(function(r, i) { return i; }), axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' } },
+      yAxis: { type: 'value', axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' }, splitLine: { lineStyle: { color: '#D5CFC5', type: 'dashed' } } },
+      series: [{ type: 'line', data: result.rounds.map(function(r) { return r.skills.length; }), smooth: true, lineStyle: { color: '#5AA4AE', width: 2 }, showSymbol: false }]
+    });
+    var chart2 = echarts.init(document.getElementById('trend-chart-2'));
+    chart2.setOption({
+      grid: { top: 10, right: 20, bottom: 30, left: 40 },
+      xAxis: { type: 'category', data: result.rounds.map(function(r, i) { return i; }), axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' } },
+      yAxis: { type: 'value', axisLine: { lineStyle: { color: '#D5CFC5' } }, axisLabel: { color: '#636E72' }, splitLine: { lineStyle: { color: '#D5CFC5', type: 'dashed' } } },
+      series: [{ type: 'line', data: result.rounds.map(function(r) { return r.skills.reduce(function(sum, s) { return sum + s.revenue; }, 0); }), smooth: true, lineStyle: { color: '#4A7C59', width: 2 }, showSymbol: false }]
+    });
   }, 100);
 }
 
-document.addEventListener('DOMContentLoaded', () => { showPage('home'); });
+// 初始化
+document.addEventListener('DOMContentLoaded', function() { showPage('home'); });
 </script>
 </body>
 </html>
