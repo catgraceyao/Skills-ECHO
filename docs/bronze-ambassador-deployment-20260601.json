@@ -1,0 +1,45 @@
+{
+  "network": "Qitmeer QNG Mainnet",
+  "deployedAt": "2026-06-01T01:20:00+08:00",
+  "deployer": "Seaman_bot",
+  "contracts": {
+    "BronzeAmbassadorConfig": {
+      "address": "0x44334705803e17051d8856adC4b130FBAB1C217a",
+      "txHash": "0x5941be...47ca96c"
+    },
+    "IncentiveDistributor": {
+      "address": "0x2D39e53804278Bb0fCB582FCC1531df045dF78c2",
+      "txHash": "0x51a51e...fb156e8"
+    },
+    "SnapshotRecorder": {
+      "address": "0x75b71B57751a3331a7ED2CE967521DB2Fe1FA729",
+      "txHash": "0x337bab...f50240e"
+    }
+  },
+  "params": {
+    "rewardPerValidMark": "1.0 MEER",
+    "reviewFeeBps": "0.1%",
+    "accuracyWindow": "30 days"
+  },
+  "deposit": {
+    "status": "confirmed",
+    "amountMEER": 10.0,
+    "source": "Seaman_bot via deposit()",
+    "failedAttempts": [
+      {
+        "from": "哪吒 (0x8D44...)",
+        "amount": 20,
+        "status": "failed",
+        "reason": "gas/nonce",
+        "txHash": "0x0ce7c005..."
+      }
+    ],
+    "confirmation": {
+      "time": "2026-06-01T02:03:00+08:00",
+      "blockNumber": 2707847,
+      "balanceWei": "10000000000000000000",
+      "balanceMEER": 10.0,
+      "verifiedBy": "猫先森链上查询"
+    }
+  }
+}

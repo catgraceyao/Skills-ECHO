@@ -1,0 +1,67 @@
+{
+  "schema": "echo.bronze-ambassador.config.v0.1",
+  "status": "locked",
+  "lockedAt": "2026-05-31T22:52:00+08:00",
+  "approvedBy": "雨娃 (哪吒授权拍板)",
+  "description": "ECHO 青铜大使审查员激励配置参数。三个核心参数由雨娃 2026-05-31 22:52 拍板锁定，其余参数沿用 v0.1 草案默认值。",
+  "parameters": {
+    "reward": {
+      "amount": "1",
+      "unit": "MEER",
+      "type": "fixed",
+      "note": "固定值，不随币价波动，简单透明"
+    },
+    "reviewFee": {
+      "rate": "0.001",
+      "percentage": "0.1%",
+      "settlementPeriod": "daily",
+      "note": "按日汇总结算，省 gas，批量打款"
+    },
+    "accuracyWindow": {
+      "days": 30,
+      "type": "rolling",
+      "note": "30天滚动窗口，近期表现权重高，给新人机会"
+    },
+    "promotion": {
+      "thresholdValidMarks": 50,
+      "minAccuracyPercent": 80,
+      "targetTier": "silver",
+      "note": "累计50次有效标记且准确率≥80%可晋级Silver"
+    },
+    "cooldown": {
+      "sameNodeHours": 24,
+      "note": "同一节点24小时内限标记1次，防刷"
+    },
+    "freeze": {
+      "triggerConsecutiveInvalid": 3,
+      "invalidAccuracyThresholdPercent": 20,
+      "durationHours": 72,
+      "note": "连续3次无效标记（准确率<20%）触发72小时冻结"
+    },
+    "reviewScope": {
+      "targetNodes": "bottom_50_percent_potency",
+      "note": "仅限审查 Potency 排名后50%的节点，聚焦弱势保护"
+    }
+  },
+  "onChain": {
+    "status": "pending_deployment",
+    "contractAddress": null,
+    "deployedAt": null,
+    "txHash": null,
+    "note": "待配置合约部署后写入链上。当前版本为本地锁定草稿，链上锁定后更新本字段。"
+  },
+  "changelog": [
+    {
+      "time": "2026-05-31T21:52:00+08:00",
+      "event": "v0.1 草案生成",
+      "actor": "猫先森",
+      "detail": "基于哪吒'固定1 MEER'确认 + 雨娃建议的按日汇总/30天滚动，生成完整配置草案"
+    },
+    {
+      "time": "2026-05-31T22:52:00+08:00",
+      "event": "参数锁定",
+      "actor": "雨娃 (哪吒授权)",
+      "detail": "三个核心参数拍板：1 MEER固定奖励 / 0.1%按日汇总 / 30天滚动窗口"
+    }
+  ]
+}
